@@ -44,7 +44,7 @@ const SYM_ALIASES = {
 // STEP 2: Paste your worker URL below (e.g. https://my-proxy.me.workers.dev)
 // STEP 3: Push to GitHub — all pairs will work instantly on any host
 // ─────────────────────────────────────────────────────────────────────────────
-const YOUR_WORKER_URL = ''; // ← PASTE YOUR CLOUDFLARE WORKER URL HERE
+const YOUR_WORKER_URL = ''; // ← See instructions below — needs a SEPARATE proxy worker
 
 // CORS proxies — raced IN PARALLEL; fastest wins
 // Worker goes first (most reliable), public proxies are automatic fallbacks
