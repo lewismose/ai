@@ -1,5 +1,14 @@
 'use strict';
 
+/* ── Auth Guard ──────────────────────────────────────────────────────────────
+   Redirects to login.html if the user has not authenticated with a valid key.
+   ─────────────────────────────────────────────────────────────────────────── */
+(function() {
+  if (sessionStorage.getItem('tv_auth') !== 'granted') {
+    window.location.replace('login.html');
+  }
+})();
+
 /* ═══════════════════════════════════════════════
    TRADEVISION AI  —  TradingView Data Engine
    • Primary source: TradingView UDF (all pairs)
