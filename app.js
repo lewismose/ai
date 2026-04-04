@@ -39,14 +39,25 @@ const SYM_ALIASES = {
   'DOW':'^DJI','US30':'^DJI','DAX':'^GDAXI','DAX40':'^GDAXI',
 };
 
-// CORS proxies — raced IN PARALLEL so fastest wins, not tried one-by-one
-// All HTTPS so they work on GitHub Pages without mixed-content blocks
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP 1: Deploy cloudflare-worker.js to https://workers.cloudflare.com (free)
+// STEP 2: Paste your worker URL below (e.g. https://my-proxy.me.workers.dev)
+// STEP 3: Push to GitHub — all pairs will work instantly on any host
+// ─────────────────────────────────────────────────────────────────────────────
+const YOUR_WORKER_URL = ''; // ← PASTE YOUR CLOUDFLARE WORKER URL HERE
+
+// CORS proxies — raced IN PARALLEL; fastest wins
+// Worker goes first (most reliable), public proxies are automatic fallbacks
 const PROXIES = [
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  // Primary: your own Cloudflare Worker (deploy cloudflare-worker.js — free, 100k/day)
+  ...(YOUR_WORKER_URL ? [u => `${YOUR_WORKER_URL}?url=${encodeURIComponent(u)}`] : []),
+  // Public fallbacks (rate-limited but usually work):
+  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
   u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
 ];
+
 
 // Timeout-safe fetch
 function fetchT(url, ms = 11000) {
