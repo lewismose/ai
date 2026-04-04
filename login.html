@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>TradeVision AI – Access Portal</title>
-  <meta name="description" content="Secure activation key portal for TradeVision AI – Advanced Market Intelligence Platform."/>
+  <title>TradeVision AI – Advanced Market Intelligence</title>
+  <meta name="description" content="TradeVision AI – Professional market analysis powered by AI. Real-time signals for Forex, Crypto, Stocks & Commodities."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -12,8 +12,8 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0a0d1a;
-      --bg2:      #0e1220;
+      --bg:       #080b18;
+      --bg2:      #0c1022;
       --surface:  rgba(255,255,255,0.04);
       --border:   rgba(255,255,255,0.08);
       --border-h: rgba(123,94,167,0.45);
@@ -21,129 +21,273 @@
       --blue:     #4FACFE;
       --teal:     #00f2fe;
       --green:    #22d3a0;
+      --gold:     #F9A825;
       --red:      #ff4d6d;
       --text:     #e8eaf6;
       --text2:    #8892b0;
       --text3:    #4a5580;
       --grad:     linear-gradient(135deg, #7B5EA7, #4FACFE);
       --grad2:    linear-gradient(135deg, #4FACFE, #00f2fe);
-      --shadow:   0 8px 40px rgba(0,0,0,0.6);
+      --grad3:    linear-gradient(135deg, #F9A825, #ff6b35);
+      --shadow:   0 8px 40px rgba(0,0,0,0.7);
     }
 
-    html, body {
-      height: 100%;
+    html { height: 100%; }
+    body {
+      min-height: 100%;
       font-family: 'Inter', sans-serif;
       background: var(--bg);
       color: var(--text);
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     /* ── Animated background orbs ── */
-    .bg-orbs {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-    }
-    .orb {
-      position: absolute; border-radius: 50%;
-      filter: blur(90px); opacity: 0.18; animation: orbFloat 20s ease-in-out infinite;
-    }
-    .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, #7B5EA7, transparent); top: -200px; left: -200px; animation-delay: 0s; }
-    .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, #4FACFE, transparent); bottom: -150px; right: -150px; animation-delay: -7s; }
-    .orb-3 { width: 350px; height: 350px; background: radial-gradient(circle, #00f2fe, transparent); top: 50%; left: 55%; animation-delay: -13s; }
-    .orb-4 { width: 280px; height: 280px; background: radial-gradient(circle, #22d3a0, transparent); top: 30%; left: 20%; animation-delay: -4s; }
+    .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.14; animation: orbFloat 22s ease-in-out infinite; }
+    .orb-1 { width: 700px; height: 700px; background: radial-gradient(circle, #7B5EA7, transparent); top: -250px; left: -200px; animation-delay: 0s; }
+    .orb-2 { width: 600px; height: 600px; background: radial-gradient(circle, #4FACFE, transparent); bottom: -200px; right: -150px; animation-delay: -8s; }
+    .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, #22d3a0, transparent); top: 40%; left: 45%; animation-delay: -14s; }
+    .orb-4 { width: 300px; height: 300px; background: radial-gradient(circle, #F9A825, transparent); bottom: 20%; left: 15%; animation-delay: -5s; }
 
     @keyframes orbFloat {
       0%, 100% { transform: translate(0,0) scale(1); }
-      33%       { transform: translate(40px,-40px) scale(1.05); }
-      66%       { transform: translate(-30px,30px) scale(0.95); }
+      33%       { transform: translate(50px,-50px) scale(1.08); }
+      66%       { transform: translate(-35px,35px) scale(0.93); }
     }
 
-    /* ── Particle canvas ── */
-    #particles-canvas {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    }
+    #particles-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 
-    /* ── Grid lines ── */
     .grid-overlay {
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       background-image:
-        linear-gradient(rgba(123,94,167,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123,94,167,0.04) 1px, transparent 1px);
+        linear-gradient(rgba(123,94,167,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123,94,167,0.035) 1px, transparent 1px);
       background-size: 60px 60px;
     }
 
-    /* ── Main wrapper ── */
-    .login-wrapper {
+    /* ── Page Layout ── */
+    .page {
       position: relative; z-index: 1;
-      height: 100vh; display: flex; align-items: center; justify-content: center;
-      padding: 20px;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      grid-template-rows: auto 1fr auto;
     }
 
-    /* ── Login card ── */
-    .login-card {
-      width: 100%; max-width: 460px;
-      background: rgba(14,18,32,0.75);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      box-shadow: var(--shadow), 0 0 0 1px rgba(123,94,167,0.1), inset 0 1px 0 rgba(255,255,255,0.06);
-      padding: 44px 40px 40px;
-      animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both;
+    /* ── Top nav bar ── */
+    .topbar {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,11,24,0.6);
+      backdrop-filter: blur(20px);
     }
-
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(32px) scale(0.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
+    .nav-brand {
+      display: flex; align-items: center; gap: 12px;
     }
-
-    /* ── Logo area ── */
-    .logo-wrap {
-      display: flex; flex-direction: column; align-items: center;
-      margin-bottom: 36px; gap: 14px;
-    }
-    .logo-icon {
-      width: 68px; height: 68px; border-radius: 20px;
+    .nav-logo {
+      width: 40px; height: 40px; border-radius: 12px;
       background: var(--grad);
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 0 1px rgba(123,94,167,0.4), 0 8px 30px rgba(123,94,167,0.35);
+      box-shadow: 0 0 20px rgba(123,94,167,0.4);
       animation: logoPulse 3s ease-in-out infinite;
+      flex-shrink: 0;
     }
     @keyframes logoPulse {
-      0%, 100% { box-shadow: 0 0 0 1px rgba(123,94,167,0.4), 0 8px 30px rgba(123,94,167,0.35); }
-      50%       { box-shadow: 0 0 0 1px rgba(79,172,254,0.5), 0 8px 40px rgba(79,172,254,0.45); }
+      0%, 100% { box-shadow: 0 0 20px rgba(123,94,167,0.4); }
+      50%       { box-shadow: 0 0 30px rgba(79,172,254,0.5); }
     }
-    .logo-text-wrap { text-align: center; }
-    .logo-name {
+    .nav-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px;
-      margin-bottom: 4px;
+      font-size: 1.2rem; font-weight: 700;
     }
-    .logo-name .grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .logo-tagline {
-      font-size: 0.75rem; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase;
+    .nav-title .grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 50px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.78rem; color: var(--text2);
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+    .nav-pill:hover { border-color: var(--border-h); color: var(--text); background: rgba(123,94,167,0.1); }
+    .nav-pill.cta {
+      background: var(--grad); border-color: transparent; color: #fff;
+      font-weight: 600;
+    }
+    .nav-pill.cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* ── Left hero column ── */
+    .hero-col {
+      padding: 60px 50px 60px 60px;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 48px;
     }
 
-    /* ── Section label ── */
-    .section-header {
-      text-align: center; margin-bottom: 28px;
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 50px;
+      border: 1px solid rgba(34,211,160,0.25);
+      background: rgba(34,211,160,0.06);
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--green);
+      margin-bottom: 16px;
+      width: fit-content;
     }
-    .section-title {
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 10px var(--green);
+      animation: blink 1.5s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-headline {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.15rem; font-weight: 600; margin-bottom: 6px;
+      font-size: clamp(2.4rem, 4vw, 3.4rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -1.5px;
     }
-    .section-sub {
-      font-size: 0.8rem; color: var(--text2); line-height: 1.5;
+    .hero-headline .grad {
+      background: var(--grad); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
     }
+    .hero-headline .gold {
+      background: var(--grad3); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 1.05rem; color: var(--text2); line-height: 1.7;
+      max-width: 500px; margin-top: 20px;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex; gap: 24px; flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1; min-width: 110px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px 20px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .stat-card:hover { border-color: var(--border-h); transform: translateY(-3px); }
+    .stat-num {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.6rem; font-weight: 700;
+      background: var(--grad); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .stat-label { font-size: 0.72rem; color: var(--text3); margin-top: 4px; letter-spacing: 0.3px; }
+
+    /* ── Features grid ── */
+    .features-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .feat-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    .feat-item:hover { border-color: rgba(79,172,254,0.25); background: rgba(79,172,254,0.04); }
+    .feat-icon {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .feat-icon.purple { background: rgba(123,94,167,0.2); }
+    .feat-icon.blue   { background: rgba(79,172,254,0.15); }
+    .feat-icon.green  { background: rgba(34,211,160,0.15); }
+    .feat-icon.gold   { background: rgba(249,168,37,0.15); }
+    .feat-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
+    .feat-desc  { font-size: 0.72rem; color: var(--text3); line-height: 1.4; }
+
+    /* ── Contact / Broker strips ── */
+    .contact-strip {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .contact-card {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 18px;
+      text-decoration: none; color: var(--text);
+      transition: border-color 0.25s, background 0.25s, transform 0.2s;
+    }
+    .contact-card:hover { border-color: var(--border-h); background: rgba(123,94,167,0.08); transform: translateX(4px); }
+    .contact-card.broker:hover { border-color: rgba(249,168,37,0.4); background: rgba(249,168,37,0.06); }
+    .contact-card.whatsapp:hover { border-color: rgba(34,211,160,0.4); background: rgba(34,211,160,0.06); }
+    .c-icon {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .c-icon.wa  { background: rgba(34,211,160,0.15); }
+    .c-icon.br  { background: rgba(249,168,37,0.15); }
+    .c-main { font-size: 0.85rem; font-weight: 600; }
+    .c-sub  { font-size: 0.72rem; color: var(--text3); margin-top: 1px; }
+    .c-arrow { margin-left: auto; color: var(--text3); font-size: 0.9rem; transition: transform 0.2s; }
+    .contact-card:hover .c-arrow { transform: translateX(4px); color: var(--text2); }
+
+    /* ── Right login column ── */
+    .login-col {
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 40px;
+      border-left: 1px solid var(--border);
+      background: rgba(8,11,24,0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .login-card {
+      width: 100%;
+      background: rgba(12,16,34,0.8);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 24px;
+      box-shadow: var(--shadow), 0 0 0 1px rgba(123,94,167,0.1), inset 0 1px 0 rgba(255,255,255,0.06);
+      padding: 40px 36px 36px;
+      animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both,
+                 borderGlow 5s ease-in-out 0.7s infinite;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(28px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes borderGlow {
+      0%, 100% { border-color: rgba(255,255,255,0.09); }
+      50%       { border-color: rgba(123,94,167,0.28); }
+    }
+
+    .card-logo {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 30px; gap: 12px;
+    }
+    .card-logo-icon {
+      width: 60px; height: 60px; border-radius: 18px;
+      background: var(--grad);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 1px rgba(123,94,167,0.4), 0 8px 28px rgba(123,94,167,0.35);
+      animation: logoPulse 3s ease-in-out infinite;
+    }
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.4rem; font-weight: 700; text-align: center;
+    }
+    .card-title .grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .card-sub { font-size: 0.78rem; color: var(--text2); text-align: center; line-height: 1.5; }
 
     /* ── Input group ── */
-    .input-group { margin-bottom: 18px; }
+    .form-section { margin-bottom: 16px; }
     .input-label {
-      display: block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.8px;
+      display: block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.9px;
       text-transform: uppercase; color: var(--text2); margin-bottom: 8px;
     }
-    .input-wrapper {
-      position: relative;
-    }
+    .input-wrapper { position: relative; }
     .key-input {
       width: 100%;
       background: rgba(255,255,255,0.04);
@@ -151,121 +295,95 @@
       border-radius: 12px;
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.05rem;
-      letter-spacing: 2px;
+      font-size: 1rem; letter-spacing: 2px;
       padding: 14px 50px 14px 18px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
       text-transform: uppercase;
     }
-    .key-input::placeholder {
-      color: var(--text3); letter-spacing: 1px; font-size: 0.85rem;
-      text-transform: none; font-family: 'Inter', sans-serif;
-    }
-    .key-input:focus {
-      border-color: var(--purple);
-      background: rgba(123,94,167,0.06);
-      box-shadow: 0 0 0 3px rgba(123,94,167,0.18), 0 4px 20px rgba(0,0,0,0.3);
-    }
-    .input-icon {
-      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--text3); pointer-events: none; transition: color 0.2s;
-    }
+    .key-input::placeholder { color: var(--text3); letter-spacing: 1px; font-size: 0.8rem; text-transform: none; font-family: 'Inter', sans-serif; }
+    .key-input:focus { border-color: var(--purple); background: rgba(123,94,167,0.06); box-shadow: 0 0 0 3px rgba(123,94,167,0.18); }
+    .input-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; transition: color 0.2s; }
     .key-input:focus + .input-icon { color: var(--purple); }
 
-    /* ── Error message ── */
+    /* ── Error ── */
     .error-msg {
-      display: none; margin-top: 10px;
+      margin-top: 10px;
       background: rgba(255,77,109,0.1);
       border: 1px solid rgba(255,77,109,0.3);
-      border-radius: 10px;
-      padding: 11px 14px;
-      font-size: 0.8rem;
-      color: #ff7090;
+      border-radius: 10px; padding: 11px 14px;
+      font-size: 0.79rem; color: #ff7090;
       display: flex; align-items: center; gap: 8px;
       opacity: 0; transform: translateY(-6px);
       transition: opacity 0.25s, transform 0.25s;
       pointer-events: none;
     }
-    .error-msg.show {
-      opacity: 1; transform: translateY(0); pointer-events: auto;
-    }
-    .error-msg svg { flex-shrink: 0; }
+    .error-msg.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 
-    /* ── Login button ── */
+    /* ── Button ── */
     .btn-login {
-      width: 100%; margin-top: 8px;
-      background: var(--grad);
-      border: none; border-radius: 12px;
+      width: 100%; margin-top: 6px;
+      background: var(--grad); border: none; border-radius: 12px;
       color: #fff; font-family: 'Space Grotesk', sans-serif;
       font-size: 1rem; font-weight: 600; letter-spacing: 0.3px;
-      padding: 15px;
-      cursor: pointer;
+      padding: 15px; cursor: pointer;
       position: relative; overflow: hidden;
       transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
       box-shadow: 0 4px 20px rgba(123,94,167,0.4);
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .btn-login::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
-      opacity: 0; transition: opacity 0.2s;
-    }
+    .btn-login::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent); opacity: 0; transition: opacity 0.2s; }
     .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(123,94,167,0.55); }
     .btn-login:hover::before { opacity: 1; }
     .btn-login:active { transform: translateY(0); }
     .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-    /* ── Loading spinner on button ── */
-    .btn-spinner {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      animation: spin 0.7s linear infinite;
-      display: none;
-    }
+    .btn-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.7s linear infinite; display: none; }
     .btn-login.loading .btn-spinner { display: block; }
-    .btn-login.loading .btn-text { display: none; }
-    .btn-login.loading .btn-icon { display: none; }
-
+    .btn-login.loading .btn-text, .btn-login.loading .btn-icon { display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Security badges ── */
-    .badges {
-      display: flex; justify-content: center; gap: 18px;
-      margin-top: 24px;
-    }
-    .badge {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 0.68rem; color: var(--text3); letter-spacing: 0.3px;
-    }
-    .badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--green); box-shadow: 0 0 8px var(--green);
-    }
-
-    /* ── Divider ── */
-    .divider {
-      height: 1px; background: var(--border); margin: 28px 0;
-    }
-
-    /* ── Attempt counter ── */
-    .attempt-info {
-      text-align: center; font-size: 0.72rem; color: var(--text3);
-      margin-top: 16px; letter-spacing: 0.2px;
-    }
+    .attempt-info { text-align: center; font-size: 0.71rem; color: var(--text3); margin-top: 14px; }
     .attempt-info span { color: var(--text2); }
 
-    /* ── Shake animation for wrong key ── */
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--border); margin: 22px 0; }
+
+    /* ── Security badges ── */
+    .badges { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .badge { display: flex; align-items: center; gap: 5px; font-size: 0.67rem; color: var(--text3); }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+    /* ── "Get a key" link ── */
+    .get-key-row {
+      text-align: center; margin-top: 18px;
+      font-size: 0.75rem; color: var(--text3);
+    }
+    .get-key-link {
+      color: var(--blue); text-decoration: none; font-weight: 600;
+      transition: color 0.2s;
+    }
+    .get-key-link:hover { color: var(--teal); }
+
+    /* ── Footer ── */
+    .footer {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      border-top: 1px solid var(--border);
+      font-size: 0.7rem; color: var(--text3);
+    }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a { color: var(--text3); text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--text2); }
+
+    /* ── Shake ── */
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      15%       { transform: translateX(-8px); }
-      30%       { transform: translateX(8px); }
-      45%       { transform: translateX(-6px); }
-      60%       { transform: translateX(6px); }
-      75%       { transform: translateX(-3px); }
-      90%       { transform: translateX(3px); }
+      0%,100% { transform: translateX(0); }
+      15%      { transform: translateX(-8px); }
+      30%      { transform: translateX(8px); }
+      45%      { transform: translateX(-5px); }
+      60%      { transform: translateX(5px); }
+      75%      { transform: translateX(-3px); }
     }
     .shake { animation: shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both; }
 
@@ -273,65 +391,47 @@
     .success-overlay {
       position: fixed; inset: 0; z-index: 100;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: rgba(10,13,26,0.95); backdrop-filter: blur(12px);
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.4s;
+      background: rgba(8,11,24,0.96); backdrop-filter: blur(16px);
+      opacity: 0; pointer-events: none; transition: opacity 0.4s;
     }
     .success-overlay.show { opacity: 1; pointer-events: auto; }
     .success-icon {
       width: 90px; height: 90px; border-radius: 50%;
       background: linear-gradient(135deg, rgba(34,211,160,0.15), rgba(34,211,160,0.05));
       border: 2px solid var(--green);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
       animation: successPop 0.5s cubic-bezier(0.22,1,0.36,1) 0.2s both;
-      box-shadow: 0 0 40px rgba(34,211,160,0.3);
+      box-shadow: 0 0 50px rgba(34,211,160,0.3);
     }
-    @keyframes successPop {
-      from { transform: scale(0.5); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
-    }
-    .success-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem; font-weight: 700; margin-bottom: 8px;
-      animation: fadeUp 0.4s ease 0.4s both;
-    }
-    .success-sub {
-      color: var(--text2); font-size: 0.9rem;
-      animation: fadeUp 0.4s ease 0.55s both;
-    }
-    .success-bar-wrap {
-      width: 260px; height: 3px; background: rgba(255,255,255,0.07);
-      border-radius: 2px; margin-top: 28px; overflow: hidden;
-      animation: fadeUp 0.4s ease 0.65s both;
-    }
-    .success-bar {
-      height: 100%; background: var(--green);
-      border-radius: 2px; width: 0%;
-      transition: width 1.8s ease;
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes successPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .success-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; animation: fadeUp 0.4s ease 0.4s both; }
+    .success-sub { color: var(--text2); font-size: 0.9rem; animation: fadeUp 0.4s ease 0.55s both; }
+    .success-bar-wrap { width: 260px; height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 28px; overflow: hidden; animation: fadeUp 0.4s ease 0.65s both; }
+    .success-bar { height: 100%; background: var(--green); border-radius: 2px; width: 0%; transition: width 1.8s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ── Scroll shimmer on card border ── */
-    @keyframes borderGlow {
-      0%, 100% { border-color: rgba(255,255,255,0.08); }
-      50% { border-color: rgba(123,94,167,0.25); }
+    /* ── Responsive: mobile single column ── */
+    @media (max-width: 900px) {
+      body { overflow-y: auto; }
+      .page { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; }
+      .topbar { padding: 16px 20px; }
+      .nav-links .nav-pill:not(.cta) { display: none; }
+      .hero-col { padding: 36px 24px; gap: 32px; }
+      .hero-headline { font-size: 2.1rem; }
+      .stats-row { gap: 12px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .login-col { padding: 28px 20px; border-left: none; border-top: 1px solid var(--border); }
+      .footer { flex-direction: column; gap: 10px; text-align: center; padding: 16px 20px; }
     }
-    .login-card { animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both, borderGlow 5s ease-in-out 0.7s infinite; }
-
-    /* ── Responsive ── */
     @media (max-width: 480px) {
-      .login-card { padding: 32px 24px 28px; border-radius: 20px; }
-      .logo-name { font-size: 1.45rem; }
+      .login-card { padding: 28px 20px; }
+      .stats-row { flex-direction: column; }
     }
   </style>
 </head>
 <body>
 
-<!-- Animated background -->
+<!-- Background -->
 <div class="bg-orbs">
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
@@ -350,94 +450,230 @@
   </div>
   <div class="success-title">Access Granted ✦</div>
   <div class="success-sub">Redirecting to TradeVision AI…</div>
-  <div class="success-bar-wrap">
-    <div class="success-bar" id="success-bar"></div>
-  </div>
+  <div class="success-bar-wrap"><div class="success-bar" id="success-bar"></div></div>
 </div>
 
-<!-- Login card -->
-<div class="login-wrapper">
-  <div class="login-card">
+<!-- Page -->
+<div class="page">
 
-    <!-- Logo -->
-    <div class="logo-wrap">
-      <div class="logo-icon">
-        <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+  <!-- Top nav -->
+  <nav class="topbar">
+    <div class="nav-brand">
+      <div class="nav-logo">
+        <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
           <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
           <circle cx="29" cy="17" r="2.2" fill="white"/>
         </svg>
       </div>
-      <div class="logo-text-wrap">
-        <div class="logo-name">TradeVision <span class="grad">AI</span></div>
-        <div class="logo-tagline">Advanced Market Intelligence Portal</div>
+      <span class="nav-title">TradeVision <span class="grad">AI</span></span>
+    </div>
+    <div class="nav-links">
+      <a href="https://wa.me/254768085041" target="_blank" class="nav-pill">
+        💬 WhatsApp Support
+      </a>
+      <a href="https://hfm.com/?refid=30502056" target="_blank" class="nav-pill cta">
+        Open Live Account →
+      </a>
+    </div>
+  </nav>
+
+  <!-- Left hero column -->
+  <main class="hero-col">
+
+    <!-- Headline -->
+    <div>
+      <div class="hero-eyebrow">
+        <span class="live-dot"></span>
+        Live Market Intelligence
+      </div>
+      <h1 class="hero-headline">
+        Trade Smarter With<br>
+        <span class="grad">AI-Powered</span><br>
+        <span class="gold">Market Analysis</span>
+      </h1>
+      <p class="hero-sub">
+        Professional-grade technical analysis for Forex, Crypto, Stocks & Commodities.
+        Real-time signals, multi-timeframe confluence, S&R zones and AI narratives — all in one platform.
+      </p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num">200+</div>
+        <div class="stat-label">Trading Pairs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">8+</div>
+        <div class="stat-label">Indicators</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">4 TF</div>
+        <div class="stat-label">Confluence</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">0 lag</div>
+        <div class="stat-label">Live Data</div>
       </div>
     </div>
 
-    <!-- Section header -->
-    <div class="section-header">
-      <div class="section-title">🔑 Enter Activation Key</div>
-      <div class="section-sub">This portal is restricted. Enter your unique<br>activation key to gain access.</div>
+    <!-- Features -->
+    <div class="features-grid">
+      <div class="feat-item">
+        <div class="feat-icon purple">📊</div>
+        <div>
+          <div class="feat-title">Advanced TA</div>
+          <div class="feat-desc">EMA, RSI, MACD, BB, ATR, ADX, VWAP & Donchian channels</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon blue">🔀</div>
+        <div>
+          <div class="feat-title">Multi-Timeframe</div>
+          <div class="feat-desc">15m, 1H, 4H & Daily confluence analysis in one click</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon green">🎯</div>
+        <div>
+          <div class="feat-title">Smart Signals</div>
+          <div class="feat-desc">BUY/SELL with Entry, TP & SL levels and R:R ratio</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon gold">🤖</div>
+        <div>
+          <div class="feat-title">AI Narrative</div>
+          <div class="feat-desc">Natural language market analysis generated per signal</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon purple">📐</div>
+        <div>
+          <div class="feat-title">Drawing Tools</div>
+          <div class="feat-desc">Trend lines, horizontal levels and rectangles on chart</div>
+        </div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon blue">🔔</div>
+        <div>
+          <div class="feat-title">Price Alerts</div>
+          <div class="feat-desc">Get notified when price hits your target level</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Input -->
-    <div class="input-group">
-      <label class="input-label" for="key-input">Activation Key</label>
-      <div class="input-wrapper">
-        <input
-          type="text"
-          id="key-input"
-          class="key-input"
-          placeholder="XXXX-XXXX-XXXX-XXXX"
-          maxlength="24"
-          autocomplete="off"
-          spellcheck="false"
-          autofocus
-        />
-        <span class="input-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    <!-- Contact & Broker -->
+    <div class="contact-strip">
+      <a href="https://wa.me/254768085041" target="_blank" class="contact-card whatsapp">
+        <div class="c-icon wa">💬</div>
+        <div>
+          <div class="c-main">WhatsApp Support</div>
+          <div class="c-sub">+254 768 085 041 · Get your activation key or ask for help</div>
+        </div>
+        <span class="c-arrow">→</span>
+      </a>
+      <a href="https://hfm.com/?refid=30502056" target="_blank" class="contact-card broker">
+        <div class="c-icon br">🏦</div>
+        <div>
+          <div class="c-main">Recommended Broker — HFM</div>
+          <div class="c-sub">hfm.com · Regulated · Low spreads · Fast execution</div>
+        </div>
+        <span class="c-arrow">→</span>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- Right login column -->
+  <aside class="login-col">
+    <div class="login-card">
+
+      <div class="card-logo">
+        <div class="card-logo-icon">
+          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+            <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="29" cy="17" r="2.2" fill="white"/>
           </svg>
-        </span>
+        </div>
+        <div class="card-title">TradeVision <span class="grad">AI</span></div>
+        <div class="card-sub">Secure Access Portal<br>Enter your activation key to continue</div>
       </div>
 
-      <!-- Error message -->
-      <div class="error-msg" id="error-msg">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
+      <!-- Input -->
+      <div class="form-section">
+        <label class="input-label" for="key-input">Activation Key</label>
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="key-input"
+            class="key-input"
+            placeholder="XXXX-XXXX-XXXX-XXXX"
+            maxlength="24"
+            autocomplete="off"
+            spellcheck="false"
+            autofocus
+          />
+          <span class="input-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </span>
+        </div>
+
+        <div class="error-msg" id="error-msg">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="error-text">Invalid key. Please contact admin.</span>
+        </div>
+      </div>
+
+      <!-- Button -->
+      <button class="btn-login" id="login-btn" onclick="handleLogin()">
+        <div class="btn-spinner"></div>
+        <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
         </svg>
-        <span id="error-text">Invalid key. Please contact admin.</span>
+        <span class="btn-text">Unlock Access</span>
+      </button>
+
+      <div class="attempt-info" id="attempt-info">
+        Attempts remaining: <span id="attempts-left">5</span>
       </div>
+
+      <div class="divider"></div>
+
+      <div class="badges">
+        <div class="badge"><div class="badge-dot"></div> Encrypted</div>
+        <div class="badge"><div class="badge-dot"></div> Secure Portal</div>
+        <div class="badge"><div class="badge-dot"></div> 24/7 Live Data</div>
+      </div>
+
+      <div class="get-key-row">
+        Don't have a key?
+        <a href="https://wa.me/254768085041" target="_blank" class="get-key-link">Contact us on WhatsApp →</a>
+      </div>
+
     </div>
+  </aside>
 
-    <!-- Login button -->
-    <button class="btn-login" id="login-btn" onclick="handleLogin()">
-      <div class="btn-spinner"></div>
-      <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-        <polyline points="10 17 15 12 10 7"/>
-        <line x1="15" y1="12" x2="3" y2="12"/>
-      </svg>
-      <span class="btn-text">Unlock Access</span>
-    </button>
-
-    <div class="attempt-info" id="attempt-info">
-      Attempts remaining: <span id="attempts-left">5</span>
+  <!-- Footer -->
+  <footer class="footer">
+    <span>© 2025 TradeVision AI — All rights reserved</span>
+    <div class="footer-links">
+      <a href="https://wa.me/254768085041" target="_blank">Support</a>
+      <a href="https://hfm.com/?refid=30502056" target="_blank">Recommended Broker</a>
+      <span style="color:var(--text3)">v2.0</span>
     </div>
+  </footer>
 
-    <div class="divider"></div>
-
-    <!-- Security badges -->
-    <div class="badges">
-      <div class="badge"><div class="badge-dot"></div> Encrypted</div>
-      <div class="badge"><div class="badge-dot"></div> Secure Portal</div>
-      <div class="badge"><div class="badge-dot"></div> 24/7 Live Data</div>
-    </div>
-
-  </div>
-</div>
+</div><!-- end .page -->
 
 <script>
   // ── Activation Keys ──────────────────────────────────────────────────
@@ -463,62 +699,44 @@
   let attemptsLeft = 5;
   let locked = false;
 
-  // ── Auto-format key input ────────────────────────────────────────────
   const keyInput = document.getElementById('key-input');
   keyInput.addEventListener('input', function () {
-    // Remove non-alphanumeric/hyphen chars, uppercase
     let val = this.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
     this.value = val;
-    // Hide error on typing
     hideError();
   });
-
   keyInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') handleLogin();
   });
 
-  // ── Login handler ────────────────────────────────────────────────────
   function handleLogin() {
     if (locked) return;
-
     const inputKey = keyInput.value.trim().toUpperCase();
-
-    if (!inputKey) {
-      showError('Please enter your activation key.');
-      shakeInput();
-      return;
-    }
+    if (!inputKey) { showError('Please enter your activation key.'); shakeInput(); return; }
 
     const btn = document.getElementById('login-btn');
-    btn.classList.add('loading');
-    btn.disabled = true;
+    btn.classList.add('loading'); btn.disabled = true;
 
-    // Simulate a brief verification delay
     setTimeout(() => {
-      btn.classList.remove('loading');
-      btn.disabled = false;
+      btn.classList.remove('loading'); btn.disabled = false;
 
       if (ACTIVATION_KEYS.includes(inputKey)) {
-        // ✅ Valid key
         showSuccess();
       } else {
-        // ❌ Invalid key
         attemptsLeft--;
         document.getElementById('attempts-left').textContent = attemptsLeft;
         shakeInput();
 
         if (attemptsLeft <= 0) {
           locked = true;
-          showError('Too many failed attempts. Please contact admin.');
-          keyInput.disabled = true;
-          btn.disabled = true;
-          document.getElementById('attempt-info').innerHTML = '⛔ Access locked. <span style="color:#ff4d6d">Contact admin.</span>';
+          showError('Too many failed attempts. Contact admin on WhatsApp.');
+          keyInput.disabled = true; btn.disabled = true;
+          document.getElementById('attempt-info').innerHTML =
+            '⛔ Access locked. <a href="https://wa.me/254768085041" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
         } else {
           showError(`Invalid key. Please contact admin. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
         }
-        // Clear input after failed attempt
-        keyInput.value = '';
-        keyInput.focus();
+        keyInput.value = ''; keyInput.focus();
       }
     }, 900);
   }
@@ -526,72 +744,46 @@
   function showError(msg) {
     const err = document.getElementById('error-msg');
     document.getElementById('error-text').textContent = msg;
-    err.style.display = 'flex';
+    err.style.opacity = '0'; err.style.display = 'flex';
     requestAnimationFrame(() => err.classList.add('show'));
   }
-
   function hideError() {
     const err = document.getElementById('error-msg');
     err.classList.remove('show');
     setTimeout(() => { if (!err.classList.contains('show')) err.style.display = 'none'; }, 300);
   }
-
   function shakeInput() {
     const wrap = document.querySelector('.input-wrapper');
-    wrap.classList.remove('shake');
-    void wrap.offsetWidth; // reflow
-    wrap.classList.add('shake');
+    wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
     setTimeout(() => wrap.classList.remove('shake'), 500);
   }
-
   function showSuccess() {
-    // Grant access — write session token so app.js guard passes
     sessionStorage.setItem('tv_auth', 'granted');
     const overlay = document.getElementById('success-overlay');
     overlay.classList.add('show');
-    // Animate progress bar
-    setTimeout(() => {
-      document.getElementById('success-bar').style.width = '100%';
-    }, 100);
-    // Redirect after bar finishes
-    setTimeout(() => {
-      window.location.href = 'index.html';
-    }, 2200);
+    setTimeout(() => { document.getElementById('success-bar').style.width = '100%'; }, 100);
+    setTimeout(() => { window.location.href = 'index.html'; }, 2200);
   }
 
-  // ── Particle system ──────────────────────────────────────────────────
+  // ── Particles ────────────────────────────────────────────────────────
   const canvas = document.getElementById('particles-canvas');
   const ctx = canvas.getContext('2d');
-  let particles = [];
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
 
-  function resize() {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  function createParticle() {
-    return {
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.2 + 0.3,
-      dx: (Math.random() - 0.5) * 0.3,
-      dy: (Math.random() - 0.5) * 0.3,
-      alpha: Math.random() * 0.4 + 0.1,
-      color: Math.random() > 0.5 ? '123,94,167' : '79,172,254',
-    };
-  }
-
-  for (let i = 0; i < 80; i++) particles.push(createParticle());
+  const particles = Array.from({ length: 80 }, () => ({
+    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+    r: Math.random() * 1.2 + 0.3,
+    dx: (Math.random() - 0.5) * 0.28, dy: (Math.random() - 0.5) * 0.28,
+    alpha: Math.random() * 0.4 + 0.08,
+    color: ['123,94,167','79,172,254','34,211,160','249,168,37'][Math.floor(Math.random()*4)],
+  }));
 
   function drawParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.color},${p.alpha})`; ctx.fill();
       p.x += p.dx; p.y += p.dy;
       if (p.x < 0 || p.x > canvas.width)  p.dx *= -1;
       if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
@@ -600,5 +792,6 @@
   }
   drawParticles();
 </script>
+
 </body>
 </html>
