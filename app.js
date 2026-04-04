@@ -39,20 +39,35 @@ const SYM_ALIASES = {
   'DOW':'^DJI','US30':'^DJI','DAX':'^GDAXI','DAX40':'^GDAXI',
 };
 
-// Multi-proxy for Yahoo Finance (returns raw JSON unlike allorigins)
+// CORS proxies — raced IN PARALLEL so fastest wins, not tried one-by-one
+// All HTTPS so they work on GitHub Pages without mixed-content blocks
 const PROXIES = [
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-  u => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(u)}`,
-  u => `https://proxy.cors.sh/${u}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
 ];
 
-// Timeout-safe fetch (works in all browsers)
-function fetchT(url, ms = 18000) {
+// Timeout-safe fetch
+function fetchT(url, ms = 11000) {
   return Promise.race([
     fetch(url),
-    new Promise((_, rej) => setTimeout(() => rej(new Error('Request timed out. Check connection and try again.')), ms)),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
   ]);
+}
+
+// Parse Yahoo Finance JSON regardless of which proxy wrapped it
+function parseYahooJson(text) {
+  let json;
+  try { json = JSON.parse(text); } catch { throw new Error('Bad JSON'); }
+  if (typeof json.contents === 'string') {
+    if (json.status?.http_code && json.status.http_code !== 200)
+      throw new Error(`Upstream ${json.status.http_code}`);
+    try { json = JSON.parse(json.contents); } catch { throw new Error('Bad wrapper'); }
+  }
+  const result = json?.chart?.result?.[0];
+  if (!result) throw new Error('No chart result');
+  return result;
 }
 
 // ─── App State ────────────────────────────────────────────────────────────────
@@ -65,177 +80,136 @@ const S = {
   lastSig: null,
 };
 
-// ─── Data: Yahoo Finance (forex, stocks, indices, commodities) ───────────────
-async function fetchYahoo(symbol, tf) {
-  const iMap = { '1m':'1m','3m':'1m','5m':'5m','15m':'15m','1h':'1h','4h':'1h','1d':'1d' };
-  const rMap = { '1m':'3d','3m':'5d','5m':'7d','15m':'14d', '1h':'60d','4h':'60d','1d':'2y' };
-  const apiUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
-    `?range=${rMap[tf]||'60d'}&interval=${iMap[tf]||'1h'}&includePrePost=false&_t=${Date.now()}`;
-  const apiUrl2= `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}` +
-    `?range=${rMap[tf]||'60d'}&interval=${iMap[tf]||'1h'}&includePrePost=false&_t=${Date.now()}`;
-  let lastErr;
-  // Try both Yahoo query1/query2 endpoints across all proxies
-  for (const yUrl of [apiUrl, apiUrl2]) {
-    for (const mkProxy of PROXIES) {
-      try {
-        const res = await fetchT(mkProxy(yUrl), 18000);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); } catch { throw new Error('Invalid JSON response'); }
-        if (typeof json.contents === 'string') {
-          try { json = JSON.parse(json.contents); } catch { throw new Error('Invalid proxy wrapper'); }
-        }
-        // Handle allorigins status wrapper
-        if (json.status?.http_code && json.status.http_code !== 200)
-          throw new Error(`Upstream HTTP ${json.status.http_code}`);
-        const result = json?.chart?.result?.[0];
-        if (!result) throw new Error(`No chart data for ${symbol}`);
-        const ts = result.timestamp, q = result.indicators.quote[0];
-        if (!ts || !q) throw new Error('Malformed chart response');
-        let candles = ts.map((t,i) => ({
-          time: t*1000, open: q.open[i], high: q.high[i],
-          low: q.low[i], close: q.close[i], volume: q.volume?.[i]||0,
-        })).filter(c => c.open && c.high && c.low && c.close);
-        if (candles.length < 10) throw new Error('Insufficient data returned');
-        if (tf === '4h') candles = groupCandles(candles, 4);
-        if (tf === '3m') candles = groupCandles(candles, 3);
-        return candles;
-      } catch(e) { lastErr = e; console.warn(`Yahoo proxy failed (${mkProxy(yUrl).slice(0,60)}...):`, e.message); }
-    }
-  }
-  throw lastErr || new Error('All Yahoo Finance sources failed for ' + symbol);
+// ─── Data: Yahoo Finance ─────────────────────────────────────────────────────
+// Races ALL proxies simultaneously for BOTH Yahoo endpoints.
+// Total wait = time of FASTEST proxy, not the sum of all timeouts.
+function _yahooViaProxy(yUrl, tf) {
+  return Promise.any(PROXIES.map(async mkProxy => {
+    const res = await fetchT(mkProxy(yUrl), 11000);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const result = parseYahooJson(text);
+    const ts = result.timestamp, q = result.indicators.quote[0];
+    if (!ts?.length || !q) throw new Error('Malformed');
+    let candles = ts.map((t, i) => ({
+      time: t * 1000, open: q.open[i], high: q.high[i],
+      low: q.low[i],  close: q.close[i], volume: q.volume?.[i] || 0,
+    })).filter(c => c.open && c.high && c.low && c.close);
+    if (candles.length < 10) throw new Error('Too few candles');
+    if (tf === '4h') candles = groupCandles(candles, 4);
+    if (tf === '3m') candles = groupCandles(candles, 3);
+    return candles;
+  }));
 }
 
-// ─── Data: stooq.com CSV (stocks, indices; no CORS, free, no key needed) ─────
+async function fetchYahoo(symbol, tf) {
+  const iMap = { '1m':'1m','3m':'1m','5m':'5m','15m':'15m','1h':'1h','4h':'1h','1d':'1d' };
+  const rMap = { '1m':'3d','3m':'5d','5m':'7d','15m':'14d','1h':'60d','4h':'60d','1d':'2y' };
+  const qs = `?range=${rMap[tf]||'60d'}&interval=${iMap[tf]||'1h'}&includePrePost=false&_t=${Date.now()}`;
+  const sym = encodeURIComponent(symbol);
+  try {
+    return await Promise.any([
+      _yahooViaProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${sym}${qs}`, tf),
+      _yahooViaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}${qs}`, tf),
+    ]);
+  } catch {
+    throw new Error(`Yahoo Finance unavailable for ${symbol}`);
+  }
+}
+
+// ─── Data: stooq.com CSV (parallel proxies) ──────────────────────────────────
 async function fetchStooq(symbol, tf) {
-  // stooq interval: d=daily, w=weekly — only daily available for free
-  // We fetch daily and resample if needed
   const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(symbol.toLowerCase())}&i=d`;
-  let lastErr;
-  for (const mkProxy of PROXIES) {
-    try {
-      const res = await fetchT(mkProxy(url), 18000);
+  try {
+    return await Promise.any(PROXIES.map(async mkProxy => {
+      const res = await fetchT(mkProxy(url), 11000);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       let text = await res.text();
-      // allorigins wraps in JSON
-      if (text.trim().startsWith('{')) {
-        const j = JSON.parse(text);
-        text = j.contents || j.body || text;
-      }
-      // Parse CSV: Date,Open,High,Low,Close,Volume
+      if (text.trim().startsWith('{')) { const j = JSON.parse(text); text = j.contents || j.body || text; }
       const lines = text.trim().split('\n').filter(l => l && !l.startsWith('Date'));
-      if (lines.length < 10) throw new Error('Stooq: insufficient rows');
+      if (lines.length < 10) throw new Error('Too few rows');
       const candles = lines.map(line => {
         const [date, open, high, low, close, volume] = line.split(',');
         const [y, m, d] = date.split('-').map(Number);
-        return {
-          time: Date.UTC(y, m-1, d),
-          open: parseFloat(open), high: parseFloat(high),
-          low: parseFloat(low), close: parseFloat(close),
-          volume: parseFloat(volume)||0,
-        };
+        return { time: Date.UTC(y,m-1,d), open:+open, high:+high, low:+low, close:+close, volume:+volume||0 };
       }).filter(c => c.open && c.high && c.low && c.close && !isNaN(c.time)).slice(-200);
-      if (candles.length < 10) throw new Error('Stooq: no valid candles');
-      // Resample to 4h or return as-is (daily only available)
+      if (candles.length < 10) throw new Error('Bad data');
       return candles;
-    } catch(e) { lastErr = e; console.warn('Stooq failed:', e.message); }
+    }));
+  } catch {
+    throw new Error(`Stooq unavailable for ${symbol}`);
   }
-  throw lastErr || new Error('Stooq failed for ' + symbol);
 }
 
-// ─── Data: Frankfurter API for live forex rates (ECB, free, no CORS) ─────────
-// Only provides daily OHLC — we use it as last resort for forex on 1d/4h/1h
+// ─── Data: Frankfurter API (ECB forex — native CORS, zero proxies needed) ────
+// Works on GitHub Pages, localhost, anywhere. Covers 30+ major currencies.
 async function fetchFrankfurter(base, quote, tf) {
-  // Frankfurter gives timeseries: /timeseries?start=...&end=...&from=X&to=Y
-  const days = tf === '1d' ? 365 : tf === '4h' ? 60 : 60;
-  const end = new Date(); const start = new Date(end - days*86400000);
-  const fmt = d => d.toISOString().slice(0,10);
-  const url = `https://api.frankfurter.app/${fmt(start)}..${fmt(end)}?from=${base}&to=${quote}`;
-  try {
-    const res = await fetchT(url, 12000);
-    if (!res.ok) throw new Error(`Frankfurter HTTP ${res.status}`);
-    const json = await res.json();
-    if (!json.rates) throw new Error('No Frankfurter rates');
-    const entries = Object.entries(json.rates).sort(([a],[b]) => a < b ? -1 : 1);
-    if (entries.length < 5) throw new Error('Frankfurter: insufficient data');
-    // Build OHLC-like candles from daily close prices (open=prev close)
-    const candles = [];
-    for (let i = 0; i < entries.length; i++) {
-      const [date, rateObj] = entries[i];
-      const close = rateObj[quote];
-      if (!close) continue;
-      const prevClose = i > 0 ? (entries[i-1][1][quote] || close) : close;
-      const [y, m, d] = date.split('-').map(Number);
-      candles.push({
-        time: Date.UTC(y, m-1, d),
-        open: prevClose, high: Math.max(prevClose, close) * 1.0002,
-        low: Math.min(prevClose, close) * 0.9998, close,
-        volume: 0,
-      });
-    }
-    if (candles.length < 5) throw new Error('Frankfurter: too few candles');
-    return candles;
-  } catch(e) { console.warn('Frankfurter failed:', e.message); throw e; }
+  const days = tf === '1d' ? 365 : 60;
+  const end = new Date(); const start = new Date(+end - days * 86400000);
+  const fmt = d => d.toISOString().slice(0, 10);
+  const isEurBase  = base  === 'EUR';
+  const isEurQuote = quote === 'EUR';
+  // Single API call — fetch both legs at once when cross-rate needed
+  const toParam = isEurBase ? quote : isEurQuote ? base : `${base},${quote}`;
+  const url = `https://api.frankfurter.app/${fmt(start)}..${fmt(end)}?from=EUR&to=${toParam}`;
+  const res = await fetchT(url, 10000);
+  if (!res.ok) throw new Error(`Frankfurter HTTP ${res.status}`);
+  const json = await res.json();
+  if (!json.rates) throw new Error('No Frankfurter rates');
+  const entries = Object.entries(json.rates).sort(([a],[b]) => a < b ? -1 : 1);
+  if (entries.length < 5) throw new Error('Insufficient history');
+  const candles = [];
+  for (let i = 0; i < entries.length; i++) {
+    const [date, r] = entries[i];
+    const [y, m, d] = date.split('-').map(Number);
+    let close;
+    if (isEurBase)       close = r[quote];           // EUR/QUOTE
+    else if (isEurQuote) close = r[base] ? 1/r[base] : null; // BASE/EUR
+    else                 close = (r[base] && r[quote]) ? r[quote]/r[base] : null; // cross
+    if (!close) continue;
+    const prev = i > 0 ? (candles[candles.length-1]?.close || close) : close;
+    const spd  = Math.abs(close - prev) * 0.25 || close * 0.00015;
+    candles.push({
+      time: Date.UTC(y,m-1,d), open: prev,
+      high: Math.max(prev,close)+spd, low: Math.min(prev,close)-spd,
+      close, volume: 0,
+    });
+  }
+  if (candles.length < 5) throw new Error('Frankfurter: too few candles');
+  return candles;
 }
 
-// ─── Data Orchestrator: cascade Yahoo → stooq → Frankfurter ──────────────────
-// Single entry point for all non-crypto pairs. Tries sources in order and
-// returns candles from whichever source succeeds first.
+// ─── Data Orchestrator ────────────────────────────────────────────────────────
+// Priority order:
+//   FOREX : Frankfurter first (native CORS, no proxy, works on GitHub Pages)
+//           → Yahoo fallback (proxied, parallel)
+//   OTHER : Yahoo first (proxied, parallel)
+//           → stooq fallback (proxied, parallel)
 async function fetchData(info, tf) {
-  const errors = [];
+  const errs = [];
 
-  // 1️⃣ Yahoo Finance (primary — widest coverage)
-  try {
-    return await fetchYahoo(info.yahooSym, tf);
-  } catch(e) { errors.push(`Yahoo: ${e.message}`); }
+  // ── FOREX: Frankfurter FIRST — works everywhere with no proxy at all ────────
+  if (info.type === 'forex') {
+    const raw = info.yahooSym.replace(/=X$/i, '');
+    const base = raw.slice(0, 3), quote = raw.slice(3);
+    try { return await fetchFrankfurter(base, quote, tf); }
+    catch(e) { errs.push(`Frankfurter: ${e.message}`); }
+  }
 
-  // 2️⃣ stooq CSV (stocks, indices, commodities — free, reliable fallback)
-  // Map Yahoo symbol suffixes to stooq format
+  // ── Yahoo Finance: all proxies raced in parallel ────────────────────────────
+  try { return await fetchYahoo(info.yahooSym, tf); }
+  catch(e) { errs.push(`Yahoo: ${e.message}`); }
+
+  // ── Non-forex fallback: stooq CSV ──────────────────────────────────────────
   if (info.type !== 'forex') {
     try {
-      // stooq uses .us for US stocks, .f for Frankfurt, ^ for indices etc.
       const stooqSym = info.yahooSym
-        .replace(/\^/g, '')       // ^GSPC → GSPC (stooq uses .us or bare)
-        .replace(/=F$/i, '.f')   // GC=F  → GC.f (futures on stooq)
-        .replace(/=X$/i, '');    // EURUSD=X not supported by stooq
+        .replace(/\^/g, '').replace(/=F$/i, '.f').replace(/=X$/i, '');
       if (stooqSym) return await fetchStooq(stooqSym, tf);
-    } catch(e) { errors.push(`Stooq: ${e.message}`); }
+    } catch(e) { errs.push(`Stooq: ${e.message}`); }
   }
 
-  // 3️⃣ Frankfurter (forex pairs — ECB rates, always available)
-  if (info.type === 'forex') {
-    try {
-      // yahooSym is like "EURUSD=X" → extract base/quote
-      const raw = info.yahooSym.replace(/=X$/i, '');
-      const base = raw.slice(0, 3), quote = raw.slice(3);
-      // Frankfurter only supports EUR as base natively; swap if needed
-      if (base === 'EUR' || quote === 'EUR') {
-        const [fb, fq] = base === 'EUR' ? [base, quote] : [quote, base];
-        const candles = await fetchFrankfurter(fb, fq, tf);
-        // If we swapped, invert prices
-        return base === 'EUR' ? candles : candles.map(c => ({
-          ...c,
-          open: 1/c.open, high: 1/c.low, low: 1/c.high, close: 1/c.close
-        }));
-      } else {
-        // Non-EUR forex: route through EUR cross-rates
-        const baseToEur = await fetchFrankfurter('EUR', base, tf);
-        const quoteToEur = await fetchFrankfurter('EUR', quote, tf);
-        // Align by time index (both series from same ECB dates)
-        const len = Math.min(baseToEur.length, quoteToEur.length);
-        return baseToEur.slice(-len).map((c, i) => {
-          const q = quoteToEur.slice(-len)[i];
-          const close = q.close / c.close;
-          return { time: c.time, open: q.open/c.open, high: q.high/c.low, low: q.low/c.high, close, volume: 0 };
-        });
-      }
-    } catch(e) { errors.push(`Frankfurter: ${e.message}`); }
-  }
-
-  // All sources exhausted
-  const detail = errors.join(' | ');
-  throw new Error(`Failed to fetch data for ${info.display}. (${detail})`);
+  throw new Error(`No data available for ${info.display}. Try a different pair or timeframe.`);
 }
 
 function groupCandles(h, sz) {
