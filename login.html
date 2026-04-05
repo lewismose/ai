@@ -1,38 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>TradeVision AI – Advanced Market Intelligence</title>
-  <meta name="description" content="TradeVision AI – Professional market analysis powered by AI. Real-time signals for Forex, Crypto, Stocks & Commodities."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:       #080b18;
-      --bg2:      #0c1022;
-      --surface:  rgba(255,255,255,0.04);
-      --border:   rgba(255,255,255,0.08);
-      --border-h: rgba(123,94,167,0.45);
-      --purple:   #7B5EA7;
-      --blue:     #4FACFE;
-      --teal:     #00f2fe;
-      --green:    #22d3a0;
-      --gold:     #F9A825;
-      --red:      #ff4d6d;
-      --text:     #e8eaf6;
-      --text2:    #8892b0;
-      --text3:    #4a5580;
-      --grad:     linear-gradient(135deg, #7B5EA7, #4FACFE);
-      --grad2:    linear-gradient(135deg, #4FACFE, #00f2fe);
-      --grad3:    linear-gradient(135deg, #F9A825, #ff6b35);
-      --shadow:   0 8px 40px rgba(0,0,0,0.7);
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TradeVision AI – Advanced Market Intelligence</title>
+  <meta name="description"
+    content="TradeVision AI – Professional market analysis powered by AI. Real-time signals for Forex, Crypto, Stocks & Commodities." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    html { height: 100%; }
+    :root {
+      --bg: #080b18;
+      --bg2: #0c1022;
+      --surface: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-h: rgba(123, 94, 167, 0.45);
+      --purple: #7B5EA7;
+      --blue: #4FACFE;
+      --teal: #00f2fe;
+      --green: #22d3a0;
+      --gold: #F9A825;
+      --red: #ff4d6d;
+      --text: #e8eaf6;
+      --text2: #8892b0;
+      --text3: #4a5580;
+      --grad: linear-gradient(135deg, #7B5EA7, #4FACFE);
+      --grad2: linear-gradient(135deg, #4FACFE, #00f2fe);
+      --grad3: linear-gradient(135deg, #F9A825, #ff6b35);
+      --shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+    }
+
+    html {
+      height: 100%;
+    }
+
     body {
       min-height: 100%;
       font-family: 'Inter', sans-serif;
@@ -42,756 +55,1721 @@
     }
 
     /* ── Animated background orbs ── */
-    .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.14; animation: orbFloat 22s ease-in-out infinite; }
-    .orb-1 { width: 700px; height: 700px; background: radial-gradient(circle, #7B5EA7, transparent); top: -250px; left: -200px; animation-delay: 0s; }
-    .orb-2 { width: 600px; height: 600px; background: radial-gradient(circle, #4FACFE, transparent); bottom: -200px; right: -150px; animation-delay: -8s; }
-    .orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, #22d3a0, transparent); top: 40%; left: 45%; animation-delay: -14s; }
-    .orb-4 { width: 300px; height: 300px; background: radial-gradient(circle, #F9A825, transparent); bottom: 20%; left: 15%; animation-delay: -5s; }
-
-    @keyframes orbFloat {
-      0%, 100% { transform: translate(0,0) scale(1); }
-      33%       { transform: translate(50px,-50px) scale(1.08); }
-      66%       { transform: translate(-35px,35px) scale(0.93); }
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    #particles-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.14;
+      animation: orbFloat 22s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, #7B5EA7, transparent);
+      top: -250px;
+      left: -200px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, #4FACFE, transparent);
+      bottom: -200px;
+      right: -150px;
+      animation-delay: -8s;
+    }
+
+    .orb-3 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #22d3a0, transparent);
+      top: 40%;
+      left: 45%;
+      animation-delay: -14s;
+    }
+
+    .orb-4 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, #F9A825, transparent);
+      bottom: 20%;
+      left: 15%;
+      animation-delay: -5s;
+    }
+
+    @keyframes orbFloat {
+
+      0%,
+      100% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      33% {
+        transform: translate(50px, -50px) scale(1.08);
+      }
+
+      66% {
+        transform: translate(-35px, 35px) scale(0.93);
+      }
+    }
+
+    #particles-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
 
     .grid-overlay {
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
       background-image:
-        linear-gradient(rgba(123,94,167,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123,94,167,0.035) 1px, transparent 1px);
+        linear-gradient(rgba(123, 94, 167, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123, 94, 167, 0.035) 1px, transparent 1px);
       background-size: 60px 60px;
     }
 
     /* ── Page Layout ── */
     .page {
-      position: relative; z-index: 1;
+      position: relative;
+      z-index: 1;
       min-height: 100vh;
       display: grid;
       grid-template-columns: 1fr 480px;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto auto 1fr auto;
     }
 
     /* ── Top nav bar ── */
     .topbar {
       grid-column: 1 / -1;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 20px 40px;
       border-bottom: 1px solid var(--border);
-      background: rgba(8,11,24,0.6);
+      background: rgba(8, 11, 24, 0.6);
       backdrop-filter: blur(20px);
     }
+
     .nav-brand {
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
+
     .nav-logo {
-      width: 40px; height: 40px; border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       background: var(--grad);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 20px rgba(123,94,167,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(123, 94, 167, 0.4);
       animation: logoPulse 3s ease-in-out infinite;
       flex-shrink: 0;
     }
+
     @keyframes logoPulse {
-      0%, 100% { box-shadow: 0 0 20px rgba(123,94,167,0.4); }
-      50%       { box-shadow: 0 0 30px rgba(79,172,254,0.5); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(123, 94, 167, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(79, 172, 254, 0.5);
+      }
     }
+
     .nav-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.2rem; font-weight: 700;
+      font-size: 1.2rem;
+      font-weight: 700;
     }
-    .nav-title .grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 
-    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-title .grad {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .nav-pill {
-      display: flex; align-items: center; gap: 6px;
-      padding: 8px 16px; border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 50px;
       border: 1px solid var(--border);
       background: var(--surface);
-      font-size: 0.78rem; color: var(--text2);
+      font-size: 0.78rem;
+      color: var(--text2);
       text-decoration: none;
       transition: border-color 0.2s, color 0.2s, background 0.2s;
       cursor: pointer;
     }
-    .nav-pill:hover { border-color: var(--border-h); color: var(--text); background: rgba(123,94,167,0.1); }
+
+    .nav-pill:hover {
+      border-color: var(--border-h);
+      color: var(--text);
+      background: rgba(123, 94, 167, 0.1);
+    }
+
     .nav-pill.cta {
-      background: var(--grad); border-color: transparent; color: #fff;
+      background: var(--grad);
+      border-color: transparent;
+      color: #fff;
       font-weight: 600;
     }
-    .nav-pill.cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    .nav-pill.cta:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
 
     /* ── Left hero column ── */
     .hero-col {
       padding: 60px 50px 60px 60px;
-      display: flex; flex-direction: column; justify-content: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       gap: 48px;
     }
 
     .hero-eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 14px; border-radius: 50px;
-      border: 1px solid rgba(34,211,160,0.25);
-      background: rgba(34,211,160,0.06);
-      font-size: 0.72rem; font-weight: 600; letter-spacing: 1px;
-      text-transform: uppercase; color: var(--green);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 50px;
+      border: 1px solid rgba(34, 211, 160, 0.25);
+      background: rgba(34, 211, 160, 0.06);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--green);
       margin-bottom: 16px;
       width: fit-content;
     }
+
     .live-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--green); box-shadow: 0 0 10px var(--green);
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 10px var(--green);
       animation: blink 1.5s ease-in-out infinite;
     }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
 
     .hero-headline {
       font-family: 'Space Grotesk', sans-serif;
       font-size: clamp(2.4rem, 4vw, 3.4rem);
-      font-weight: 800; line-height: 1.1; letter-spacing: -1.5px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
     }
+
     .hero-headline .grad {
-      background: var(--grad); -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent; background-clip: text;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
     .hero-headline .gold {
-      background: var(--grad3); -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent; background-clip: text;
+      background: var(--grad3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .hero-sub {
-      font-size: 1.05rem; color: var(--text2); line-height: 1.7;
-      max-width: 500px; margin-top: 20px;
+      font-size: 1.05rem;
+      color: var(--text2);
+      line-height: 1.7;
+      max-width: 500px;
+      margin-top: 20px;
     }
 
     /* ── Stats row ── */
     .stats-row {
-      display: flex; gap: 24px; flex-wrap: wrap;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
     }
+
     .stat-card {
-      flex: 1; min-width: 110px;
-      background: rgba(255,255,255,0.04);
+      flex: 1;
+      min-width: 110px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
-      border-radius: 16px; padding: 18px 20px;
+      border-radius: 16px;
+      padding: 18px 20px;
       transition: border-color 0.3s, transform 0.3s;
     }
-    .stat-card:hover { border-color: var(--border-h); transform: translateY(-3px); }
+
+    .stat-card:hover {
+      border-color: var(--border-h);
+      transform: translateY(-3px);
+    }
+
     .stat-num {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem; font-weight: 700;
-      background: var(--grad); -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent; background-clip: text;
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .stat-label { font-size: 0.72rem; color: var(--text3); margin-top: 4px; letter-spacing: 0.3px; }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text3);
+      margin-top: 4px;
+      letter-spacing: 0.3px;
+    }
 
     /* ── Features grid ── */
     .features-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
     }
+
     .feat-item {
-      display: flex; align-items: flex-start; gap: 12px;
-      background: rgba(255,255,255,0.03);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
-      border-radius: 14px; padding: 16px;
+      border-radius: 14px;
+      padding: 16px;
       transition: border-color 0.25s, background 0.25s;
     }
-    .feat-item:hover { border-color: rgba(79,172,254,0.25); background: rgba(79,172,254,0.04); }
+
+    .feat-item:hover {
+      border-color: rgba(79, 172, 254, 0.25);
+      background: rgba(79, 172, 254, 0.04);
+    }
+
     .feat-icon {
-      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1rem;
     }
-    .feat-icon.purple { background: rgba(123,94,167,0.2); }
-    .feat-icon.blue   { background: rgba(79,172,254,0.15); }
-    .feat-icon.green  { background: rgba(34,211,160,0.15); }
-    .feat-icon.gold   { background: rgba(249,168,37,0.15); }
-    .feat-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 2px; }
-    .feat-desc  { font-size: 0.72rem; color: var(--text3); line-height: 1.4; }
+
+    .feat-icon.purple {
+      background: rgba(123, 94, 167, 0.2);
+    }
+
+    .feat-icon.blue {
+      background: rgba(79, 172, 254, 0.15);
+    }
+
+    .feat-icon.green {
+      background: rgba(34, 211, 160, 0.15);
+    }
+
+    .feat-icon.gold {
+      background: rgba(249, 168, 37, 0.15);
+    }
+
+    .feat-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .feat-desc {
+      font-size: 0.72rem;
+      color: var(--text3);
+      line-height: 1.4;
+    }
 
     /* ── Contact / Broker strips ── */
     .contact-strip {
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+
     .contact-card {
-      display: flex; align-items: center; gap: 14px;
-      background: rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px 18px;
-      text-decoration: none; color: var(--text);
+      border-radius: 14px;
+      padding: 14px 18px;
+      text-decoration: none;
+      color: var(--text);
       transition: border-color 0.25s, background 0.25s, transform 0.2s;
     }
-    .contact-card:hover { border-color: var(--border-h); background: rgba(123,94,167,0.08); transform: translateX(4px); }
-    .contact-card.broker:hover { border-color: rgba(249,168,37,0.4); background: rgba(249,168,37,0.06); }
-    .contact-card.whatsapp:hover { border-color: rgba(34,211,160,0.4); background: rgba(34,211,160,0.06); }
-    .c-icon {
-      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+
+    .contact-card:hover {
+      border-color: var(--border-h);
+      background: rgba(123, 94, 167, 0.08);
+      transform: translateX(4px);
     }
-    .c-icon.wa  { background: rgba(34,211,160,0.15); }
-    .c-icon.br  { background: rgba(249,168,37,0.15); }
-    .c-main { font-size: 0.85rem; font-weight: 600; }
-    .c-sub  { font-size: 0.72rem; color: var(--text3); margin-top: 1px; }
-    .c-arrow { margin-left: auto; color: var(--text3); font-size: 0.9rem; transition: transform 0.2s; }
-    .contact-card:hover .c-arrow { transform: translateX(4px); color: var(--text2); }
+
+    .contact-card.broker:hover {
+      border-color: rgba(249, 168, 37, 0.4);
+      background: rgba(249, 168, 37, 0.06);
+    }
+
+    .contact-card.whatsapp:hover {
+      border-color: rgba(34, 211, 160, 0.4);
+      background: rgba(34, 211, 160, 0.06);
+    }
+
+    .c-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .c-icon.wa {
+      background: rgba(34, 211, 160, 0.15);
+    }
+
+    .c-icon.br {
+      background: rgba(249, 168, 37, 0.15);
+    }
+
+    .c-main {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .c-sub {
+      font-size: 0.72rem;
+      color: var(--text3);
+      margin-top: 1px;
+    }
+
+    .c-arrow {
+      margin-left: auto;
+      color: var(--text3);
+      font-size: 0.9rem;
+      transition: transform 0.2s;
+    }
+
+    .contact-card:hover .c-arrow {
+      transform: translateX(4px);
+      color: var(--text2);
+    }
 
     /* ── Right login column ── */
     .login-col {
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 40px 40px;
       border-left: 1px solid var(--border);
-      background: rgba(8,11,24,0.5);
+      background: rgba(8, 11, 24, 0.5);
       backdrop-filter: blur(10px);
     }
 
     .login-card {
       width: 100%;
-      background: rgba(12,16,34,0.8);
-      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(12, 16, 34, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.09);
       border-radius: 24px;
-      box-shadow: var(--shadow), 0 0 0 1px rgba(123,94,167,0.1), inset 0 1px 0 rgba(255,255,255,0.06);
+      box-shadow: var(--shadow), 0 0 0 1px rgba(123, 94, 167, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
       padding: 40px 36px 36px;
-      animation: cardIn 0.7s cubic-bezier(0.22,1,0.36,1) both,
-                 borderGlow 5s ease-in-out 0.7s infinite;
+      animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both,
+        borderGlow 5s ease-in-out 0.7s infinite;
     }
+
     @keyframes cardIn {
-      from { opacity: 0; transform: translateY(28px) scale(0.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translateY(28px) scale(0.97);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
+
     @keyframes borderGlow {
-      0%, 100% { border-color: rgba(255,255,255,0.09); }
-      50%       { border-color: rgba(123,94,167,0.28); }
+
+      0%,
+      100% {
+        border-color: rgba(255, 255, 255, 0.09);
+      }
+
+      50% {
+        border-color: rgba(123, 94, 167, 0.28);
+      }
     }
 
     .card-logo {
-      display: flex; flex-direction: column; align-items: center;
-      margin-bottom: 30px; gap: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+      gap: 12px;
     }
+
     .card-logo-icon {
-      width: 60px; height: 60px; border-radius: 18px;
+      width: 60px;
+      height: 60px;
+      border-radius: 18px;
       background: var(--grad);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 0 1px rgba(123,94,167,0.4), 0 8px 28px rgba(123,94,167,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 0 1px rgba(123, 94, 167, 0.4), 0 8px 28px rgba(123, 94, 167, 0.35);
       animation: logoPulse 3s ease-in-out infinite;
     }
+
     .card-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.4rem; font-weight: 700; text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
     }
-    .card-title .grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .card-sub { font-size: 0.78rem; color: var(--text2); text-align: center; line-height: 1.5; }
+
+    .card-title .grad {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card-sub {
+      font-size: 0.78rem;
+      color: var(--text2);
+      text-align: center;
+      line-height: 1.5;
+    }
 
     /* ── Input group ── */
-    .form-section { margin-bottom: 16px; }
-    .input-label {
-      display: block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.9px;
-      text-transform: uppercase; color: var(--text2); margin-bottom: 8px;
+    .form-section {
+      margin-bottom: 16px;
     }
-    .input-wrapper { position: relative; }
+
+    .input-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
     .key-input {
       width: 100%;
-      background: rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       border-radius: 12px;
       color: var(--text);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1rem; letter-spacing: 2px;
+      font-size: 1rem;
+      letter-spacing: 2px;
       padding: 14px 50px 14px 18px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
       text-transform: uppercase;
     }
-    .key-input::placeholder { color: var(--text3); letter-spacing: 1px; font-size: 0.8rem; text-transform: none; font-family: 'Inter', sans-serif; }
-    .key-input:focus { border-color: var(--purple); background: rgba(123,94,167,0.06); box-shadow: 0 0 0 3px rgba(123,94,167,0.18); }
-    .input-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; transition: color 0.2s; }
-    .key-input:focus + .input-icon { color: var(--purple); }
+
+    .key-input::placeholder {
+      color: var(--text3);
+      letter-spacing: 1px;
+      font-size: 0.8rem;
+      text-transform: none;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .key-input:focus {
+      border-color: var(--purple);
+      background: rgba(123, 94, 167, 0.06);
+      box-shadow: 0 0 0 3px rgba(123, 94, 167, 0.18);
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .key-input:focus+.input-icon {
+      color: var(--purple);
+    }
 
     /* ── Error ── */
     .error-msg {
       margin-top: 10px;
-      background: rgba(255,77,109,0.1);
-      border: 1px solid rgba(255,77,109,0.3);
-      border-radius: 10px; padding: 11px 14px;
-      font-size: 0.79rem; color: #ff7090;
-      display: flex; align-items: center; gap: 8px;
-      opacity: 0; transform: translateY(-6px);
+      background: rgba(255, 77, 109, 0.1);
+      border: 1px solid rgba(255, 77, 109, 0.3);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 0.79rem;
+      color: #ff7090;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(-6px);
       transition: opacity 0.25s, transform 0.25s;
       pointer-events: none;
     }
-    .error-msg.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+    .error-msg.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
 
     /* ── Button ── */
     .btn-login {
-      width: 100%; margin-top: 6px;
-      background: var(--grad); border: none; border-radius: 12px;
-      color: #fff; font-family: 'Space Grotesk', sans-serif;
-      font-size: 1rem; font-weight: 600; letter-spacing: 0.3px;
-      padding: 15px; cursor: pointer;
-      position: relative; overflow: hidden;
+      width: 100%;
+      margin-top: 6px;
+      background: var(--grad);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      padding: 15px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
       transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
-      box-shadow: 0 4px 20px rgba(123,94,167,0.4);
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(123, 94, 167, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .btn-login::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent); opacity: 0; transition: opacity 0.2s; }
-    .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(123,94,167,0.55); }
-    .btn-login:hover::before { opacity: 1; }
-    .btn-login:active { transform: translateY(0); }
-    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-    .btn-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: spin 0.7s linear infinite; display: none; }
-    .btn-login.loading .btn-spinner { display: block; }
-    .btn-login.loading .btn-text, .btn-login.loading .btn-icon { display: none; }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .attempt-info { text-align: center; font-size: 0.71rem; color: var(--text3); margin-top: 14px; }
-    .attempt-info span { color: var(--text2); }
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(123, 94, 167, 0.55);
+    }
+
+    .btn-login:hover::before {
+      opacity: 1;
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .btn-login:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .btn-login.loading .btn-spinner {
+      display: block;
+    }
+
+    .btn-login.loading .btn-text,
+    .btn-login.loading .btn-icon {
+      display: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .attempt-info {
+      text-align: center;
+      font-size: 0.71rem;
+      color: var(--text3);
+      margin-top: 14px;
+    }
+
+    .attempt-info span {
+      color: var(--text2);
+    }
 
     /* ── Divider ── */
-    .divider { height: 1px; background: var(--border); margin: 22px 0; }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 22px 0;
+    }
 
     /* ── Security badges ── */
-    .badges { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-    .badge { display: flex; align-items: center; gap: 5px; font-size: 0.67rem; color: var(--text3); }
-    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.67rem;
+      color: var(--text3);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
 
     /* ── "Get a key" link ── */
     .get-key-row {
-      text-align: center; margin-top: 18px;
-      font-size: 0.75rem; color: var(--text3);
+      text-align: center;
+      margin-top: 18px;
+      font-size: 0.75rem;
+      color: var(--text3);
     }
+
     .get-key-link {
-      color: var(--blue); text-decoration: none; font-weight: 600;
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
       transition: color 0.2s;
     }
-    .get-key-link:hover { color: var(--teal); }
+
+    .get-key-link:hover {
+      color: var(--teal);
+    }
 
     /* ── Footer ── */
     .footer {
       grid-column: 1 / -1;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 16px 40px;
       border-top: 1px solid var(--border);
-      font-size: 0.7rem; color: var(--text3);
+      font-size: 0.7rem;
+      color: var(--text3);
     }
-    .footer-links { display: flex; gap: 18px; }
-    .footer-links a { color: var(--text3); text-decoration: none; transition: color 0.2s; }
-    .footer-links a:hover { color: var(--text2); }
+
+    .footer-links {
+      display: flex;
+      gap: 18px;
+    }
+
+    .footer-links a {
+      color: var(--text3);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--text2);
+    }
 
     /* ── Shake ── */
     @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      15%      { transform: translateX(-8px); }
-      30%      { transform: translateX(8px); }
-      45%      { transform: translateX(-5px); }
-      60%      { transform: translateX(5px); }
-      75%      { transform: translateX(-3px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      15% {
+        transform: translateX(-8px);
+      }
+
+      30% {
+        transform: translateX(8px);
+      }
+
+      45% {
+        transform: translateX(-5px);
+      }
+
+      60% {
+        transform: translateX(5px);
+      }
+
+      75% {
+        transform: translateX(-3px);
+      }
     }
-    .shake { animation: shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both; }
+
+    .shake {
+      animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
 
     /* ── Success overlay ── */
     .success-overlay {
-      position: fixed; inset: 0; z-index: 100;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: rgba(8,11,24,0.96); backdrop-filter: blur(16px);
-      opacity: 0; pointer-events: none; transition: opacity 0.4s;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(8, 11, 24, 0.96);
+      backdrop-filter: blur(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
     }
-    .success-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .success-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .success-icon {
-      width: 90px; height: 90px; border-radius: 50%;
-      background: linear-gradient(135deg, rgba(34,211,160,0.15), rgba(34,211,160,0.05));
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(34, 211, 160, 0.15), rgba(34, 211, 160, 0.05));
       border: 2px solid var(--green);
-      display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
-      animation: successPop 0.5s cubic-bezier(0.22,1,0.36,1) 0.2s both;
-      box-shadow: 0 0 50px rgba(34,211,160,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: successPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+      box-shadow: 0 0 50px rgba(34, 211, 160, 0.3);
     }
-    @keyframes successPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .success-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; animation: fadeUp 0.4s ease 0.4s both; }
-    .success-sub { color: var(--text2); font-size: 0.9rem; animation: fadeUp 0.4s ease 0.55s both; }
-    .success-bar-wrap { width: 260px; height: 3px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 28px; overflow: hidden; animation: fadeUp 0.4s ease 0.65s both; }
-    .success-bar { height: 100%; background: var(--green); border-radius: 2px; width: 0%; transition: width 1.8s ease; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    @keyframes successPop {
+      from {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .success-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      animation: fadeUp 0.4s ease 0.4s both;
+    }
+
+    .success-sub {
+      color: var(--text2);
+      font-size: 0.9rem;
+      animation: fadeUp 0.4s ease 0.55s both;
+    }
+
+    .success-bar-wrap {
+      width: 260px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 2px;
+      margin-top: 28px;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease 0.65s both;
+    }
+
+    .success-bar {
+      height: 100%;
+      background: var(--green);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 1.8s ease;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
     /* ── Responsive: mobile single column ── */
     @media (max-width: 900px) {
-      body { overflow-y: auto; }
-      .page { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; }
-      .topbar { padding: 16px 20px; }
-      .nav-links .nav-pill:not(.cta) { display: none; }
-      .hero-col { padding: 36px 24px; gap: 32px; }
-      .hero-headline { font-size: 2.1rem; }
-      .stats-row { gap: 12px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .login-col { padding: 28px 20px; border-left: none; border-top: 1px solid var(--border); }
-      .footer { flex-direction: column; gap: 10px; text-align: center; padding: 16px 20px; }
+      body {
+        overflow-y: auto;
+      }
+
+      .page {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto;
+      }
+
+      .topbar {
+        padding: 16px 20px;
+      }
+
+      .nav-links .nav-pill:not(.cta):not(#theme-btn) {
+        display: none;
+      }
+
+      .hero-col {
+        padding: 36px 24px;
+        gap: 32px;
+      }
+
+      .hero-headline {
+        font-size: 2.1rem;
+      }
+
+      .stats-row {
+        gap: 12px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .login-col {
+        padding: 28px 20px;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+
+      .footer {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        padding: 16px 20px;
+      }
     }
+
     @media (max-width: 480px) {
-      .login-card { padding: 28px 20px; }
-      .stats-row { flex-direction: column; }
+      .login-card {
+        padding: 28px 20px;
+      }
+
+      .stats-row {
+        flex-direction: column;
+      }
+    }
+
+    /* ── Floating Buttons ── */
+    .floating-wa, .floating-ig {
+      position: fixed;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      text-decoration: none;
+    }
+
+    .floating-wa {
+      bottom: 24px;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+    }
+
+    .floating-ig {
+      bottom: 94px;
+      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      box-shadow: 0 8px 24px rgba(220, 39, 67, 0.4);
+    }
+
+    .floating-wa::before, .floating-ig::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      animation: wa-pulse 2s infinite;
+      pointer-events: none;
+    }
+
+    .floating-wa::before {
+      border: 1px solid rgba(37, 211, 102, 0.3);
+    }
+
+    .floating-ig::before {
+      border: 1px solid rgba(220, 39, 67, 0.3);
+      animation-delay: 1s;
+    }
+
+    @keyframes wa-pulse {
+      0% {
+        transform: scale(1);
+        opacity: 0.8;
+      }
+
+      100% {
+        transform: scale(1.4);
+        opacity: 0;
+      }
+    }
+
+    .floating-wa svg, .floating-ig svg {
+      width: 30px;
+      height: 30px;
+      transition: transform 0.3s;
+    }
+
+    .floating-wa:hover, .floating-ig:hover {
+      transform: translateY(-4px) scale(1.05);
+      color: #fff;
+    }
+
+    .floating-wa:hover {
+      box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
+    }
+
+    .floating-ig:hover {
+      box-shadow: 0 12px 32px rgba(220, 39, 67, 0.5);
+    }
+
+    .floating-wa:hover svg, .floating-ig:hover svg {
+      transform: scale(1.1);
+    }
+
+    /* ── Light Mode Support ── */
+    body.light-theme {
+      --bg: #eaf0f6;
+      --bg2: #ffffff;
+      --surface: rgba(255, 255, 255, 0.45);
+      --border: rgba(0, 0, 0, 0.08);
+      --border-h: rgba(123, 94, 167, 0.25);
+      --text: #05051a;
+      --text2: rgba(5, 5, 26, 0.65);
+      --text3: rgba(5, 5, 26, 0.45);
+    }
+
+    body.light-theme .login-card {
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    body.light-theme .topbar {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    body.light-theme .ticker-wrap {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    body.light-theme .key-input {
+      color: #000;
+      border-color: rgba(0, 0, 0, 0.15);
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    body.light-theme .key-input:focus {
+      background: #fff;
+      border-color: var(--blue);
+    }
+
+    body.light-theme .contact-card {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    body.light-theme .feat-item {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    body.light-theme .stat-card {
+      background: rgba(255, 255, 255, 0.7);
+      border-color: rgba(0, 0, 0, 0.08);
+    }
+
+    body.light-theme .nav-pill {
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    body.light-theme .grid-overlay {
+      background-image:
+        linear-gradient(rgba(123, 94, 167, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(123, 94, 167, 0.05) 1px, transparent 1px);
+    }
+
+    body.light-theme .testimonial-carousel {
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), transparent);
+    }
+
+    /* ── Live Ticker ── */
+    .ticker-wrap {
+      grid-column: 1 / -1;
+      width: 100%;
+      background: rgba(8, 11, 24, 0.8);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .ticker-content {
+      display: inline-block;
+      white-space: nowrap;
+      animation: ticker 35s linear infinite;
+    }
+
+    .ticker-content:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes ticker {
+      0% {
+        transform: translateX(0);
+      }
+
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0 16px;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .ticker-sym {
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    .ticker-price {
+      color: var(--text);
+    }
+
+    .ticker-pct.up {
+      color: var(--green);
+    }
+
+    .ticker-pct.down {
+      color: var(--red);
+    }
+
+    /* ── Testimonials ── */
+    .testimonial-carousel {
+      margin-top: -10px;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      position: relative;
+    }
+
+    .test-card {
+      transition: opacity 0.5s ease;
+    }
+
+    .test-stars {
+      color: var(--gold);
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    .test-quote {
+      font-size: 0.9rem;
+      color: var(--text2);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .test-author {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    @media (max-width: 850px) {
+      .floating-wa, .floating-ig {
+        right: 20px;
+        width: 50px;
+        height: 50px;
+      }
+      .floating-wa {
+        bottom: 20px;
+      }
+      .floating-ig {
+        bottom: 82px;
+      }
+      .floating-wa svg, .floating-ig svg {
+        width: 26px;
+        height: 26px;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<!-- Background -->
-<div class="bg-orbs">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="orb orb-4"></div>
-</div>
-<canvas id="particles-canvas"></canvas>
-<div class="grid-overlay"></div>
-
-<!-- Success overlay -->
-<div class="success-overlay" id="success-overlay">
-  <div class="success-icon">
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22d3a0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
+  <!-- Background -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
   </div>
-  <div class="success-title">Access Granted ✦</div>
-  <div class="success-sub">Redirecting to TradeVision AI…</div>
-  <div class="success-bar-wrap"><div class="success-bar" id="success-bar"></div></div>
-</div>
+  <canvas id="particles-canvas"></canvas>
+  <div class="grid-overlay"></div>
 
-<!-- Page -->
-<div class="page">
-
-  <!-- Top nav -->
-  <nav class="topbar">
-    <div class="nav-brand">
-      <div class="nav-logo">
-        <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
-          <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="29" cy="17" r="2.2" fill="white"/>
-        </svg>
-      </div>
-      <span class="nav-title">TradeVision <span class="grad">AI</span></span>
+  <!-- Success overlay -->
+  <div class="success-overlay" id="success-overlay">
+    <div class="success-icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22d3a0" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
     </div>
-    <div class="nav-links">
-      <a href="https://wa.me/254768085041" target="_blank" class="nav-pill">
-        💬 WhatsApp Support
-      </a>
-      <a href="https://hfm.com/?refid=30502056" target="_blank" class="nav-pill cta">
-        Open Live Account →
-      </a>
+    <div class="success-title">Access Granted ✦</div>
+    <div class="success-sub">Redirecting to TradeVision AI…</div>
+    <div class="success-bar-wrap">
+      <div class="success-bar" id="success-bar"></div>
     </div>
-  </nav>
+  </div>
 
-  <!-- Left hero column -->
-  <main class="hero-col">
+  <!-- Page -->
+  <div class="page">
 
-    <!-- Headline -->
-    <div>
-      <div class="hero-eyebrow">
-        <span class="live-dot"></span>
-        Live Market Intelligence
-      </div>
-      <h1 class="hero-headline">
-        Trade Smarter With<br>
-        <span class="grad">AI-Powered</span><br>
-        <span class="gold">Market Analysis</span>
-      </h1>
-      <p class="hero-sub">
-        Professional-grade technical analysis for Forex, Crypto, Stocks & Commodities.
-        Real-time signals, multi-timeframe confluence, S&R zones and AI narratives — all in one platform.
-      </p>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-num">200+</div>
-        <div class="stat-label">Trading Pairs</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">8+</div>
-        <div class="stat-label">Indicators</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">4 TF</div>
-        <div class="stat-label">Confluence</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num">0 lag</div>
-        <div class="stat-label">Live Data</div>
-      </div>
-    </div>
-
-    <!-- Features -->
-    <div class="features-grid">
-      <div class="feat-item">
-        <div class="feat-icon purple">📊</div>
-        <div>
-          <div class="feat-title">Advanced TA</div>
-          <div class="feat-desc">EMA, RSI, MACD, BB, ATR, ADX, VWAP & Donchian channels</div>
-        </div>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon blue">🔀</div>
-        <div>
-          <div class="feat-title">Multi-Timeframe</div>
-          <div class="feat-desc">15m, 1H, 4H & Daily confluence analysis in one click</div>
-        </div>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon green">🎯</div>
-        <div>
-          <div class="feat-title">Smart Signals</div>
-          <div class="feat-desc">BUY/SELL with Entry, TP & SL levels and R:R ratio</div>
-        </div>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon gold">🤖</div>
-        <div>
-          <div class="feat-title">AI Narrative</div>
-          <div class="feat-desc">Natural language market analysis generated per signal</div>
-        </div>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon purple">📐</div>
-        <div>
-          <div class="feat-title">Drawing Tools</div>
-          <div class="feat-desc">Trend lines, horizontal levels and rectangles on chart</div>
-        </div>
-      </div>
-      <div class="feat-item">
-        <div class="feat-icon blue">🔔</div>
-        <div>
-          <div class="feat-title">Price Alerts</div>
-          <div class="feat-desc">Get notified when price hits your target level</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Contact & Broker -->
-    <div class="contact-strip">
-      <a href="https://wa.me/254768085041" target="_blank" class="contact-card whatsapp">
-        <div class="c-icon wa">💬</div>
-        <div>
-          <div class="c-main">WhatsApp Support</div>
-          <div class="c-sub">+254 768 085 041 · Get your activation key or ask for help</div>
-        </div>
-        <span class="c-arrow">→</span>
-      </a>
-      <a href="https://hfm.com/?refid=30502056" target="_blank" class="contact-card broker">
-        <div class="c-icon br">🏦</div>
-        <div>
-          <div class="c-main">Recommended Broker — HFM</div>
-          <div class="c-sub">hfm.com · Regulated · Low spreads · Fast execution</div>
-        </div>
-        <span class="c-arrow">→</span>
-      </a>
-    </div>
-
-  </main>
-
-  <!-- Right login column -->
-  <aside class="login-col">
-    <div class="login-card">
-
-      <div class="card-logo">
-        <div class="card-logo-icon">
-          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-            <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="29" cy="17" r="2.2" fill="white"/>
+    <!-- Top nav -->
+    <nav class="topbar">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
+            <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="29" cy="17" r="2.2" fill="white" />
           </svg>
         </div>
-        <div class="card-title">TradeVision <span class="grad">AI</span></div>
-        <div class="card-sub">Secure Access Portal<br>Enter your activation key to continue</div>
+        <span class="nav-title">TradeVision <span class="grad">AI</span></span>
+      </div>
+      <div class="nav-links">
+        <button id="theme-btn" class="nav-pill" aria-label="Toggle Theme"
+          style="padding: 6px 12px; font-size: 1rem; border:none;">🌙</button>
+        <a href="https://wa.me/254768085041" target="_blank" class="nav-pill">
+          💬 WhatsApp Support
+        </a>
+        <a href="https://hfm.com/?refid=30502056" target="_blank" class="nav-pill cta">
+          Open Live Account →
+        </a>
+      </div>
+    </nav>
+
+    <!-- Ticker -->
+    <div class="ticker-wrap">
+      <div class="ticker-content" id="ticker-content">
+        <!-- JS fills this -->
+      </div>
+    </div>
+
+    <!-- Left hero column -->
+    <main class="hero-col">
+
+      <!-- Headline -->
+      <div>
+        <div class="hero-eyebrow">
+          <span class="live-dot"></span>
+          Live Market Intelligence
+        </div>
+        <h1 class="hero-headline">
+          Trade Smarter With<br>
+          <span class="grad">AI-Powered</span><br>
+          <span class="gold">Market Analysis</span>
+        </h1>
+        <p class="hero-sub">
+          Professional-grade technical analysis for Forex, Crypto, Stocks & Commodities.
+          Real-time signals, multi-timeframe confluence, S&R zones and AI narratives — all in one platform.
+        </p>
       </div>
 
-      <!-- Input -->
-      <div class="form-section">
-        <label class="input-label" for="key-input">Activation Key</label>
-        <div class="input-wrapper">
-          <input
-            type="text"
-            id="key-input"
-            class="key-input"
-            placeholder="XXXX-XXXX-XXXX-XXXX"
-            maxlength="24"
-            autocomplete="off"
-            spellcheck="false"
-            autofocus
-          />
-          <span class="input-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num">200+</div>
+          <div class="stat-label">Trading Pairs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">8+</div>
+          <div class="stat-label">Indicators</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">4 TF</div>
+          <div class="stat-label">Confluence</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">0 lag</div>
+          <div class="stat-label">Live Data</div>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="features-grid">
+        <div class="feat-item">
+          <div class="feat-icon purple">📊</div>
+          <div>
+            <div class="feat-title">Advanced TA</div>
+            <div class="feat-desc">EMA, RSI, MACD, BB, ATR, ADX, VWAP & Donchian channels</div>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon blue">🔀</div>
+          <div>
+            <div class="feat-title">Multi-Timeframe</div>
+            <div class="feat-desc">15m, 1H, 4H & Daily confluence analysis in one click</div>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon green">🎯</div>
+          <div>
+            <div class="feat-title">Smart Signals</div>
+            <div class="feat-desc">BUY/SELL with Entry, TP & SL levels and R:R ratio</div>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon gold">🤖</div>
+          <div>
+            <div class="feat-title">AI Narrative</div>
+            <div class="feat-desc">Natural language market analysis generated per signal</div>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon purple">📐</div>
+          <div>
+            <div class="feat-title">Drawing Tools</div>
+            <div class="feat-desc">Trend lines, horizontal levels and rectangles on chart</div>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="feat-icon blue">🔔</div>
+          <div>
+            <div class="feat-title">Price Alerts</div>
+            <div class="feat-desc">Get notified when price hits your target level</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Testimonials -->
+      <div class="testimonial-carousel">
+        <div class="test-card" id="test-card">
+          <div class="test-stars">★★★★★</div>
+          <p class="test-quote" id="test-quote">"TradeVision AI paid for itself on day one. The narrative feature
+            completely reshaped how I see market structure."</p>
+          <div class="test-author" id="test-author">— Alex T.</div>
+        </div>
+      </div>
+
+      <!-- Contact & Broker -->
+      <div class="contact-strip">
+        <a href="https://wa.me/254768085041" target="_blank" class="contact-card whatsapp">
+          <div class="c-icon wa">💬</div>
+          <div>
+            <div class="c-main">WhatsApp Support</div>
+            <div class="c-sub">+254 768 085 041 · Get your activation key or ask for help</div>
+          </div>
+          <span class="c-arrow">→</span>
+        </a>
+        <a href="https://hfm.com/?refid=30502056" target="_blank" class="contact-card broker">
+          <div class="c-icon br">🏦</div>
+          <div>
+            <div class="c-main">Recommended Broker — HFM</div>
+            <div class="c-sub">hfm.com · Regulated · Low spreads · Fast execution</div>
+          </div>
+          <span class="c-arrow">→</span>
+        </a>
+      </div>
+
+    </main>
+
+    <!-- Right login column -->
+    <aside class="login-col">
+      <div class="login-card">
+
+        <div class="card-logo">
+          <div class="card-logo-icon">
+            <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+              <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <circle cx="29" cy="17" r="2.2" fill="white" />
             </svg>
-          </span>
+          </div>
+          <div class="card-title">TradeVision <span class="grad">AI</span></div>
+          <div class="card-sub">Secure Access Portal<br>Enter your activation key to continue</div>
         </div>
 
-        <div class="error-msg" id="error-msg">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        <!-- Input -->
+        <div class="form-section">
+          <label class="input-label" for="key-input">Activation Key</label>
+          <div class="input-wrapper">
+            <input type="text" id="key-input" class="key-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="24"
+              autocomplete="off" spellcheck="false" autofocus />
+            <span class="input-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </span>
+          </div>
+
+          <div class="error-msg" id="error-msg">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span id="error-text">Invalid key. Please contact admin.</span>
+          </div>
+        </div>
+
+        <!-- Button -->
+        <button class="btn-login" id="login-btn" onclick="handleLogin()">
+          <div class="btn-spinner"></div>
+          <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
           </svg>
-          <span id="error-text">Invalid key. Please contact admin.</span>
+          <span class="btn-text">Unlock Access</span>
+        </button>
+
+        <div class="attempt-info" id="attempt-info">
+          Attempts remaining: <span id="attempts-left">5</span>
         </div>
+
+        <div class="divider"></div>
+
+        <div class="badges">
+          <div class="badge">
+            <div class="badge-dot"></div> Encrypted
+          </div>
+          <div class="badge">
+            <div class="badge-dot"></div> Secure Portal
+          </div>
+          <div class="badge">
+            <div class="badge-dot"></div> 24/7 Live Data
+          </div>
+        </div>
+
+        <div class="get-key-row">
+          Don't have a key?
+          <a href="https://wa.me/254768085041" target="_blank" class="get-key-link">Contact us on WhatsApp →</a>
+        </div>
+
       </div>
+    </aside>
 
-      <!-- Button -->
-      <button class="btn-login" id="login-btn" onclick="handleLogin()">
-        <div class="btn-spinner"></div>
-        <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        <span class="btn-text">Unlock Access</span>
-      </button>
-
-      <div class="attempt-info" id="attempt-info">
-        Attempts remaining: <span id="attempts-left">5</span>
+    <!-- Footer -->
+    <footer class="footer">
+      <span>© 2026 TradeVision AI — All rights reserved</span>
+      <div class="footer-links">
+        <a href="https://wa.me/254768085041" target="_blank">Support</a>
+        <a href="https://hfm.com/?refid=30502056" target="_blank">Recommended Broker</a>
+        <span style="color:var(--text3)">v2.0</span>
       </div>
+    </footer>
 
-      <div class="divider"></div>
+  </div><!-- end .page -->
 
-      <div class="badges">
-        <div class="badge"><div class="badge-dot"></div> Encrypted</div>
-        <div class="badge"><div class="badge-dot"></div> Secure Portal</div>
-        <div class="badge"><div class="badge-dot"></div> 24/7 Live Data</div>
-      </div>
+  <!-- Floating IG Button -->
+  <a href="https://instagram.com/lewis.ict" target="_blank" class="floating-ig" aria-label="Follow us on Instagram">
+    <svg viewBox="0 0 448 512" fill="currentColor">
+      <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/>
+    </svg>
+  </a>
 
-      <div class="get-key-row">
-        Don't have a key?
-        <a href="https://wa.me/254768085041" target="_blank" class="get-key-link">Contact us on WhatsApp →</a>
-      </div>
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/254768085041" target="_blank" class="floating-wa" aria-label="Contact us on WhatsApp">
+    <svg viewBox="0 0 448 512" fill="currentColor">
+      <path
+        d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+    </svg>
+  </a>
 
-    </div>
-  </aside>
+  <script>
+    // ── Activation Keys ──────────────────────────────────────────────────
+    const ACTIVATION_KEYS = [
+      'TV-A7K2-X9NP-QR45',
+      'TV-B3M8-LZ7W-FG12',
+      'TV-C5R1-YH6T-DJ89',
+      'TV-D9P4-KU3V-SM67',
+      'TV-E2N7-WB8Q-TL34',
+      'TV-F6J3-XC1M-HK90',
+      'TV-G8L5-ZN4R-PW23',
+      'TV-H1K9-VF7B-EU56',
+      'TV-I4Q2-YM6D-AC78',
+      'TV-J7W8-TH9G-NB01',
+      'TV-K3X6-RL2S-FD45',
+      'TV-L5B1-QP4N-ZJ67',
+      'TV-M9V3-UK7W-XE89',
+      'TRADINGAI2026',
+      'AUREX',
+      'OJ',
+    ];
 
-  <!-- Footer -->
-  <footer class="footer">
-    <span>© 2025 TradeVision AI — All rights reserved</span>
-    <div class="footer-links">
-      <a href="https://wa.me/254768085041" target="_blank">Support</a>
-      <a href="https://hfm.com/?refid=30502056" target="_blank">Recommended Broker</a>
-      <span style="color:var(--text3)">v2.0</span>
-    </div>
-  </footer>
+    let attemptsLeft = 5;
+    let locked = false;
 
-</div><!-- end .page -->
-
-<script>
-  // ── Activation Keys ──────────────────────────────────────────────────
-  const ACTIVATION_KEYS = [
-    'TV-A7K2-X9NP-QR45',
-    'TV-B3M8-LZ7W-FG12',
-    'TV-C5R1-YH6T-DJ89',
-    'TV-D9P4-KU3V-SM67',
-    'TV-E2N7-WB8Q-TL34',
-    'TV-F6J3-XC1M-HK90',
-    'TV-G8L5-ZN4R-PW23',
-    'TV-H1K9-VF7B-EU56',
-    'TV-I4Q2-YM6D-AC78',
-    'TV-J7W8-TH9G-NB01',
-    'TV-K3X6-RL2S-FD45',
-    'TV-L5B1-QP4N-ZJ67',
-    'TV-M9V3-UK7W-XE89',
-    'AUREX',
-    'TRADINGAI2026',
-    'OJ',
-  ];
-
-  let attemptsLeft = 5;
-  let locked = false;
-
-  const keyInput = document.getElementById('key-input');
-  keyInput.addEventListener('input', function () {
-    let val = this.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
-    this.value = val;
-    hideError();
-  });
-  keyInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') handleLogin();
-  });
-
-  function handleLogin() {
-    if (locked) return;
-    const inputKey = keyInput.value.trim().toUpperCase();
-    if (!inputKey) { showError('Please enter your activation key.'); shakeInput(); return; }
-
-    const btn = document.getElementById('login-btn');
-    btn.classList.add('loading'); btn.disabled = true;
-
-    setTimeout(() => {
-      btn.classList.remove('loading'); btn.disabled = false;
-
-      if (ACTIVATION_KEYS.includes(inputKey)) {
-        showSuccess();
-      } else {
-        attemptsLeft--;
-        document.getElementById('attempts-left').textContent = attemptsLeft;
-        shakeInput();
-
-        if (attemptsLeft <= 0) {
-          locked = true;
-          showError('Too many failed attempts. Contact admin on WhatsApp.');
-          keyInput.disabled = true; btn.disabled = true;
-          document.getElementById('attempt-info').innerHTML =
-            '⛔ Access locked. <a href="https://wa.me/254768085041" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
-        } else {
-          showError(`Invalid key. Please contact admin. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
-        }
-        keyInput.value = ''; keyInput.focus();
-      }
-    }, 900);
-  }
-
-  function showError(msg) {
-    const err = document.getElementById('error-msg');
-    document.getElementById('error-text').textContent = msg;
-    err.style.opacity = '0'; err.style.display = 'flex';
-    requestAnimationFrame(() => err.classList.add('show'));
-  }
-  function hideError() {
-    const err = document.getElementById('error-msg');
-    err.classList.remove('show');
-    setTimeout(() => { if (!err.classList.contains('show')) err.style.display = 'none'; }, 300);
-  }
-  function shakeInput() {
-    const wrap = document.querySelector('.input-wrapper');
-    wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
-    setTimeout(() => wrap.classList.remove('shake'), 500);
-  }
-  function showSuccess() {
-    sessionStorage.setItem('tv_auth', 'granted');
-    const overlay = document.getElementById('success-overlay');
-    overlay.classList.add('show');
-    setTimeout(() => { document.getElementById('success-bar').style.width = '100%'; }, 100);
-    setTimeout(() => { window.location.href = 'index.html'; }, 2200);
-  }
-
-  // ── Particles ────────────────────────────────────────────────────────
-  const canvas = document.getElementById('particles-canvas');
-  const ctx = canvas.getContext('2d');
-  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-
-  const particles = Array.from({ length: 80 }, () => ({
-    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-    r: Math.random() * 1.2 + 0.3,
-    dx: (Math.random() - 0.5) * 0.28, dy: (Math.random() - 0.5) * 0.28,
-    alpha: Math.random() * 0.4 + 0.08,
-    color: ['123,94,167','79,172,254','34,211,160','249,168,37'][Math.floor(Math.random()*4)],
-  }));
-
-  function drawParticles() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${p.color},${p.alpha})`; ctx.fill();
-      p.x += p.dx; p.y += p.dy;
-      if (p.x < 0 || p.x > canvas.width)  p.dx *= -1;
-      if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+    const keyInput = document.getElementById('key-input');
+    keyInput.addEventListener('input', function () {
+      let val = this.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+      this.value = val;
+      hideError();
     });
-    requestAnimationFrame(drawParticles);
-  }
-  drawParticles();
-</script>
+    keyInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') handleLogin();
+    });
+
+    function handleLogin() {
+      if (locked) return;
+      const inputKey = keyInput.value.trim().toUpperCase();
+      if (!inputKey) { showError('Please enter your activation key.'); shakeInput(); return; }
+
+      const btn = document.getElementById('login-btn');
+      btn.classList.add('loading'); btn.disabled = true;
+
+      setTimeout(() => {
+        btn.classList.remove('loading'); btn.disabled = false;
+
+        if (ACTIVATION_KEYS.includes(inputKey)) {
+          showSuccess();
+        } else {
+          attemptsLeft--;
+          document.getElementById('attempts-left').textContent = attemptsLeft;
+          shakeInput();
+
+          if (attemptsLeft <= 0) {
+            locked = true;
+            showError('Too many failed attempts. Contact admin on WhatsApp.');
+            keyInput.disabled = true; btn.disabled = true;
+            document.getElementById('attempt-info').innerHTML =
+              '⛔ Access locked. <a href="https://wa.me/254768085041" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
+          } else {
+            showError(`Invalid key. Please contact admin. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
+          }
+          keyInput.value = ''; keyInput.focus();
+        }
+      }, 900);
+    }
+
+    function showError(msg) {
+      const err = document.getElementById('error-msg');
+      document.getElementById('error-text').textContent = msg;
+      err.style.opacity = '0'; err.style.display = 'flex';
+      requestAnimationFrame(() => err.classList.add('show'));
+    }
+    function hideError() {
+      const err = document.getElementById('error-msg');
+      err.classList.remove('show');
+      setTimeout(() => { if (!err.classList.contains('show')) err.style.display = 'none'; }, 300);
+    }
+    function shakeInput() {
+      const wrap = document.querySelector('.input-wrapper');
+      wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+      setTimeout(() => wrap.classList.remove('shake'), 500);
+    }
+    function showSuccess() {
+      sessionStorage.setItem('tv_auth', 'granted');
+      const overlay = document.getElementById('success-overlay');
+      overlay.classList.add('show');
+      setTimeout(() => { document.getElementById('success-bar').style.width = '100%'; }, 100);
+      setTimeout(() => { window.location.href = 'index.html'; }, 2200);
+    }
+
+    // ── Dark/Light Mode ──────────────────────────────────────────────────
+    const themeBtn = document.getElementById('theme-btn');
+    if (localStorage.getItem('tv_theme') === 'light') {
+      document.body.classList.add('light-theme');
+      themeBtn.textContent = '☀️';
+    }
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      themeBtn.textContent = isLight ? '☀️' : '🌙';
+      localStorage.setItem('tv_theme', isLight ? 'light' : 'dark');
+    });
+
+    // ── Ticker ───────────────────────────────────────────────────────────
+    const tickerPairs = [
+      { s: 'BTC/USDT', p: '64,230.50', c: '+1.4%', dir: 'up' },
+      { s: 'ETH/USDT', p: '3,450.20', c: '+2.1%', dir: 'up' },
+      { s: 'EUR/USD', p: '1.0924', c: '-0.1%', dir: 'down' },
+      { s: 'GBP/USD', p: '1.2640', c: '+0.2%', dir: 'up' },
+      { s: 'GOLD', p: '2,340.10', c: '+0.8%', dir: 'up' },
+      { s: 'NASDAQ', p: '18,240.2', c: '+1.1%', dir: 'up' },
+      { s: 'SOL/USDT', p: '142.50', c: '-1.2%', dir: 'down' },
+      { s: 'TSLA', p: '175.20', c: '+2.4%', dir: 'up' }
+    ];
+    let tickerHtml = '';
+    tickerPairs.forEach(t => {
+      tickerHtml += `<span class="ticker-item"><span class="ticker-sym">${t.s}</span><span class="ticker-price">${t.p}</span><span class="ticker-pct ${t.dir}">${t.c}</span></span>`;
+    });
+    // Duplicate for seamless scroll
+    document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml + tickerHtml + tickerHtml;
+
+    // ── Testimonials ─────────────────────────────────────────────────────
+    const testimonials = [
+      { q: '"TradeVision AI paid for itself on day one. The narrative feature completely reshaped how I see market structure."', a: '— Alex T.' },
+      { q: '"Finally, a tool that combines multi-timeframe confluence automatically. Saves me hours of manual charting."', a: '— Sarah M.' },
+      { q: '"The sniper entries from the AI signals are incredibly accurate. Highly recommend for any serious trader."', a: '— David K.' },
+      { q: '"Its ability to filter out fake breakouts using volume and RSI variance gives me so much confidence."', a: '— Mark L.' }
+    ];
+    let testIdx = 0;
+    setInterval(() => {
+      const card = document.getElementById('test-card');
+      card.style.opacity = '0';
+      setTimeout(() => {
+        testIdx = (testIdx + 1) % testimonials.length;
+        document.getElementById('test-quote').textContent = testimonials[testIdx].q;
+        document.getElementById('test-author').textContent = testimonials[testIdx].a;
+        card.style.opacity = '1';
+      }, 500);
+    }, 6000);
+
+    // ── Background Chart Elements ────────────────────────────────────────
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+
+    const candles = Array.from({ length: 35 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      w: Math.random() * 6 + 4,
+      h: Math.random() * 40 + 20,
+      wick: Math.random() * 40 + 20,
+      dx: (Math.random() - 0.5) * 0.4,
+      dy: (Math.random() - 0.5) * 0.4,
+      alpha: Math.random() * 0.15 + 0.05,
+      isBull: Math.random() > 0.5
+    }));
+
+    function drawChartElements() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const isLight = document.body.classList.contains('light-theme');
+
+      // Draw EMA Wave faintly in bg
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      for (let i = 0; i < canvas.width; i += 20) {
+        let y = canvas.height / 2 + Math.sin(i / 150 + Date.now() / 2000) * 100 + Math.cos(i / 80) * 50;
+        ctx.lineTo(i, y);
+      }
+      ctx.strokeStyle = isLight ? 'rgba(79,172,254,0.15)' : 'rgba(79,172,254,0.08)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      candles.forEach(c => {
+        const col = c.isBull ? (isLight ? '0,166,80' : '34,211,160') : (isLight ? '211,47,47' : '255,77,109');
+
+        ctx.fillStyle = `rgba(${col},${c.alpha})`;
+        ctx.strokeStyle = `rgba(${col},${c.alpha})`;
+        ctx.lineWidth = 1.5;
+
+        // Draw Wick
+        ctx.beginPath();
+        ctx.moveTo(c.x + c.w / 2, c.y - c.wick / 2);
+        ctx.lineTo(c.x + c.w / 2, c.y + c.h + c.wick / 2);
+        ctx.stroke();
+
+        // Draw Body
+        ctx.fillRect(c.x, c.y, c.w, c.h);
+
+        c.x += c.dx; c.y += c.dy;
+        if (c.x < -50 || c.x > canvas.width + 50) c.dx *= -1;
+        if (c.y < -50 || c.y > canvas.height + 50) c.dy *= -1;
+      });
+      requestAnimationFrame(drawChartElements);
+    }
+    drawChartElements();
+  </script>
 
 </body>
+
 </html>
