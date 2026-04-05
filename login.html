@@ -813,6 +813,276 @@
       color: var(--teal);
     }
 
+    /* ── Tabs ── */
+    .login-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      border-radius: 10px;
+      color: var(--text2);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: rgba(123, 94, 167, 0.2);
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(123, 94, 167, 0.3);
+    }
+
+    /* ── Pricing ── */
+    .pricing-plans {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .pricing-plan {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      transition: all 0.3s ease;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .pricing-plan:hover {
+      border-color: rgba(79, 172, 254, 0.4);
+      background: rgba(79, 172, 254, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .pricing-plan.popular {
+      border-color: rgba(123, 94, 167, 0.5);
+      background: rgba(123, 94, 167, 0.08);
+      box-shadow: 0 8px 24px rgba(123, 94, 167, 0.15);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--grad);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 12px rgba(123, 94, 167, 0.4);
+      white-space: nowrap;
+    }
+
+    .plan-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+
+    .plan-price {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .plan-period {
+      font-size: 1rem;
+      color: var(--text3);
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .plan-btn {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .plan-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .pricing-plan.popular .plan-btn {
+      background: var(--grad);
+      border: none;
+      box-shadow: 0 4px 15px rgba(123, 94, 167, 0.3);
+    }
+
+    .pricing-plan.popular .plan-btn:hover {
+      box-shadow: 0 6px 20px rgba(123, 94, 167, 0.5);
+      transform: translateY(-1px);
+    }
+
+    body.light-theme .login-tabs {
+       background: rgba(0,0,0,0.03);
+    }
+    body.light-theme .tab-btn.active {
+       background: #fff;
+       border-color: rgba(0,0,0,0.1);
+    }
+    body.light-theme .pricing-plan {
+       background: rgba(255,255,255,0.7);
+    }
+    body.light-theme .pricing-plan.popular {
+       background: rgba(123, 94, 167, 0.05);
+    }
+    body.light-theme .plan-btn {
+       background: rgba(0,0,0,0.05);
+       color: #000;
+       border-color: rgba(0,0,0,0.1);
+    }
+    body.light-theme .plan-btn:hover {
+       background: rgba(0,0,0,0.1);
+    }
+    body.light-theme .pricing-plan.popular .plan-btn {
+       color: #fff;
+    }
+
+    .plan-discount {
+      display: inline-block;
+      margin: 0 auto 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--green);
+      background: rgba(34, 211, 160, 0.1);
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(34, 211, 160, 0.2);
+    }
+
+    .negotiate-wrap {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .negotiate-btn {
+      background: transparent;
+      border: 1px dashed rgba(79, 172, 254, 0.4);
+      color: var(--text2);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .negotiate-btn:hover {
+      border-style: solid;
+      border-color: var(--blue);
+      color: var(--text);
+      background: rgba(79, 172, 254, 0.06);
+    }
+
+    body.light-theme .plan-discount {
+      background: rgba(34, 211, 160, 0.15);
+      border-color: rgba(34, 211, 160, 0.3);
+      color: #0d8a63;
+    }
+
+    /* ── Payment Methods ── */
+    .payment-methods-wrap {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .payment-methods-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .payment-icons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .payment-icons:hover {
+      opacity: 1;
+    }
+
+    .pay-icon {
+      height: 20px;
+      filter: grayscale(1) brightness(1.5);
+      transition: filter 0.3s, transform 0.2s;
+      cursor: help;
+    }
+
+    .pay-icon:hover {
+      filter: none;
+      transform: translateY(-2px);
+    }
+
+    body.light-theme .pay-icon {
+      filter: grayscale(1) brightness(0.5);
+    }
+
+    body.light-theme .pay-icon:hover {
+      filter: none;
+    }
+
+    body.light-theme .negotiate-wrap {
+      border-color: rgba(0,0,0,0.1);
+    }
+
+    body.light-theme .negotiate-btn {
+      border-color: rgba(0,0,0,0.2);
+      color: #000;
+    }
+
+    body.light-theme .negotiate-btn:hover {
+      background: rgba(0,0,0,0.05);
+      border-color: var(--blue);
+    }
+
     /* ── Footer ── */
     .footer {
       grid-column: 1 / -1;
@@ -1482,8 +1752,15 @@
           <div class="card-sub">Secure Access Portal<br>Enter your activation key to continue</div>
         </div>
 
-        <!-- Input -->
-        <div class="form-section">
+        <!-- Tabs -->
+        <div class="login-tabs">
+          <button class="tab-btn active" id="tab-login" onclick="switchLoginTab('login')">Activation Key</button>
+          <button class="tab-btn" id="tab-pricing" onclick="switchLoginTab('pricing')">Pricing Plans</button>
+        </div>
+
+        <div id="login-view">
+          <!-- Input -->
+          <div class="form-section">
           <label class="input-label" for="key-input">Activation Key</label>
           <div class="input-wrapper">
             <input type="text" id="key-input" class="key-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="24"
@@ -1539,8 +1816,84 @@
 
         <div class="get-key-row">
           Don't have a key?
-          <a href="https://wa.me/254768085041" target="_blank" class="get-key-link">Contact us on WhatsApp →</a>
+          <a href="javascript:void(0)" onclick="switchLoginTab('pricing')" class="get-key-link">View Pricing Plans →</a>
         </div>
+
+        </div> <!-- end login-view -->
+
+        <div id="pricing-view" style="display: none;">
+          <div class="pricing-plans">
+            <div class="pricing-plan">
+              <div>
+                <div class="plan-title">Monthly</div>
+                <div class="plan-price">$50<span class="plan-period" style="font-size:0.8rem">/mo</span></div>
+              </div>
+              <a href="https://wa.me/254768085041?text=Hi,%20I'm%20interested%20in%20the%20Monthly%20plan%20($50)%20for%20TradeVision%20AI" target="_blank" class="plan-btn">Select</a>
+            </div>
+            <div class="pricing-plan popular">
+              <div class="popular-badge">Popular</div>
+              <div>
+                <div class="plan-title">Quarterly</div>
+                <div class="plan-price">$100<span class="plan-period" style="font-size:0.8rem">/3mo</span></div>
+                <div class="plan-discount">Save 33% ($50)</div>
+              </div>
+              <a href="https://wa.me/254768085041?text=Hi,%20I'm%20interested%20in%20the%20Quarterly%20plan%20($100)%20for%20TradeVision%20AI" target="_blank" class="plan-btn">Select</a>
+            </div>
+            <div class="pricing-plan">
+              <div>
+                <div class="plan-title">Yearly</div>
+                <div class="plan-price">$500<span class="plan-period" style="font-size:0.8rem">/yr</span></div>
+                <div class="plan-discount">Save 16% ($100)</div>
+              </div>
+              <a href="https://wa.me/254768085041?text=Hi,%20I'm%20interested%20in%20the%20Yearly%20plan%20($500)%20for%20TradeVision%20AI" target="_blank" class="plan-btn">Select</a>
+            </div>
+            <div class="pricing-plan" style="border-color: rgba(249, 168, 37, 0.4); background: rgba(249, 168, 37, 0.05);">
+              <div>
+                <div class="plan-title" style="color: var(--gold);">Lifetime</div>
+                <div class="plan-price">$1200<span class="plan-period" style="font-size: 0.75rem;">/once</span></div>
+                <div class="plan-discount" style="background: rgba(249, 168, 37, 0.1); border-color: rgba(249, 168, 37, 0.2); color: var(--gold);">Best Value</div>
+              </div>
+              <a href="https://wa.me/254768085041?text=Hi,%20I'm%20interested%20in%20the%20Lifetime%20plan%20($1200)%20for%20TradeVision%20AI" target="_blank" class="plan-btn" style="background: rgba(249, 168, 37, 0.1); border-color: rgba(249, 168, 37, 0.3); color: var(--gold);">Select</a>
+            </div>
+          </div>
+          
+          <div class="negotiate-wrap">
+            <button class="negotiate-btn" onclick="window.open('https://wa.me/254768085041?text=Hi,%20I%20would%20like%20to%20discuss%20a%20custom%20pricing%20plan%20for%20TradeVision%20AI', '_blank')">Want to negotiate a price?</button>
+          </div>
+
+          <div class="payment-methods-wrap">
+            <div class="payment-methods-title">Accepted Payment Methods</div>
+            <div class="payment-icons">
+              <!-- Crypto -->
+              <svg class="pay-icon" viewBox="0 0 24 24" fill="#F7931A" title="Crypto (BTC/USDT/ETH)">
+                <path d="M23.638 14.904c-1.232 4.945-6.25 8.012-11.192 6.779-4.941-1.233-8.01-6.249-6.777-11.192 1.231-4.942 6.248-8.012 11.192-6.779 4.941 1.234 8.011 6.249 6.777 11.192zm-5.053-4.048c.328-2.186-1.336-3.363-3.609-4.148l.737-2.956-1.8-.449-.718 2.881c-.473-.118-.958-.229-1.442-.338l.723-2.898-1.799-.449-.738 2.959c-.391-.09-.773-.178-1.144-.271l.001-.005-2.482-.62-.479 1.921s1.335.306 1.306.325c.728.182.86.666.838 1.051l-.839 3.366c.05.013.116.03.188.057l-.19-.048-1.176 4.717c-.089.222-.315.555-.824.428.018.026-1.306-.325-1.306-.325l-.894 2.062 2.342.584c.436.109.864.221 1.285.326l-.744 2.986 1.8.449.738-2.959c.491.134.969.259 1.439.378l-.734 2.943 1.8.449.743-2.983c3.076.582 5.394.348 6.368-2.435.786-2.241-.039-3.535-1.656-4.382 1.177-.272 2.065-1.047 2.304-2.651zm-4.116 5.795c-.558 2.239-4.331 1.029-5.553.725l.991-3.971c1.222.304 5.129.904 4.562 3.246zm1.041-5.83c-.508 2.041-3.652 1.004-4.669.752l.9-3.606c1.017.253 4.286.726 3.769 2.854z" />
+              </svg>
+              <!-- PayPal -->
+              <svg class="pay-icon" viewBox="0 0 24 24" fill="#003087" title="PayPal">
+                <path d="M20.067 6.378c-.139 2.344-1.419 4.456-3.393 5.367-2.093.971-4.281 1.333-6.505 1.333h-1.482c-.439 0-.811.302-.894.733l-1.319 6.814c-.04.211.122.404.337.404h3.629c.433 0 .8.307.882.732l.033.167c.071.353.38.604.74.604h2.254c.352 0 .638-.286.638-.638 0-.074-.012-.147-.037-.215l-.462-1.238c-.083-.223-.002-.472.195-.602 2.164-1.42 3.673-4.041 3.673-6.845 0-2.39-1.125-4.526-2.884-5.834l-.043.149c-.198.814-.524 1.554-.932 2.203l-.045.066zm-5.694-5.378h-7.143c-.439 0-.811.302-.894.733l-2.32 11.986c-.021.112-.001.227.057.327.058.1.155.176.269.212l2.678.85c.168.053.351.01.483-.11.132-.119.191-.294.159-.467l-.768-4.044c-.083-.431.249-.833.688-.833h2.366c4.61 0 8.016-1.921 8.016-5.833 0-2.333-1.638-3.831-4.591-3.831z" />
+              </svg>
+              <!-- Skrill (Representative) -->
+              <div class="pay-icon" style="background:#802060; color:#fff; padding:0 6px; border-radius:4px; font-weight:800; font-size:10px; line-height:20px; filter: grayscale(1);">SKRILL</div>
+              <!-- BinancePay -->
+              <svg class="pay-icon" viewBox="0 0 24 24" fill="#FCD535" title="BinancePay">
+                <path d="M12.001 0l-1.944 1.944h3.888l-1.944-1.944zM4.113 4.113l-1.944 1.944 1.944 1.944 1.944-1.944-1.944-1.944zM19.887 4.113l-1.944 1.944 1.944 1.944 1.944-1.944-1.944-1.944zM0 12l1.944-1.944v3.888l-1.944-1.944zM24 12l-1.944-1.944v3.888l1.944-1.944zM4.113 16l1.944 1.944-1.944 1.944-1.944-1.944 1.944-1.944zM19.887 16l1.944 1.944-1.944 1.944-1.944-1.944 1.944-1.944zM12 24l1.944-1.944h-3.888l1.944 1.944zM12 6.5l2.75 2.75 2.75-2.75L12 1 6.5 6.5l2.75 2.75 2.75-2.75zM12 17.5l-2.75-2.75-2.75 2.75 5.5 5.5 5.5-5.5-2.75-2.75-2.75 2.75zM17.5 12l-2.75-2.75 2.75-2.75 5.5 5.5-5.5 5.5-2.75-2.75 2.75-2.75zM6.5 12l2.75 2.75-2.75 2.75-5.5-5.5 5.5-5.5 2.75 2.75-2.75 2.75z" />
+              </svg>
+              <!-- Bybit Pay (Rep) -->
+              <div class="pay-icon" style="background:#000; color:#F7A600; padding:0 6px; border-radius:4px; font-weight:800; font-size:10px; line-height:20px; filter: grayscale(1);">BYBIT</div>
+              <!-- M-Pesa (Rep) -->
+              <div class="pay-icon" style="background:#49AA46; color:#fff; padding:0 6px; border-radius:4px; font-weight:800; font-size:10px; line-height:20px; filter: grayscale(1);">M-PESA</div>
+              <!-- Wire Transfer -->
+              <svg class="pay-icon" viewBox="0 0 24 24" fill="currentColor" title="Wire Transfer">
+                <path d="M2 20h20v2H2v-2zm10-18L1 8h22L12 2zM3.97 9v9h3V9h-3zm6.03 0v9h3V9h-3zm6.03 0v9h3V9h-3z" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="get-key-row">
+            Already have a key?
+            <a href="javascript:void(0)" onclick="switchLoginTab('login')" class="get-key-link">Enter Activation Key →</a>
+          </div>
+        </div> <!-- end pricing-view -->
 
       </div>
     </aside>
@@ -1605,6 +1958,25 @@
     keyInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') handleLogin();
     });
+
+    function switchLoginTab(tab) {
+      const loginView = document.getElementById('login-view');
+      const pricingView = document.getElementById('pricing-view');
+      const tabLogin = document.getElementById('tab-login');
+      const tabPricing = document.getElementById('tab-pricing');
+      
+      if (tab === 'login') {
+        loginView.style.display = 'block';
+        pricingView.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabPricing.classList.remove('active');
+      } else {
+        loginView.style.display = 'none';
+        pricingView.style.display = 'block';
+        tabLogin.classList.remove('active');
+        tabPricing.classList.add('active');
+      }
+    }
 
     function handleLogin() {
       if (locked) return;
