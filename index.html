@@ -1,368 +1,503 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>TradeVision AI – Live Chart Analyzer</title>
-  <meta name="description" content="Advanced real-time trading analysis with AI narrative, multi-timeframe confluence, market structure, S/R zones, Fibonacci, divergence detection, and more."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
+  <meta name="description"
+    content="Advanced real-time trading analysis with AI narrative, multi-timeframe confluence, market structure, S/R zones, Fibonacci, divergence detection, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<div class="bg-orbs">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="orb orb-4"></div>
-</div>
-<canvas id="particles-canvas"></canvas>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+  <canvas id="particles-canvas"></canvas>
 
-<div class="app">
+  <div class="app">
 
-  <!-- ── HEADER ── -->
-  <header class="header glass">
-    <div class="header-left">
-      <div class="logo-mark">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-          <circle cx="18" cy="18" r="18" fill="url(#hg)"/>
-          <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="29" cy="17" r="2" fill="white"/>
-          <defs><linearGradient id="hg" x1="0" y1="0" x2="36" y2="36"><stop stop-color="#7B5EA7"/><stop offset="1" stop-color="#4FACFE"/></linearGradient></defs>
-        </svg>
-      </div>
-      <div>
-        <h1 class="logo-name">TradeVision <span class="grad">AI</span></h1>
-        <p class="logo-sub">Advanced Market Intelligence Portal</p>
-      </div>
-    </div>
-    <div class="header-right">
-      <button id="theme-btn" class="theme-btn" aria-label="Toggle Theme">🌙</button>
-      <div class="live-badge"><span class="live-dot"></span>Live Data</div>
-    </div>
-  </header>
-
-  <!-- ── MAIN LAYOUT ── -->
-  <div class="layout">
-
-    <!-- ══ LEFT SIDEBAR ══ -->
-    <aside class="sidebar">
-
-      <!-- 01 · Select Pair -->
-      <div class="card glass pair-card">
-        <div class="card-label">01 · Select Pair</div>
-        <div class="local-search-wrap">
-          <div class="ls-input-row glass">
-            <div class="ls-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </div>
-            <input type="text" id="local-search" class="pair-input ls-input" placeholder="Search available pairs..." autocomplete="off" spellcheck="false" />
-          </div>
-          <div class="local-suggestions" id="local-suggestions" style="display:none"></div>
-        </div>
-
-        <div class="custom-selects">
-          <input type="hidden" id="pair-input" value="" />
-          
-          <div class="select-wrapper crypto-wrap">
-            <div class="sw-icon">₿</div>
-            <select class="c-select" data-type="crypto">
-              <option value="" disabled selected>Crypto Pairs</option>
-              <option value="BTCUSDT">BTC/USDT</option>
-              <option value="ETHUSDT">ETH/USDT</option>
-              <option value="SOLUSDT">SOL/USDT</option>
-              <option value="XRPUSDT">XRP/USDT</option>
-              <option value="BNBUSDT">BNB/USDT</option>
-              <option value="DOGEUSDT">DOGE/USDT</option>
-              <option value="ADAUSDT">ADA/USDT</option>
-              <option value="DOTUSDT">DOT/USDT</option>
-              <option value="MATICUSDT">MATIC/USDT</option>
-              <option value="SHIBUSDT">SHIB/USDT</option>
-              <option value="AVAXUSDT">AVAX/USDT</option>
-              <option value="LINKUSDT">LINK/USDT</option>
-              <option value="ATOMUSDT">ATOM/USDT</option>
-              <option value="NEARUSDT">NEAR/USDT</option>
-              <option value="LTCUSDT">LTC/USDT</option>
-              <option value="FTMUSDT">FTM/USDT</option>
-              <option value="BCHUSDT">BCH/USDT</option>
-              <option value="ALGOUSDT">ALGO/USDT</option>
-            </select>
-            <div class="sw-arrow">▼</div>
-          </div>
-
-          <div class="select-wrapper forex-wrap">
-            <div class="sw-icon">FX</div>
-            <select class="c-select" data-type="forex">
-              <option value="" disabled selected>Forex Pairs</option>
-              <option value="EURUSD">EUR/USD</option>
-              <option value="GBPUSD">GBP/USD</option>
-              <option value="USDJPY">USD/JPY</option>
-              <option value="AUDUSD">AUD/USD</option>
-              <option value="USDCAD">USD/CAD</option>
-              <option value="USDCHF">USD/CHF</option>
-              <option value="NZDUSD">NZD/USD</option>
-              <option value="EURJPY">EUR/JPY</option>
-              <option value="GBPJPY">GBP/JPY</option>
-              <option value="AUDJPY">AUD/JPY</option>
-              <option value="CADJPY">CAD/JPY</option>
-              <option value="CHFJPY">CHF/JPY</option>
-              <option value="EURAUD">EUR/AUD</option>
-              <option value="EURGBP">EUR/GBP</option>
-              <option value="EURCAD">EUR/CAD</option>
-              <option value="EURCHF">EUR/CHF</option>
-              <option value="GBPAUD">GBP/AUD</option>
-              <option value="GBPCAD">GBP/CAD</option>
-            </select>
-            <div class="sw-arrow">▼</div>
-          </div>
-
-          <div class="select-wrapper stock-wrap">
-            <div class="sw-icon">$</div>
-            <select class="c-select" data-type="stock">
-              <option value="" disabled selected>Stocks</option>
-              <option value="AAPL">Apple (AAPL)</option>
-              <option value="NVDA">Nvidia (NVDA)</option>
-              <option value="TSLA">Tesla (TSLA)</option>
-              <option value="MSFT">Microsoft (MSFT)</option>
-              <option value="GOOGL">Alphabet (GOOGL)</option>
-              <option value="AMZN">Amazon (AMZN)</option>
-              <option value="META">Meta (META)</option>
-              <option value="NFLX">Netflix (NFLX)</option>
-              <option value="AMD">AMD (AMD)</option>
-              <option value="INTC">Intel (INTC)</option>
-              <option value="BA">Boeing (BA)</option>
-              <option value="DIS">Disney (DIS)</option>
-              <option value="JPM">JPMorgan (JPM)</option>
-              <option value="V">Visa (V)</option>
-              <option value="WMT">Walmart (WMT)</option>
-              <option value="KO">Coca-Cola (KO)</option>
-            </select>
-            <div class="sw-arrow">▼</div>
-          </div>
-
-          <div class="select-wrapper index-wrap">
-            <div class="sw-icon">◱</div>
-            <select class="c-select" data-type="index">
-              <option value="" disabled selected>Indices</option>
-              <option value="US30">Dow Jones (US30)</option>
-              <option value="NASDAQ">NASDAQ 100</option>
-              <option value="SP500">S&amp;P 500</option>
-              <option value="DAX40">DAX 40 (Germany)</option>
-            </select>
-            <div class="sw-arrow">▼</div>
-          </div>
-
-          <div class="select-wrapper com-wrap">
-            <div class="sw-icon">☼</div>
-            <select class="c-select" data-type="commodity">
-              <option value="" disabled selected>Commodities</option>
-              <option value="GOLD">Gold</option>
-              <option value="SILVER">Silver</option>
-              <option value="OIL">Crude Oil</option>
-            </select>
-            <div class="sw-arrow">▼</div>
-          </div>
-        </div>
-
-        <!-- Timeframe -->
-        <div class="card-label" style="margin-top:14px">Timeframe</div>
-        <div class="tf-row tf-row-wrap">
-          <button class="tf-btn" data-tf="1m">1m</button>
-          <button class="tf-btn" data-tf="3m">3m</button>
-          <button class="tf-btn" data-tf="5m">5m</button>
-          <button class="tf-btn" data-tf="15m">15m</button>
-          <button class="tf-btn active" data-tf="1h">1H</button>
-          <button class="tf-btn" data-tf="4h">4H</button>
-          <button class="tf-btn" data-tf="1d">1D</button>
-        </div>
-
-        <!-- Risk/Reward -->
-        <div class="card-label" style="margin-top:14px">Risk : Reward</div>
-        <div class="tf-row">
-          <button class="tf-btn rr-btn" data-rr="1">1:1</button>
-          <button class="tf-btn rr-btn" data-rr="1.5">1:1.5</button>
-          <button class="tf-btn rr-btn active" data-rr="2.2">1:2.2</button>
-          <button class="tf-btn rr-btn" data-rr="3">1:3</button>
-          <button class="tf-btn rr-btn" data-rr="5">1:5</button>
-        </div>
-
-        <button class="btn-analyze" id="analyze-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          Analyze Chart
-          <span class="btn-arrow">→</span>
-        </button>
-      </div>
-
-      <!-- 02 · Signal Output (hidden until analysis) -->
-      <div class="card glass signal-card" id="signal-card" style="display:none">
-        <div class="card-label">02 · Signal</div>
-
-        <!-- Big Hero Signal -->
-        <div class="signal-hero" id="signal-hero">
-          <div class="signal-direction">
-            <span class="sh-icon" id="sig-icon">↔</span>
-            <span id="sig-text">NEUTRAL</span>
-          </div>
-          <div class="sig-meta">
-            <span id="sig-pair">–</span> · <span id="sig-tf">–</span>
-          </div>
-        </div>
-
-        <!-- Confidence -->
-        <div class="conf-wrap">
-          <div class="conf-row"><span class="conf-lbl">Confidence</span><span class="conf-pct" id="conf-pct">0%</span></div>
-          <div class="conf-bar"><div class="conf-fill" id="conf-fill"></div></div>
-          <span class="conf-tag" id="conf-tag">–</span>
-        </div>
-
-        <!-- Market Structure Badges -->
-        <div class="ms-strip" id="ms-strip"></div>
-
-        <!-- Trade Levels -->
-        <div class="levels-grid">
-          <div class="level entry"><div class="lv-label">Entry</div><div class="lv-val" id="lv-entry">–</div></div>
-          <div class="level tp"><div class="lv-label">Target</div><div class="lv-val" id="lv-tp">–</div></div>
-          <div class="level sl"><div class="lv-label">Stop</div><div class="lv-val" id="lv-sl">–</div></div>
-          <div class="level rr"><div class="lv-label">R:R</div><div class="lv-val" id="lv-rr">–</div></div>
-        </div>
-
-        <!-- AI Narrative -->
-        <div class="narrative-block" id="narrative-block">
-          <div class="narrative-header">
-            <span class="narrative-icon">🤖</span>
-            <span class="narrative-title">AI Trade Analysis</span>
-          </div>
-          <div id="narrative-content">
-            <div class="narrative-skeleton">
-              <div class="skel-line"></div>
-              <div class="skel-line"></div>
-              <div class="skel-line"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 03 · Multi-Timeframe Confluence -->
-      <div class="card glass mtf-card" id="mtf-card" style="display:none">
-        <div class="card-label collapsible-toggle open" id="mtf-toggle">
-          03 · Multi-Timeframe Confluence
-          <span class="toggle-arrow">▼</span>
-        </div>
-        <div class="collapsible-body open" id="mtf-body">
-          <div class="mtf-grid" id="mtf-grid">
-            <div class="mtf-cell loading"><span class="mtf-tf">15m</span><span class="mtf-sig">…</span><span class="mtf-conf">–</span><div class="mtf-bar-wrap"><div class="mtf-bar" style="width:0"></div></div></div>
-            <div class="mtf-cell loading"><span class="mtf-tf">1H</span><span class="mtf-sig">…</span><span class="mtf-conf">–</span><div class="mtf-bar-wrap"><div class="mtf-bar" style="width:0"></div></div></div>
-            <div class="mtf-cell loading"><span class="mtf-tf">4H</span><span class="mtf-sig">…</span><span class="mtf-conf">–</span><div class="mtf-bar-wrap"><div class="mtf-bar" style="width:0"></div></div></div>
-            <div class="mtf-cell loading"><span class="mtf-tf">1D</span><span class="mtf-sig">…</span><span class="mtf-conf">–</span><div class="mtf-bar-wrap"><div class="mtf-bar" style="width:0"></div></div></div>
-          </div>
-          <div class="confluence-row">
-            <span class="conf-label-small">Confluence</span>
-            <div class="conf-bar-multi"><div class="conf-bar-multi-fill" id="conf-bar-multi-fill" style="width:0"></div></div>
-            <span class="conf-score-text" id="conf-score-text">–</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 04 · Signal History -->
-      <div class="card glass history-card" id="history-card">
-        <div class="card-label collapsible-toggle" id="history-toggle">
-          <span>04 · Signal History</span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <button class="hist-clear-btn" id="hist-clear-btn">Clear</button>
-            <span class="toggle-arrow">▼</span>
-          </div>
-        </div>
-        <div class="collapsible-body" id="history-body">
-          <div class="history-list" id="history-list">
-            <div class="hist-empty">No history yet. Run an analysis to start tracking.</div>
-          </div>
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- ══ CHART AREA ══ -->
-    <main class="chart-panel">
-
-      <!-- Empty state -->
-      <div class="chart-state glass" id="state-empty">
-        <div class="state-rings"><div class="sring"></div><div class="sring s2"></div><div class="sring s3"></div>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".5">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    <!-- ── HEADER ── -->
+    <header class="header glass">
+      <div class="header-left">
+        <div class="logo-mark">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="url(#hg)" />
+            <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="29" cy="17" r="2" fill="white" />
+            <defs>
+              <linearGradient id="hg" x1="0" y1="0" x2="36" y2="36">
+                <stop stop-color="#7B5EA7" />
+                <stop offset="1" stop-color="#4FACFE" />
+              </linearGradient>
+            </defs>
           </svg>
         </div>
-        <h2>Select a pair and click Analyze</h2>
-        <p>Real-time data for forex, crypto, stocks, indices &amp; commodities.</p>
-      </div>
-
-      <!-- Loading state -->
-      <div class="chart-state glass" id="state-loading" style="display:none">
-        <div class="spin-wrap"><div class="spin-ring"></div><div class="spin-ring r2"></div></div>
-        <h2 id="load-title">Fetching live data…</h2>
-        <div class="load-steps">
-          <div class="lstep active" id="ls1"><div class="ldot"></div><span>Connecting to data source</span></div>
-          <div class="lstep" id="ls2"><div class="ldot"></div><span>Downloading OHLCV data</span></div>
-          <div class="lstep" id="ls3"><div class="ldot"></div><span>Computing indicators</span></div>
-          <div class="lstep" id="ls4"><div class="ldot"></div><span>Generating signal</span></div>
+        <div>
+          <h1 class="logo-name">TradeVision <span class="grad">AI</span></h1>
+          <p class="logo-sub">Advanced Market Intelligence Portal</p>
         </div>
       </div>
-
-      <!-- Error state -->
-      <div class="chart-state glass" id="state-error" style="display:none">
-        <div class="err-icon">
-          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        </div>
-        <h2>Failed to fetch data</h2>
-        <p id="err-msg">Could not load market data. Check the pair name and try again.</p>
-        <button class="btn-retry" id="retry-btn">Try Again</button>
+      <div class="header-right">
+        <button id="theme-btn" class="theme-btn" aria-label="Toggle Theme">🌙</button>
+        <button id="logout-btn" class="logout-btn" aria-label="Log out">Exit AI</button>
+        <div class="live-badge"><span class="live-dot"></span>Live Data</div>
       </div>
+    </header>
 
-      <!-- Chart wrapper -->
-      <div class="chart-wrapper" id="chart-wrapper" style="display:none">
-        <div class="chart-topbar">
-          <div class="chart-pair-name" id="chart-pair-name">–</div>
-          <div class="chart-price-wrap">
-            <span class="chart-price" id="chart-price">–</span>
-            <span class="chart-change" id="chart-change">–</span>
+    <!-- ── MAIN LAYOUT ── -->
+    <div class="layout">
+
+      <!-- ══ LEFT SIDEBAR ══ -->
+      <aside class="sidebar">
+
+        <!-- 01 · Select Pair -->
+        <div class="card glass pair-card">
+          <div class="card-label">01 · Select Pair</div>
+          <div class="local-search-wrap">
+            <div class="ls-input-row glass">
+              <div class="ls-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </div>
+              <input type="text" id="local-search" class="pair-input ls-input" placeholder="Search available pairs..."
+                autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="local-suggestions" id="local-suggestions" style="display:none"></div>
           </div>
-          <div class="chart-meta" id="chart-meta">–</div>
-          <!-- Price Alert -->
-          <div class="alert-row" id="alert-row">
-            <div class="alert-input-wrap">
-              <span class="alert-icon">🔔</span>
-              <input type="number" class="alert-input" id="alert-input" placeholder="Set alert price" step="any"/>
-              <button class="alert-set-btn" id="alert-set-btn">Set</button>
+
+          <div class="custom-selects">
+            <input type="hidden" id="pair-input" value="" />
+
+            <div class="select-wrapper crypto-wrap">
+              <div class="sw-icon">₿</div>
+              <select class="c-select" data-type="crypto">
+                <option value="" disabled selected>Crypto Pairs</option>
+                <option value="BTCUSDT">BTC/USDT</option>
+                <option value="ETHUSDT">ETH/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
+                <option value="XRPUSDT">XRP/USDT</option>
+                <option value="BNBUSDT">BNB/USDT</option>
+                <option value="DOGEUSDT">DOGE/USDT</option>
+                <option value="ADAUSDT">ADA/USDT</option>
+                <option value="DOTUSDT">DOT/USDT</option>
+                <option value="MATICUSDT">MATIC/USDT</option>
+                <option value="SHIBUSDT">SHIB/USDT</option>
+                <option value="AVAXUSDT">AVAX/USDT</option>
+                <option value="LINKUSDT">LINK/USDT</option>
+                <option value="ATOMUSDT">ATOM/USDT</option>
+                <option value="NEARUSDT">NEAR/USDT</option>
+                <option value="LTCUSDT">LTC/USDT</option>
+                <option value="FTMUSDT">FTM/USDT</option>
+                <option value="BCHUSDT">BCH/USDT</option>
+                <option value="ALGOUSDT">ALGO/USDT</option>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper forex-wrap">
+              <div class="sw-icon">FX</div>
+              <select class="c-select" data-type="forex">
+                <option value="" disabled selected>Forex Pairs</option>
+                <option value="EURUSD">EUR/USD</option>
+                <option value="GBPUSD">GBP/USD</option>
+                <option value="USDJPY">USD/JPY</option>
+                <option value="AUDUSD">AUD/USD</option>
+                <option value="USDCAD">USD/CAD</option>
+                <option value="USDCHF">USD/CHF</option>
+                <option value="NZDUSD">NZD/USD</option>
+                <option value="EURJPY">EUR/JPY</option>
+                <option value="GBPJPY">GBP/JPY</option>
+                <option value="AUDJPY">AUD/JPY</option>
+                <option value="CADJPY">CAD/JPY</option>
+                <option value="CHFJPY">CHF/JPY</option>
+                <option value="EURAUD">EUR/AUD</option>
+                <option value="EURGBP">EUR/GBP</option>
+                <option value="EURCAD">EUR/CAD</option>
+                <option value="EURCHF">EUR/CHF</option>
+                <option value="GBPAUD">GBP/AUD</option>
+                <option value="GBPCAD">GBP/CAD</option>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper stock-wrap">
+              <div class="sw-icon">$</div>
+              <select class="c-select" data-type="stock">
+                <option value="" disabled selected>Stocks</option>
+                <option value="AAPL">Apple (AAPL)</option>
+                <option value="NVDA">Nvidia (NVDA)</option>
+                <option value="TSLA">Tesla (TSLA)</option>
+                <option value="MSFT">Microsoft (MSFT)</option>
+                <option value="GOOGL">Alphabet (GOOGL)</option>
+                <option value="AMZN">Amazon (AMZN)</option>
+                <option value="META">Meta (META)</option>
+                <option value="NFLX">Netflix (NFLX)</option>
+                <option value="AMD">AMD (AMD)</option>
+                <option value="INTC">Intel (INTC)</option>
+                <option value="BA">Boeing (BA)</option>
+                <option value="DIS">Disney (DIS)</option>
+                <option value="JPM">JPMorgan (JPM)</option>
+                <option value="V">Visa (V)</option>
+                <option value="WMT">Walmart (WMT)</option>
+                <option value="KO">Coca-Cola (KO)</option>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper index-wrap">
+              <div class="sw-icon">◱</div>
+              <select class="c-select" data-type="index">
+                <option value="" disabled selected>Indices</option>
+                <option value="US30">Dow Jones (US30)</option>
+                <option value="NASDAQ">NASDAQ 100</option>
+                <option value="SP500">S&amp;P 500</option>
+                <option value="DAX40">DAX 40 (Germany)</option>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper com-wrap">
+              <div class="sw-icon">☼</div>
+              <select class="c-select" data-type="commodity">
+                <option value="" disabled selected>Commodities</option>
+                <option value="GOLD">Gold</option>
+                <option value="SILVER">Silver</option>
+                <option value="OIL">Crude Oil</option>
+              </select>
+              <div class="sw-arrow">▼</div>
             </div>
           </div>
-          <div class="alert-active-badge" id="alert-active-badge" style="display:none">
-            <span class="alert-dot"></span>
-            <span id="alert-badge-text">Alert: –</span>
+
+          <!-- Timeframe -->
+          <div class="card-label" style="margin-top:14px">Timeframe</div>
+          <div class="tf-row tf-row-wrap">
+            <button class="tf-btn" data-tf="1m">1m</button>
+            <button class="tf-btn" data-tf="3m">3m</button>
+            <button class="tf-btn" data-tf="5m">5m</button>
+            <button class="tf-btn" data-tf="15m">15m</button>
+            <button class="tf-btn active" data-tf="1h">1H</button>
+            <button class="tf-btn" data-tf="4h">4H</button>
+            <button class="tf-btn" data-tf="1d">1D</button>
+          </div>
+
+          <!-- Risk/Reward -->
+          <div class="card-label" style="margin-top:14px">Risk : Reward</div>
+          <div class="tf-row">
+            <button class="tf-btn rr-btn" data-rr="1">1:1</button>
+            <button class="tf-btn rr-btn" data-rr="1.5">1:1.5</button>
+            <button class="tf-btn rr-btn active" data-rr="2.2">1:2.2</button>
+            <button class="tf-btn rr-btn" data-rr="3">1:3</button>
+            <button class="tf-btn rr-btn" data-rr="5">1:5</button>
+          </div>
+
+          <button class="btn-analyze" id="analyze-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Analyze Chart
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 02 · Signal Output (hidden until analysis) -->
+        <div class="card glass signal-card" id="signal-card" style="display:none">
+          <div class="card-label">02 · Signal</div>
+
+          <!-- Big Hero Signal -->
+          <a href="https://hfm.com/?refid=30502056" target="_blank" class="signal-hero" id="signal-hero"
+            style="text-decoration:none;">
+            <div class="signal-direction">
+              <span class="sh-icon" id="sig-icon">↔</span>
+              <span id="sig-text">NEUTRAL</span>
+            </div>
+            <div class="sig-meta">
+              <span id="sig-pair">–</span> · <span id="sig-tf">–</span>
+            </div>
+          </a>
+
+          <!-- Confidence -->
+          <div class="conf-wrap">
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><span class="conf-pct" id="conf-pct">0%</span>
+            </div>
+            <div class="conf-bar">
+              <div class="conf-fill" id="conf-fill"></div>
+            </div>
+            <span class="conf-tag" id="conf-tag">–</span>
+          </div>
+
+          <!-- Market Structure Badges -->
+          <div class="ms-strip" id="ms-strip"></div>
+
+          <!-- Trade Levels -->
+          <div class="levels-grid">
+            <div class="level entry">
+              <div class="lv-label">Entry</div>
+              <div class="lv-val" id="lv-entry">–</div>
+            </div>
+            <div class="level tp">
+              <div class="lv-label">Target</div>
+              <div class="lv-val" id="lv-tp">–</div>
+            </div>
+            <div class="level sl">
+              <div class="lv-label">Stop</div>
+              <div class="lv-val" id="lv-sl">–</div>
+            </div>
+            <div class="level rr">
+              <div class="lv-label">R:R</div>
+              <div class="lv-val" id="lv-rr">–</div>
+            </div>
+          </div>
+
+          <!-- Orderflow Data -->
+          <div class="orderflow-block" id="orderflow-block" style="display:none">
+            <div class="of-label"><span>Orderflow (CVD)</span><span id="of-delta">Δ +0.0K</span></div>
+            <div class="of-bar">
+              <div class="of-fill" id="of-fill" style="width:50%"></div>
+            </div>
+            <div class="of-meta">
+              <span id="of-buy">Buy: 50%</span>
+              <span id="of-sell">Sell: 50%</span>
+            </div>
+          </div>
+
+          <!-- AI Narrative -->
+          <div class="narrative-block" id="narrative-block">
+            <div class="narrative-header">
+              <span class="narrative-icon">🤖</span>
+              <span class="narrative-title">AI Trade Analysis</span>
+            </div>
+            <div id="narrative-content">
+              <div class="narrative-skeleton">
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Copy Trade Button -->
+          <a href="https://hfm.com/?refid=30502056" target="_blank" class="btn-copy-trade">
+            <span class="ct-icon">⚡</span>
+            Copy this Trade
+          </a>
+        </div>
+
+        <!-- 03 · Multi-Timeframe Confluence -->
+        <div class="card glass mtf-card" id="mtf-card" style="display:none">
+          <div class="card-label collapsible-toggle open" id="mtf-toggle">
+            03 · Multi-Timeframe Confluence
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="mtf-body">
+            <div class="mtf-grid" id="mtf-grid">
+              <div class="mtf-cell loading"><span class="mtf-tf">15m</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+              <div class="mtf-cell loading"><span class="mtf-tf">1H</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+              <div class="mtf-cell loading"><span class="mtf-tf">4H</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+              <div class="mtf-cell loading"><span class="mtf-tf">1D</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+            </div>
+            <div class="confluence-row">
+              <span class="conf-label-small">Confluence</span>
+              <div class="conf-bar-multi">
+                <div class="conf-bar-multi-fill" id="conf-bar-multi-fill" style="width:0"></div>
+              </div>
+              <span class="conf-score-text" id="conf-score-text">–</span>
+            </div>
           </div>
         </div>
 
-        <div class="canvas-container" style="position:relative">
-          <!-- Drawing Toolbar -->
-          <div class="draw-toolbar hidden" id="draw-toolbar">
-            <button class="draw-btn active" id="draw-pointer" title="Pointer">↖</button>
-            <div class="draw-sep"></div>
-            <button class="draw-btn" id="draw-hline" title="Horizontal Line">—</button>
-            <button class="draw-btn" id="draw-trendline" title="Trendline">╱</button>
-            <button class="draw-btn" id="draw-rect" title="Rectangle">▭</button>
-            <div class="draw-sep"></div>
-            <button class="draw-clear-btn" id="draw-clear">Clear</button>
+        <!-- 04 · Signal History -->
+        <div class="card glass history-card" id="history-card">
+          <div class="card-label collapsible-toggle" id="history-toggle">
+            <span>04 · Signal History</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="hist-clear-btn" id="hist-clear-btn">Clear</button>
+              <span class="toggle-arrow">▼</span>
+            </div>
           </div>
-          <canvas id="main-canvas"></canvas>
+          <div class="collapsible-body" id="history-body">
+            <div class="history-list" id="history-list">
+              <div class="hist-empty">No history yet. Run an analysis to start tracking.</div>
+            </div>
+          </div>
         </div>
 
-        <div class="chart-legend" id="chart-legend"></div>
-      </div>
+      </aside>
 
-    </main>
+      <!-- ══ CHART AREA ══ -->
+      <main class="chart-panel">
+
+        <!-- Empty state -->
+        <div class="chart-state glass" id="state-empty">
+          <div class="state-rings">
+            <div class="sring"></div>
+            <div class="sring s2"></div>
+            <div class="sring s3"></div>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+              opacity=".5">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <h2>Select a pair and click Analyze</h2>
+          <p>Real-time data for forex, crypto, stocks, indices &amp; commodities.</p>
+        </div>
+
+        <!-- Loading state -->
+        <div class="chart-state glass" id="state-loading" style="display:none">
+          <div class="spin-wrap">
+            <div class="spin-ring"></div>
+            <div class="spin-ring r2"></div>
+          </div>
+          <h2 id="load-title">Fetching live data…</h2>
+          <div class="load-steps">
+            <div class="lstep active" id="ls1">
+              <div class="ldot"></div><span>Connecting to data source</span>
+            </div>
+            <div class="lstep" id="ls2">
+              <div class="ldot"></div><span>Downloading OHLCV data</span>
+            </div>
+            <div class="lstep" id="ls3">
+              <div class="ldot"></div><span>Computing indicators</span>
+            </div>
+            <div class="lstep" id="ls4">
+              <div class="ldot"></div><span>Generating signal</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error state -->
+        <div class="chart-state glass" id="state-error" style="display:none">
+          <div class="err-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2>Failed to fetch data</h2>
+          <p id="err-msg">Could not load market data. Check the pair name and try again.</p>
+          <button class="btn-retry" id="retry-btn">Try Again</button>
+        </div>
+
+        <!-- Chart wrapper -->
+        <div class="chart-wrapper" id="chart-wrapper" style="display:none">
+          <div class="chart-topbar">
+            <div class="chart-pair-name" id="chart-pair-name">–</div>
+            <div class="chart-price-wrap">
+              <span class="chart-price" id="chart-price">–</span>
+              <span class="chart-change" id="chart-change">–</span>
+            </div>
+            <div class="chart-meta" id="chart-meta">–</div>
+            <!-- Price Alert -->
+            <div class="alert-row" id="alert-row">
+              <div class="alert-input-wrap">
+                <span class="alert-icon">🔔</span>
+                <input type="number" class="alert-input" id="alert-input" placeholder="Set alert price" step="any" />
+                <button class="alert-set-btn" id="alert-set-btn">Set</button>
+              </div>
+            </div>
+            <div class="alert-active-badge" id="alert-active-badge" style="display:none">
+              <span class="alert-dot"></span>
+              <span id="alert-badge-text">Alert: –</span>
+            </div>
+          </div>
+
+          <div class="canvas-container" style="position:relative">
+            <!-- Drawing Toolbar -->
+            <div class="draw-toolbar hidden" id="draw-toolbar">
+              <button class="draw-btn active" id="draw-pointer" title="Pointer">↖</button>
+              <div class="draw-sep"></div>
+              <button class="draw-btn" id="draw-hline" title="Horizontal Line">—</button>
+              <button class="draw-btn" id="draw-trendline" title="Trendline">╱</button>
+              <button class="draw-btn" id="draw-rect" title="Rectangle">▭</button>
+              <div class="draw-sep"></div>
+              <button class="draw-clear-btn" id="draw-clear">Clear</button>
+            </div>
+            <canvas id="main-canvas"></canvas>
+          </div>
+
+          <div class="chart-legend" id="chart-legend"></div>
+        </div>
+
+      </main>
+    </div>
   </div>
-</div>
 
-<script src="app.js"></script>
+  <!-- Signal Popup Modal -->
+  <div class="signal-modal-overlay" id="signal-modal-overlay">
+    <div class="signal-modal">
+      <div class="sm-header">
+        <div class="sm-title">⚡ AI Signal Detected</div>
+        <button class="sm-close" id="sm-close">&times;</button>
+      </div>
+      <div class="sm-body">
+        <div class="sm-pair" id="sm-pair">--</div>
+        <div class="sm-direction" id="sm-direction">--</div>
+        <div class="sm-conf">Confidence: <span id="sm-conf">--</span></div>
+
+        <div class="sm-levels">
+          <div class="sm-level"><span class="label">ENTRY</span><span class="val" id="sm-entry">--</span></div>
+          <div class="sm-level"><span class="label">TAKE PROFIT</span><span class="val tp" id="sm-tp">--</span></div>
+          <div class="sm-level"><span class="label">STOP LOSS</span><span class="val sl" id="sm-sl">--</span></div>
+        </div>
+
+        <a href="https://hfm.com/?refid=30502056" target="_blank" class="btn-copy-trade sm-btn"
+          style="text-decoration: none;">⚡ Copy This Trade</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating IG Button -->
+  <a href="https://instagram.com/lewis.ict" target="_blank" class="floating-ig" aria-label="Follow us on Instagram">
+    <svg viewBox="0 0 448 512" fill="currentColor">
+      <path
+        d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
+    </svg>
+  </a>
+
+  <!-- Floating WhatsApp Button -->
+  <a href="https://wa.me/254768085041" target="_blank" class="floating-wa" aria-label="Contact us on WhatsApp">
+    <svg viewBox="0 0 448 512" fill="currentColor">
+      <path
+        d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+    </svg>
+  </a>
+
+  <script src="app.js"></script>
 </body>
+
 </html>
