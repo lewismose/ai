@@ -1666,3 +1666,297 @@ if (pModal) {
     if (e.target === pModal) pModal.classList.remove('show');
   });
 }
+
+// ─── Position Size Calculator ───────────────────────────────────────────────
+function calculatePositionSize() {
+  if (!S.lastSig || !S.active) {
+    toast('Run an analysis first', 'warn');
+    return;
+  }
+  
+  const eqStr = document.getElementById('calc-equity').value;
+  const riskStr = document.getElementById('calc-risk').value;
+  const levInp = document.getElementById('calc-lev');
+  const levUnl = document.getElementById('calc-unlimited');
+  
+  const equity = parseFloat(eqStr);
+  const riskPct = parseFloat(riskStr);
+  const leverage = levUnl.checked ? Infinity : parseFloat(levInp.value);
+  
+  if (isNaN(equity) || equity <= 0 || isNaN(riskPct) || riskPct <= 0) {
+    toast('Enter valid Equity and Risk values', 'warn');
+    return;
+  }
+
+  const entry = parseFloat(S.lastSig.entry.replace(/,/g, ''));
+  const sl = parseFloat(S.lastSig.sl.replace(/,/g, ''));
+  const tp = parseFloat(S.lastSig.tp.replace(/,/g, ''));
+  
+  const type = S.active.type;
+  const pair = S.active.display.replace(/[^A-Z]/g, '');
+  
+  const riskUsd = equity * (riskPct / 100);
+  const priceDist = Math.abs(entry - sl);
+  if (priceDist === 0) return;
+
+  let lotSize = 0;
+  let pipVal = 10;
+  
+  if (type === 'forex') {
+    const isJpy = pair.includes('JPY');
+    const multiplier = isJpy ? 100 : 10000;
+    const pipDist = priceDist * multiplier;
+    
+    if (pair.endsWith('USD')) pipVal = 10;
+    else if (isJpy) pipVal = 1000 / 150; // Approximated cross rate for JPY crosses
+    else if (pair.endsWith('CAD')) pipVal = 10 / 1.35;
+    else if (pair.endsWith('CHF')) pipVal = 10 / 0.9;
+    else if (pair.endsWith('GBP')) pipVal = 10 * 1.26;
+    else if (pair.endsWith('AUD')) pipVal = 10 * 0.65;
+    else if (pair.endsWith('NZD')) pipVal = 10 * 0.6;
+    
+    lotSize = riskUsd / (pipDist * pipVal);
+  } else if (type === 'commodity' && (pair.includes('GOLD') || pair.includes('XAU'))) {
+    // Gold 1 lot = 100oz.
+    lotSize = riskUsd / (priceDist * 100);
+  } else {
+    // Crypto / Indices / Other
+    // Default 1 lot = 1 unit
+    lotSize = riskUsd / priceDist;
+  }
+
+  // Margin cap
+  let marginPerLot = 0;
+  if (type === 'forex') {
+    const base = pair.slice(0, 3);
+    let baseUsd = 1; // USD base
+    if (base === 'EUR') baseUsd = 1.08;
+    else if (base === 'GBP') baseUsd = 1.26;
+    else if (base === 'AUD') baseUsd = 0.65;
+    else if (base === 'NZD') baseUsd = 0.60;
+    else if (base === 'CHF') baseUsd = 1.11;
+    else if (base === 'CAD') baseUsd = 0.74;
+    marginPerLot = (100000 * baseUsd) / leverage;
+  } else if (type === 'commodity' && (pair.includes('GOLD') || pair.includes('XAU'))) {
+    marginPerLot = (100 * entry) / leverage;
+  } else {
+    marginPerLot = entry / leverage;
+  }
+  
+  if (marginPerLot > 0 && isFinite(leverage)) {
+    const maxLots = equity / marginPerLot;
+    if (lotSize > maxLots) {
+      lotSize = maxLots;
+      toast('Lot size curbed by max leverage', 'warn');
+      document.getElementById('calc-info').textContent = `Max Leverage Reached! Margin > Equity.`;
+    } else {
+      document.getElementById('calc-info').textContent = `Using: ${pair} @ ${S.lastSig.signal}`;
+    }
+  } else {
+    document.getElementById('calc-info').textContent = `Using: ${pair} @ ${S.lastSig.signal}`;
+  }
+
+  const rewardDist = Math.abs(tp - entry);
+  let rewardUsd = 0;
+  if (type === 'forex') {
+    const isJpy = pair.includes('JPY');
+    rewardUsd = (rewardDist * (isJpy ? 100 : 10000)) * pipVal * lotSize;
+  } else if (type === 'commodity' && (pair.includes('GOLD') || pair.includes('XAU'))) {
+    rewardUsd = rewardDist * 100 * lotSize;
+  } else {
+    rewardUsd = rewardDist * lotSize;
+  }
+
+  // Update UI Elements
+  document.getElementById('calc-lots').textContent = lotSize < 0.01 ? lotSize.toFixed(4) : lotSize.toFixed(2);
+  document.getElementById('calc-loss').textContent = '$' + (type === 'forex' ? (priceDist * (pair.includes('JPY') ? 100 : 10000) * pipVal * lotSize) : type === 'commodity' ? (priceDist * 100 * lotSize) : (priceDist * lotSize)).toFixed(2);
+  document.getElementById('calc-gain').textContent = '$' + rewardUsd.toFixed(2);
+  document.getElementById('calc-results').style.opacity = '1';
+  if (lotSize === equity/marginPerLot) {
+    // Only toast on limit, prevent spam if they click repeatedly unless they reset. Note we toasted already above!
+  } else {
+    toast('Position calculated', 'ok');
+  }
+}
+
+const pCalcBtn = document.getElementById('calc-btn');
+if (pCalcBtn) {
+  pCalcBtn.addEventListener('click', calculatePositionSize);
+}
+
+const pCalcUnl = document.getElementById('calc-unlimited');
+const pCalcLevInp = document.getElementById('calc-lev');
+if (pCalcUnl && pCalcLevInp) {
+  pCalcUnl.addEventListener('change', () => {
+    pCalcLevInp.disabled = pCalcUnl.checked;
+    pCalcLevInp.style.opacity = pCalcUnl.checked ? '0.3' : '1';
+  });
+}
+
+/* ── MARKET SESSIONS LOGIC ── */
+const SESSION_CONFIG = [
+  { id: 'sydney', name: 'Sydney', start: 22, end: 7, color: '#00F2FE' },
+  { id: 'tokyo', name: 'Tokyo', start: 0, end: 9, color: '#FFD54F' },
+  { id: 'london', name: 'London', start: 7, end: 16, color: '#7B5EA7' },
+  { id: 'newyork', name: 'New York', start: 12, end: 21, color: '#4FACFE' }
+];
+
+function updateMarketSessions() {
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+  const utcMin = now.getUTCMinutes();
+  const utcSec = now.getUTCSeconds();
+  
+  let londonOpen = false;
+  let nyOpen = false;
+
+  SESSION_CONFIG.forEach(s => {
+    const el = document.getElementById(`sess-${s.id}`);
+    if (!el) return;
+    
+    let isOpen = false;
+    if (s.start < s.end) {
+      isOpen = utcHour >= s.start && utcHour < s.end;
+    } else { // Overnights (Sydney)
+      isOpen = utcHour >= s.start || utcHour < s.end;
+    }
+
+    if (s.id === 'london') londonOpen = isOpen;
+    if (s.id === 'newyork') nyOpen = isOpen;
+
+    el.classList.toggle('active', isOpen);
+    el.querySelector('.sess-status').textContent = isOpen ? 'Open' : 'Closed';
+    
+    // Countdown logic
+    let targetHour = isOpen ? s.end : s.start;
+    let diffHours = targetHour - utcHour;
+    if (diffHours <= 0) diffHours += 24;
+    
+    let mins = 59 - utcMin;
+    let secs = 59 - utcSec;
+    let hrs = diffHours - 1;
+    
+    el.querySelector('.sess-timer').textContent = `${hrs}h ${mins}m`;
+  });
+
+  // Killzone: London/NY overlap (12:00 - 16:00 UTC)
+  const kz = document.getElementById('sess-killzone');
+  if (kz) {
+    const isKz = utcHour >= 12 && utcHour < 16;
+    kz.style.display = isKz ? 'flex' : 'none';
+  }
+}
+
+/* ── ECONOMIC CALENDAR LOGIC ── */
+async function fetchEconomicCalendar() {
+  const listEl = document.getElementById('econ-list');
+  if (!listEl) return;
+
+  try {
+    const res = await fetchT('https://nfs.faireconomy.media/ff_calendar_thisweek.json', 8000);
+    if (!res.ok) throw new Error('Calendar fetch failed');
+    const events = await res.json();
+    
+    const now = new Date();
+    // Filter: High impact, strictly upcoming
+    const highEvents = events
+      .filter(e => e.impact === 'High')
+      .map(e => ({ ...e, dateObj: new Date(e.date) }))
+      .filter(e => e.dateObj > now)
+      .sort((a, b) => a.dateObj - b.dateObj)
+      .slice(0, 5);
+
+    if (highEvents.length === 0) {
+      listEl.innerHTML = '<div class="econ-loading">No high-impact events today.</div>';
+      return;
+    }
+
+    listEl.innerHTML = highEvents.map(e => {
+      const diff = e.dateObj - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const timeStr = e.dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      
+      return `
+        <div class="econ-item">
+          <div class="econ-impact high"></div>
+          <div class="econ-info">
+            <span class="econ-curr">${e.country}</span>
+            <span class="econ-event">${e.title}</span>
+          </div>
+          <div class="econ-time-wrap">
+            <span class="econ-time">${timeStr}</span>
+            <span class="econ-countdown">in ${h}h ${m}m</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (e) {
+    listEl.innerHTML = '<div class="econ-loading">Calendar currently unavailable.</div>';
+  }
+}
+
+/* ── SMART WATCHLIST LOGIC ── */
+const WATCHLIST_PAIRS = ['BTCUSDT', 'ETHUSDT', 'EURUSD', 'GBPUSD', 'GOLD', 'US30'];
+
+async function scanSmartWatchlist() {
+  const wlEl = document.getElementById('wl-list');
+  if (!wlEl) return;
+
+  const results = await Promise.allSettled(WATCHLIST_PAIRS.map(async p => {
+    const info = detectSymbol(p);
+    const candles = info.useBinance ? await fetchBinance(info.binSym, '1h') : await fetchData(info, '1h');
+    const last = candles[candles.length - 1];
+    const closes = candles.map(c => c.close);
+    
+    // Fast TA for bias
+    const e20 = ema(closes, 20);
+    const e50 = ema(closes, 50);
+    const ri = rsi(closes, 14);
+    
+    const n = candles.length - 1;
+    let bias = 'neutral';
+    if (e20[n] > e50[n] && ri[n] > 50) bias = 'bullish';
+    else if (e20[n] < e50[n] && ri[n] < 50) bias = 'bearish';
+    
+    return { pair: p, price: last.close, bias, info };
+  }));
+
+  wlEl.innerHTML = results.map(r => {
+    if (r.status === 'rejected') return '';
+    const d = r.value;
+    const priceFmt = d.info.type === 'crypto' ? d.price.toFixed(2) : d.price.toFixed(d.price < 10 ? 4 : 2);
+    
+    return `
+      <div class="wl-item" onclick="quickAnalyze('${d.pair}')">
+        <div class="wl-bias-dot ${d.bias}"></div>
+        <span class="wl-pair">${d.pair}</span>
+        <span class="wl-price">${priceFmt}</span>
+        <span class="wl-arrow">→</span>
+      </div>
+    `;
+  }).join('');
+}
+
+// Global jump for watchlist
+window.quickAnalyze = (symbol) => {
+  const input = document.getElementById('local-search');
+  if (input) {
+    input.value = symbol;
+    // Trigger analysis
+    const btn = document.getElementById('analyze-btn');
+    if (btn) btn.click();
+    toast(`Jumping to ${symbol}`, 'ok');
+  }
+};
+
+/* ── INITIALIZE NEW FEATURES ── */
+setInterval(updateMarketSessions, 1000);
+updateMarketSessions();
+
+fetchEconomicCalendar();
+setInterval(fetchEconomicCalendar, 300000); // 5 mins
+
+setTimeout(scanSmartWatchlist, 1000);
+setInterval(scanSmartWatchlist, 180000); // 3 mins
