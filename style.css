@@ -95,7 +95,7 @@ body.light-theme .logout-btn:hover{background:#d32f2f;color:#fff;}
 
 /* ── LAYOUT ── */
 .layout{display:grid;grid-template-columns:340px 1fr;gap:10px;padding:10px 12px 12px;flex:1;min-height:0}
-.sidebar{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0}
+.sidebar{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;content-visibility:auto;contain-intrinsic-size:1px 1500px;}
 .sidebar::-webkit-scrollbar{width:4px}
 .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:999px}
 
@@ -514,10 +514,14 @@ body.light-theme .logout-btn:hover{background:#d32f2f;color:#fff;}
   .sidebar { display: contents; }
   
   .pair-card { order: 1; margin-bottom: 0px; }
-  .chart-panel { order: 2; min-height: 480px; height: 550px; padding: 6px 0; margin: 4px 0; flex-shrink: 0; }
+  .chart-panel { order: 2; min-height: 480px; height: 550px; padding: 6px 0; margin: 4px 0; flex-shrink: 0; transition: height 0.35s cubic-bezier(0.23,1,0.32,1); }
+  .chart-panel.clean-mode { height: 420px; min-height: 380px; }
   .card { order: 3; margin-bottom: 6px; }
   
-  .canvas-container { min-height: 100%; height: 100%; }
+  /* Chart wrapper must fill the panel fully */
+  .chart-wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; }
+  .canvas-container { flex: 1; min-height: 0; position: relative; }
+  #main-canvas { display: block; width: 100%; height: 100%; }
   
   .mtf-grid { grid-template-columns: repeat(2, 1fr); }
   .draw-toolbar { top: 4px; padding: 4px 6px; gap: 2px; }
@@ -530,6 +534,7 @@ body.light-theme .logout-btn:hover{background:#d32f2f;color:#fff;}
   .chart-price-wrap { width: 100%; justify-content: flex-start; }
   .chart-meta { display: none; } /* Hide meta text on mobile to save space */
   .chart-legend { position: relative; bottom: auto; left: auto; padding: 6px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,.05); border-radius: 0; background: transparent; backdrop-filter: none; }
+  .chart-legend.hidden { display: none; }
 }
 @media(max-width:420px){
   .mtf-grid { grid-template-columns: repeat(2, 1fr); }
@@ -676,3 +681,298 @@ body.light-theme .logout-btn:hover{background:#d32f2f;color:#fff;}
   .sess-timer { font-size: 0.65rem; }
   .kz-text { font-size: 0.6rem; }
 }
+
+/* ── NEW ELITE FEATURES ── */
+.btn-toggle-ind { padding: 4px 10px; border-radius: 999px; background: rgba(79,172,254,0.1); border: 1px solid rgba(79,172,254,0.3); color: var(--blue); font-size: 0.75rem; cursor: pointer; transition: all 0.2s; font-family: 'Space Grotesk', sans-serif; font-weight: 700; margin-left: auto; white-space: nowrap; }
+.btn-toggle-ind:hover { background: rgba(79,172,254,0.2); }
+.btn-toggle-ind.cleaned { color: var(--text3); border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.03); }
+
+/* ── TRADE JOURNAL — ENHANCED ── */
+.journal-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 10px;
+}
+.j-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.j-stat span:first-child { font-size: 0.58rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
+.j-stat .val { font-size: 0.92rem; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--text); }
+.j-stat.wr .val { color: var(--blue); }
+.j-stat.wins .val { color: var(--green); }
+.j-stat.losses .val { color: var(--red); }
+.j-stat.pnl .val { font-size: 0.78rem; }
+.j-stat.pnl .val.pos { color: var(--green); }
+.j-stat.pnl .val.neg { color: var(--red); }
+
+/* Journal filter tabs */
+.journal-filters {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.j-filter-btn {
+  flex: 1;
+  padding: 4px 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--text3);
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.j-filter-btn:hover { color: var(--text2); background: rgba(255,255,255,0.04); }
+.j-filter-btn.active { background: rgba(79,172,254,0.12); border-color: rgba(79,172,254,0.3); color: var(--blue); }
+.j-filter-btn.active.won { background: rgba(0,230,118,0.1); border-color: rgba(0,230,118,0.25); color: var(--green); }
+.j-filter-btn.active.lost { background: rgba(255,82,82,0.1); border-color: rgba(255,82,82,0.25); color: var(--red); }
+
+/* Journal rows enhanced */
+.hist-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  animation: tagin .3s var(--r) both;
+}
+.hist-row:hover { background: rgba(255,255,255,0.055); transform: translateX(2px); }
+.hist-row.won { border-left: 3px solid var(--green); background: rgba(0,230,118,0.04); }
+.hist-row.lost { border-left: 3px solid var(--red); background: rgba(255,82,82,0.04); }
+.hist-row-top { display: flex; align-items: center; gap: 6px; width: 100%; }
+.hist-pair { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.82rem; color: var(--text); flex: 1; }
+.hist-tf { font-size: 0.6rem; color: var(--text3); background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
+.hist-sig { font-weight: 800; font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; letter-spacing: 0.05em; white-space: nowrap; }
+.hist-sig.buy { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.22); }
+.hist-sig.sell { background: rgba(255,82,82,0.1); color: var(--red); border: 1px solid rgba(255,82,82,0.22); }
+.hist-conf { font-size: 0.65rem; color: var(--text2); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.hist-date { font-size: 0.58rem; color: var(--text3); white-space: nowrap; }
+.hist-outcome { font-size: 0.6rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+.hist-outcome.won { background: rgba(0,230,118,0.12); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+.hist-outcome.lost { background: rgba(255,82,82,0.12); color: var(--red); border: 1px solid rgba(255,82,82,0.2); }
+.hist-outcome.pending { background: rgba(255,213,79,0.08); color: var(--gold); border: 1px solid rgba(255,213,79,0.18); }
+
+/* Journal notes */
+.hist-notes {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: var(--text2);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  padding: 5px 8px;
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  min-height: 32px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+.hist-notes:focus { border-color: rgba(79,172,254,0.35); background: rgba(79,172,254,0.04); }
+.hist-notes::placeholder { color: var(--text3); font-style: italic; }
+
+/* Journal action buttons */
+.hist-btn-group { display: flex; gap: 4px; width: 100%; }
+.hist-btn {
+  flex: 1;
+  padding: 5px 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.03);
+  color: var(--text2);
+  font-size: 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.hist-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+.hist-btn.won { border-color: rgba(0,230,118,0.35); color: var(--green); background: rgba(0,230,118,0.1); }
+.hist-btn.lost { border-color: rgba(255,82,82,0.35); color: var(--red); background: rgba(255,82,82,0.1); }
+.hist-btn.del { border-color: rgba(255,255,255,0.08); }
+.hist-btn.del:hover { border-color: rgba(255,82,82,0.3); color: var(--red); background: rgba(255,82,82,0.08); }
+
+/* Journal equity curve banner */
+.journal-equity {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(79,172,254,0.05);
+  border: 1px solid rgba(79,172,254,0.12);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.journal-equity-label { font-size: 0.62rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+.journal-equity-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.07); border-radius: 999px; overflow: hidden; }
+.journal-equity-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--purple), var(--blue)); transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+.journal-equity-pct { font-size: 0.72rem; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: var(--blue); white-space: nowrap; }
+
+.hist-empty { font-size: 0.78rem; color: var(--text3); text-align: center; padding: 20px 16px; font-style: italic; }
+
+.news-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.news-item:last-child { border-bottom: none; }
+.news-title { font-size: 0.75rem; color: var(--text); font-weight: 600; font-family: 'Space Grotesk', sans-serif; line-height: 1.3; }
+.news-meta { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text3); margin-top: 2px;}
+.news-sentiment { font-weight: 700; padding: 1px 6px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.6rem; }
+.news-sentiment.bull { background: rgba(0,230,118,0.1); color: var(--green); }
+.news-sentiment.bear { background: rgba(255,82,82,0.1); color: var(--red); }
+.news-sentiment.neu { background: rgba(255,255,255,0.05); color: var(--text2); border: 1px solid rgba(255,255,255,0.1) }
+
+/* ══════════════════════════════════════════════════════════════════
+   LOW-END DEVICE PERFORMANCE OVERRIDES
+   Applied when JS detects: ≤4 CPU cores, ≤2GB RAM, or 2G/slow-2G
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Kill expensive background blur — biggest GPU win */
+body.low-end .glass {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: rgba(8, 8, 20, 0.94) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+}
+body.low-end .glass::before { display: none !important; }
+
+/* Freeze orb animations — they use filter:blur which is extremely expensive */
+body.low-end .orb {
+  animation: none !important;
+  filter: none !important;
+  opacity: 0.08 !important;
+}
+
+/* Remove all glowing box-shadows from buttons and signals */
+body.low-end .btn-analyze,
+body.low-end .signal-hero.buy,
+body.low-end .signal-hero.sell,
+body.low-end .signal-badge,
+body.low-end .btn-copy-trade,
+body.low-end .wl-bias-dot {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Speed up / simplify transitions */
+body.low-end * {
+  transition-duration: 0.12s !important;
+}
+body.low-end .conf-fill,
+body.low-end .journal-equity-fill {
+  transition: width 0.4s ease !important;
+}
+body.low-end .collapsible-body {
+  transition: max-height 0.2s ease, opacity 0.15s !important;
+}
+
+/* Kill orb blur filter on the orb elements */
+body.low-end .bg-orbs {
+  display: none !important;
+}
+
+/* Session pill glow off */
+body.low-end .session-killzone { animation: none !important; }
+body.low-end .live-dot { animation: none !important; background: var(--green) !important; }
+
+/* Reduce shadow depth on cards */
+body.low-end .card {
+  box-shadow: none !important;
+}
+
+/* Use CSS contain to limit repaint scope on card updates */
+.card { contain: layout style; content-visibility: auto; contain-intrinsic-size: 1px 300px; }
+.chart-panel { contain: layout; }
+.history-list { contain: strict; max-height: 260px; }
+
+/* ── Market Sessions UI ── */
+.session-tz-note {
+  font-size: 0.62rem;
+  color: var(--text3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 10px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.sess-times {
+  font-size: 0.65rem;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255,255,255,0.04);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin: 0 4px;
+}
+.session-pill.active .sess-times {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+/* ── Extreme Perf Manual Toggle Active ── */
+#perf-toggle.active {
+  background: var(--gold);
+  color: #000;
+  box-shadow: 0 0 15px rgba(255, 213, 79, 0.4);
+}
+
+body.low-end {
+  --glass: #08080c;
+  --glass-border: #1a1a24;
+}
+body.low-end * {
+  animation-duration: 0.001s !important; /* Kill most animations */
+  transition: none !important; /* Instant snap */
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+body.low-end .glass {
+  background: var(--glass) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+
+/* ── Auto-Track Status Badge in Journal rows ── */
+.hist-closed-info {
+  font-size: 0.6rem;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  padding: 1px 0;
+}
+.hist-closed-info .closed-price {
+  color: var(--text2);
+  font-weight: 600;
+}
+.hist-auto-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  background: rgba(79,172,254,0.1);
+  border: 1px solid rgba(79,172,254,0.2);
+  color: var(--blue);
+}
+
