@@ -934,6 +934,125 @@ body.low-end .card {
   box-shadow: 0 0 15px rgba(255, 213, 79, 0.4);
 }
 
+/* ── Journal Statistics Dashboard ── */
+.journal-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.j-stat {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: transform 0.2s;
+}
+.j-stat:hover { transform: translateY(-2px); border-color: var(--border-h); }
+.j-stat span:first-child { 
+  font-size: 0.58rem; 
+  color: var(--text3); 
+  text-transform: uppercase; 
+  letter-spacing: 0.08em; 
+  font-weight: 800; 
+}
+.j-stat .val { 
+  font-size: 1.05rem; 
+  font-weight: 800; 
+  font-family: 'Space Grotesk', sans-serif; 
+}
+.j-stat .val.pos { color: var(--green); }
+.j-stat .val.neg { color: var(--red); }
+
+/* ── Journal Ledger Header ── */
+.journal-ledger-header {
+  display: grid;
+  grid-template-columns: 1.1fr 40px 45px 1fr 65px;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px 10px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 15px;
+}
+
+.history-list {
+  max-height: 450px !important;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.15);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
+
+/* ── Journal Ledger Rows ── */
+.hist-row {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  transition: background 0.2s;
+}
+.hist-row:hover { background: rgba(255,255,255,0.02) !important; }
+
+.hist-main {
+  display: grid;
+  grid-template-columns: 1.1fr 40px 45px 1fr 65px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 12px;
+}
+
+.hist-pair { font-size: 0.78rem; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hist-sig { font-size: 0.62rem; font-weight: 900; padding: 2px 0; border-radius: 4px; text-align: center; text-transform: uppercase; }
+.hist-sig.buy { background: rgba(79,172,254,0.1); color: var(--blue); }
+.hist-sig.sell { background: rgba(249,168,37,0.1); color: var(--gold); }
+.hist-tf { font-size: 0.68rem; color: var(--text2); text-align: center; font-weight: 600; opacity: 0.8; }
+.hist-outcome { font-size: 0.6rem; padding: 3px 0; border-radius: 5px; text-align: center; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
+.hist-profit { font-size: 0.78rem; font-weight: 800; text-align: right; font-family: 'JetBrains Mono', monospace; }
+.hist-profit.pos { color: var(--green); }
+.hist-profit.neg { color: var(--red); }
+
+.hist-notes {
+  width: calc(100% - 24px) !important;
+  margin: 0 12px 10px !important;
+  padding: 8px 10px !important;
+  background: rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  border-radius: 6px !important;
+  font-size: 0.72rem !important;
+  color: var(--text2) !important;
+  resize: vertical;
+  min-height: 36px;
+  line-height: 1.4;
+}
+
+.hist-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px 12px;
+}
+.hist-date { font-size: 0.6rem; color: var(--text3); font-weight: 500; }
+
+.hist-btn-group { display: flex; gap: 5px; }
+.hist-outcome.pending {
+  border: 1px solid rgba(79,172,254,0.3);
+  background: rgba(79,172,254,0.08);
+  color: var(--blue);
+}
+
 body.low-end {
   --glass: #08080c;
   --glass-border: #1a1a24;
