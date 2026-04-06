@@ -56,6 +56,38 @@
       </div>
     </header>
 
+    <!-- ── MARKET SESSIONS BAR ── -->
+    <div class="sessions-bar glass" id="sessions-bar">
+      <div class="session-pill" id="sess-sydney">
+        <span class="sess-dot"></span>
+        <span class="sess-name">Sydney</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-pill" id="sess-tokyo">
+        <span class="sess-dot"></span>
+        <span class="sess-name">Tokyo</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-pill" id="sess-london">
+        <span class="sess-dot"></span>
+        <span class="sess-name">London</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-pill" id="sess-newyork">
+        <span class="sess-dot"></span>
+        <span class="sess-name">New York</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-killzone" id="sess-killzone" style="display:none">
+        <span class="kz-icon">⚡</span>
+        <span class="kz-text">Killzone Active</span>
+      </div>
+    </div>
+
     <!-- ── MAIN LAYOUT ── -->
     <div class="layout">
 
@@ -340,10 +372,68 @@
           </div>
         </div>
 
-        <!-- 04 · Signal History -->
+        <!-- 04 · Position Calculator -->
+        <div class="card glass calc-card" id="calc-card">
+          <div class="card-label collapsible-toggle open" id="calc-toggle">
+            04 · Position Calculator
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="calc-body">
+            <div class="calc-row-wrap" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; margin-top: 8px;">
+              <div class="calc-input-grp" style="flex: 1 1 45%; min-width: 100px;">
+                <label style="font-size: 10px; opacity: 0.7; margin-bottom: 4px; display: block;">Equity (USD)</label>
+                <div class="ls-input-row glass">
+                  <input type="number" id="calc-equity" class="ls-input" value="1000" style="width: 100%; border: none; background: transparent; color: white; padding: 6px; font-size: 13px;" />
+                </div>
+              </div>
+              <div class="calc-input-grp" style="flex: 1 1 20%; min-width: 60px;">
+                <label style="font-size: 10px; opacity: 0.7; margin-bottom: 4px; display: block;">Risk (%)</label>
+                <div class="ls-input-row glass">
+                  <input type="number" id="calc-risk" class="ls-input" value="1" step="0.1" style="width: 100%; border: none; background: transparent; color: white; padding: 6px; font-size: 13px;" />
+                </div>
+              </div>
+              <div class="calc-input-grp" style="flex: 1 1 100%;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                  <label style="font-size: 10px; opacity: 0.7;">Leverage (1:X)</label>
+                  <label style="font-size: 10px; opacity: 0.8; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="checkbox" id="calc-unlimited" style="cursor: pointer;" />
+                    Unlimited
+                  </label>
+                </div>
+                <div class="ls-input-row glass">
+                  <input type="number" id="calc-lev" class="ls-input" value="100" style="width: 100%; border: none; background: transparent; color: white; padding: 6px; font-size: 13px; outline: none;" />
+                </div>
+              </div>
+            </div>
+            
+            <button class="btn-analyze" id="calc-btn" style="margin-bottom: 12px;">
+              Calculate Position
+            </button>
+            
+            <div class="levels-grid" id="calc-results" style="opacity: 0.5; transition: 0.3s ease;">
+              <div class="level entry" style="flex-direction: column; align-items: flex-start; padding: 8px;">
+                <div class="lv-label">Lot Size</div>
+                <div class="lv-val" id="calc-lots" style="font-size: 14px; margin-top: 2px;">--</div>
+              </div>
+              <div class="level sl" style="flex-direction: column; align-items: flex-start; padding: 8px;">
+                <div class="lv-label">Loss (USD)</div>
+                <div class="lv-val" id="calc-loss" style="font-size: 14px; margin-top: 2px;">--</div>
+              </div>
+              <div class="level tp" style="flex-direction: column; align-items: flex-start; padding: 8px;">
+                <div class="lv-label">Gain (USD)</div>
+                <div class="lv-val" id="calc-gain" style="font-size: 14px; margin-top: 2px;">--</div>
+              </div>
+            </div>
+            <div style="font-size: 10px; opacity: 0.5; margin-top: 8px; text-align: center;" id="calc-info">
+              Requires an active generated signal.
+            </div>
+          </div>
+        </div>
+
+        <!-- 05 · Signal History -->
         <div class="card glass history-card" id="history-card">
           <div class="card-label collapsible-toggle" id="history-toggle">
-            <span>04 · Signal History</span>
+            <span>05 · Signal History</span>
             <div style="display:flex;align-items:center;gap:8px">
               <button class="hist-clear-btn" id="hist-clear-btn">Clear</button>
               <span class="toggle-arrow">▼</span>
@@ -352,6 +442,32 @@
           <div class="collapsible-body" id="history-body">
             <div class="history-list" id="history-list">
               <div class="hist-empty">No history yet. Run an analysis to start tracking.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 06 · Economic Calendar -->
+        <div class="card glass econ-card" id="econ-card">
+          <div class="card-label collapsible-toggle" id="econ-toggle">
+            06 · Economic Calendar
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body" id="econ-body">
+            <div class="econ-list" id="econ-list">
+              <div class="econ-loading">Loading events…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 07 · Smart Watchlist -->
+        <div class="card glass watchlist-card" id="watchlist-card">
+          <div class="card-label collapsible-toggle open" id="watchlist-toggle">
+            07 · Smart Watchlist
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="watchlist-body">
+            <div class="wl-list" id="wl-list">
+              <div class="wl-loading">Scanning markets…</div>
             </div>
           </div>
         </div>
