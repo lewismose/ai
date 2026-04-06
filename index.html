@@ -449,9 +449,18 @@
             <!-- Stats Grid (filled by JS) -->
             <div class="journal-stats" id="journal-stats" style="display:none"></div>
 
+            <!-- Performance Graph -->
+            <div class="journal-perf-wrap">
+              <canvas id="journal-perf-graph" height="120"></canvas>
+              <div class="journal-perf-legend">
+                <span class="j-leg"><span class="j-dot win"></span> Wins</span>
+                <span class="j-leg"><span class="j-dot loss"></span> Losses</span>
+              </div>
+            </div>
+
             <!-- Equity / Win-rate bar -->
             <div class="journal-equity">
-              <span class="journal-equity-label">📈 Performance</span>
+              <span class="journal-equity-label">📈 Account Growth</span>
               <div class="journal-equity-bar">
                 <div class="journal-equity-fill" id="journal-equity-fill" style="width:0%"></div>
               </div>
@@ -463,7 +472,16 @@
               <button class="j-filter-btn active" data-filter="all">All</button>
               <button class="j-filter-btn" data-filter="won">Wins</button>
               <button class="j-filter-btn" data-filter="lost">Losses</button>
-              <button class="j-filter-btn" data-filter="pending">Open</button>
+              <button class="j-filter-btn" data-filter="pending">Active</button>
+            </div>
+
+            <!-- Ledger Header -->
+            <div class="journal-ledger-header">
+              <span>Asset</span>
+              <span>Pos</span>
+              <span>TF</span>
+              <span>Outcome</span>
+              <span style="text-align:right">R-Profit</span>
             </div>
 
             <!-- Trade rows (filled by JS) -->
@@ -483,6 +501,7 @@
             <div class="econ-list" id="econ-list">
               <div class="econ-loading">Loading events…</div>
             </div>
+            <button class="btn-retry" id="econ-refresh-btn" style="width:100%; margin-top:8px; padding:6px; font-size:11px;">↻ Refresh Calendar</button>
           </div>
         </div>
 
