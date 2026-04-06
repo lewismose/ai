@@ -50,6 +50,7 @@
         </div>
       </div>
       <div class="header-right">
+        <button id="perf-toggle" class="theme-btn" title="Extreme Performance Mode">🚀</button>
         <button id="theme-btn" class="theme-btn" aria-label="Toggle Theme">🌙</button>
         <button id="logout-btn" class="logout-btn" aria-label="Log out">Exit AI</button>
         <div class="live-badge"><span class="live-dot"></span>Live Data</div>
@@ -58,27 +59,32 @@
 
     <!-- ── MARKET SESSIONS BAR ── -->
     <div class="sessions-bar glass" id="sessions-bar">
+      <div class="session-tz-note">All times in UTC</div>
       <div class="session-pill" id="sess-sydney">
         <span class="sess-dot"></span>
         <span class="sess-name">Sydney</span>
+        <span class="sess-times">22:00 - 07:00</span>
         <span class="sess-status">--</span>
         <span class="sess-timer">--:--</span>
       </div>
       <div class="session-pill" id="sess-tokyo">
         <span class="sess-dot"></span>
         <span class="sess-name">Tokyo</span>
+        <span class="sess-times">00:00 - 09:00</span>
         <span class="sess-status">--</span>
         <span class="sess-timer">--:--</span>
       </div>
       <div class="session-pill" id="sess-london">
         <span class="sess-dot"></span>
         <span class="sess-name">London</span>
+        <span class="sess-times">07:00 - 16:00</span>
         <span class="sess-status">--</span>
         <span class="sess-timer">--:--</span>
       </div>
       <div class="session-pill" id="sess-newyork">
         <span class="sess-dot"></span>
         <span class="sess-name">New York</span>
+        <span class="sess-times">12:00 - 21:00</span>
         <span class="sess-status">--</span>
         <span class="sess-timer">--:--</span>
       </div>
@@ -430,18 +436,39 @@
           </div>
         </div>
 
-        <!-- 05 · Signal History -->
+        <!-- 05 · Signal History / Journal -->
         <div class="card glass history-card" id="history-card">
           <div class="card-label collapsible-toggle" id="history-toggle">
-            <span>05 · Signal History</span>
+            <span>05 · Journal Tracker</span>
             <div style="display:flex;align-items:center;gap:8px">
-              <button class="hist-clear-btn" id="hist-clear-btn">Clear</button>
+              <button class="hist-clear-btn" id="hist-clear-btn">Clear All</button>
               <span class="toggle-arrow">▼</span>
             </div>
           </div>
           <div class="collapsible-body" id="history-body">
+            <!-- Stats Grid (filled by JS) -->
+            <div class="journal-stats" id="journal-stats" style="display:none"></div>
+
+            <!-- Equity / Win-rate bar -->
+            <div class="journal-equity">
+              <span class="journal-equity-label">📈 Performance</span>
+              <div class="journal-equity-bar">
+                <div class="journal-equity-fill" id="journal-equity-fill" style="width:0%"></div>
+              </div>
+              <span class="journal-equity-pct" id="journal-equity-pct">No trades yet</span>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="journal-filters">
+              <button class="j-filter-btn active" data-filter="all">All</button>
+              <button class="j-filter-btn" data-filter="won">Wins</button>
+              <button class="j-filter-btn" data-filter="lost">Losses</button>
+              <button class="j-filter-btn" data-filter="pending">Open</button>
+            </div>
+
+            <!-- Trade rows (filled by JS) -->
             <div class="history-list" id="history-list">
-              <div class="hist-empty">No history yet. Run an analysis to start tracking.</div>
+              <div class="hist-empty">📋 No trades yet.<br>Run an analysis to auto-log signals.</div>
             </div>
           </div>
         </div>
@@ -468,6 +495,19 @@
           <div class="collapsible-body open" id="watchlist-body">
             <div class="wl-list" id="wl-list">
               <div class="wl-loading">Scanning markets…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 08 · News Sentiment -->
+        <div class="card glass news-card" id="news-card">
+          <div class="card-label collapsible-toggle open" id="news-toggle">
+            08 · News Sentiment
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="news-body">
+            <div class="news-list" id="news-list" style="max-height:250px;overflow-y:auto;padding:8px 0;">
+              <div class="news-loading" style="padding:12px;font-size:12px;opacity:0.6;text-align:center;">Analyze a pair to fetch news…</div>
             </div>
           </div>
         </div>
@@ -550,6 +590,8 @@
               <span class="alert-dot"></span>
               <span id="alert-badge-text">Alert: –</span>
             </div>
+            <!-- Clean Chart Toggle -->
+            <button id="toggle-indicators" class="btn-toggle-ind" title="Toggle Clean Chart">👁 Options</button>
           </div>
 
           <div class="canvas-container" style="position:relative">
