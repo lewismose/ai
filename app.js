@@ -119,10 +119,11 @@ const PROXIES = [
   // Primary: your own Cloudflare Worker (deploy cloudflare-worker.js — free, 100k/day)
   ...(YOUR_WORKER_URL ? [u => `${YOUR_WORKER_URL}?url=${encodeURIComponent(u)}`] : []),
   // Public fallbacks (rate-limited but usually work):
-  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u => `https://cors-anywhere.herokuapp.com/${u}`, // Note: Needs temporary access activation
   u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  u => `https://thingproxy.freeboard.io/fetch/${u}`,
 ];
 
 
@@ -2278,9 +2279,22 @@ async function fetchEconomicCalendar() {
     }).join('');
 
   } catch (e) {
-    listEl.innerHTML = '<div class="econ-loading">Calendar currently unavailable.</div>';
+    listEl.innerHTML = '<div class="econ-loading">Calendar currently unavailable.<br><span style="font-size:10px; opacity:0.5">Note: Some proxies are blocked by the provider. Try refreshing.</span></div>';
   }
 }
+
+// Bind Calendar Refresh
+document.addEventListener('DOMContentLoaded', () => {
+  const refBtn = document.getElementById('econ-refresh-btn');
+  if (refBtn) {
+    refBtn.addEventListener('click', () => {
+      const listEl = document.getElementById('econ-list');
+      if (listEl) listEl.innerHTML = '<div class="econ-loading">Refreshing calendar…</div>';
+      fetchEconomicCalendar();
+      toast('Syncing economic data...', 'info');
+    });
+  }
+});
 
 /* ── SMART WATCHLIST LOGIC ── */
 const WATCHLIST_PAIRS = ['BTCUSDT', 'ETHUSDT', 'EURUSD', 'GBPUSD', 'GOLD', 'US30'];
@@ -2434,26 +2448,42 @@ function _patchHist() {
   const statsEl = document.getElementById('journal-stats');
   if (!list) return;
 
-  // Compute stats from ALL entries
-  let w = 0, l = 0;
-  h.forEach(e => {
-    if (e.status === 'won') w++;
-    else if (e.status === 'lost') l++;
+  // Compute advanced metrics
+  const closed = h.filter(e => e.status === 'won' || e.status === 'lost');
+  let w = 0, l = 0, totalWinR = 0, totalLossR = 0;
+  let equityCurve = [0];
+  let curR = 0;
+  let peak = 0;
+  let maxDD = 0;
+
+  [...closed].reverse().forEach(e => {
+    const r = (e.status === 'won' ? 2.2 : -1.0);
+    if (r > 0) { w++; totalWinR += r; } else { l++; totalLossR += Math.abs(r); }
+    curR += r;
+    equityCurve.push(curR);
+    if (curR > peak) peak = curR;
+    const dd = peak - curR;
+    if (dd > maxDD) maxDD = dd;
   });
+
   const total = w + l;
   const wr = total > 0 ? Math.round((w / total) * 100) : 0;
-  const pnl = (w * 2.2 - l * 1) * 10; // Estimated P&L at fixed $10/R
+  const pf = totalLossR > 0 ? (totalWinR / totalLossR).toFixed(2) : totalWinR > 0 ? '∞' : '0.00';
+  const expectancy = total > 0 ? ((totalWinR - totalLossR) / total).toFixed(2) : '0.00';
 
   // Stats grid
   if (statsEl) {
     statsEl.style.display = 'grid';
     statsEl.innerHTML = `
-      <div class="j-stat wr"><span>Win Rate</span><span class="val">${wr}%</span></div>
-      <div class="j-stat wins"><span>Wins</span><span class="val">${w}</span></div>
-      <div class="j-stat losses"><span>Losses</span><span class="val">${l}</span></div>
-      <div class="j-stat pnl"><span>Est. P&L</span><span class="val ${pnl >= 0 ? 'pos' : 'neg'}">${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toFixed(0)}</span></div>
+      <div class="j-stat"><span>Win Rate</span><span class="val">${wr}%</span></div>
+      <div class="j-stat"><span>Profit Factor</span><span class="val">${pf}</span></div>
+      <div class="j-stat"><span>Expectancy</span><span class="val">${expectancy}R</span></div>
+      <div class="j-stat"><span>Max Drawdown</span><span class="val neg">-${maxDD.toFixed(1)}R</span></div>
     `;
   }
+
+  // Draw Performance Graph
+  renderPerformanceGraph(h);
 
   // Equity bar
   const eqFill = document.getElementById('journal-equity-fill');
@@ -2492,35 +2522,39 @@ function _patchHist() {
     const rowCls  = status === 'won' ? 'won' : status === 'lost' ? 'lost' : '';
     const note    = e.note || '';
     const dateStr = e.date ? `<span class="hist-date">${e.date}</span>` : '';
+    const rVal    = status === 'won' ? '+2.2R' : status === 'lost' ? '-1.0R' : '--';
+    const profCls = status === 'won' ? 'pos' : status === 'lost' ? 'neg' : '';
 
     // Auto-track info
     const hasLevels = e.tp && e.sl;
     let trackStr = '';
     if (status === 'won' && e.closedAt) {
-      trackStr = `<div class="hist-closed-info">🎯 Closed @ <span class="closed-price">${e.closedAt}</span> <span class="hist-auto-badge">⚡ Auto</span>${e.closedDate ? ` · ${e.closedDate}` : ''}</div>`;
+      trackStr = `<div class="hist-closed-info">🎯 TP Hit @ <span class="closed-price">${e.closedAt}</span> <span class="hist-auto-badge">Auto</span></div>`;
     } else if (status === 'lost' && e.closedAt) {
-      trackStr = `<div class="hist-closed-info">🛑 Closed @ <span class="closed-price">${e.closedAt}</span> <span class="hist-auto-badge">⚡ Auto</span>${e.closedDate ? ` · ${e.closedDate}` : ''}</div>`;
-    } else if (status !== 'won' && status !== 'lost' && hasLevels) {
-      trackStr = `<div class="hist-closed-info">TP <span class="closed-price">${fmtP(e.tp)}</span> · SL <span class="closed-price">${fmtP(e.sl)}</span> <span class="hist-auto-badge">🔍 Tracking</span></div>`;
+      trackStr = `<div class="hist-closed-info">🛑 SL Hit @ <span class="closed-price">${e.closedAt}</span> <span class="hist-auto-badge">Auto</span></div>`;
+    } else if (status === 'pending' && hasLevels) {
+      trackStr = `<div class="hist-closed-info"><span class="hist-auto-badge active">⚡ Active</span> TP: ${fmtP(e.tp)} · SL: ${fmtP(e.sl)}</div>`;
     }
 
     return `
       <div class="hist-row ${rowCls}">
-        <div class="hist-row-top">
+        <div class="hist-main">
           <span class="hist-pair">${e.pair}</span>
-          <span class="hist-tf">${e.tf}</span>
           <span class="hist-sig ${cls}">${e.signal}</span>
-          <span class="hist-conf">${e.confidence}%</span>
-          <span class="hist-outcome ${status}">${status === 'won' ? '✓ Win' : status === 'lost' ? '✗ Loss' : '⏳ Open'}</span>
+          <span class="hist-tf">${e.tf}</span>
+          <span class="hist-outcome ${status}">${status === 'won' ? '✓ TP' : status === 'lost' ? '✗ SL' : '⏳ Open'}</span>
+          <span class="hist-profit ${profCls}">${rVal}</span>
         </div>
-        ${dateStr}
-        ${trackStr}
-        <textarea class="hist-notes" placeholder="Add trade notes…" onchange="saveNote(${realIdx},this.value)">${note}</textarea>
-        <div class="hist-btn-group">
-          <button class="hist-btn ${status === 'won' ? 'won' : ''}" onclick="setHistStatus(${realIdx},'won')">✓ Win</button>
-          <button class="hist-btn ${status === 'lost' ? 'lost' : ''}" onclick="setHistStatus(${realIdx},'lost')">✗ Loss</button>
-          <button class="hist-btn del" onclick="deleteHistEntry(${realIdx})" title="Delete">🗑</button>
+        <textarea class="hist-notes" placeholder="Trade proof or notes…" onchange="saveNote(${realIdx},this.value)">${note}</textarea>
+        <div class="hist-footer">
+          ${dateStr}
+          <div class="hist-btn-group">
+            <button class="hist-btn ${status === 'won' ? 'won' : ''}" onclick="setHistStatus(${realIdx},'won')" title="Log as Win">✓</button>
+            <button class="hist-btn ${status === 'lost' ? 'lost' : ''}" onclick="setHistStatus(${realIdx},'lost')" title="Log as Loss">✗</button>
+            <button class="hist-btn del" onclick="deleteHistEntry(${realIdx})" title="Delete">🗑</button>
+          </div>
         </div>
+        ${trackStr ? `<div style="padding: 0 12px 10px;">${trackStr}</div>` : ''}
       </div>`;
   }).join('');
 }
@@ -2613,3 +2647,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+function renderPerformanceGraph(h) {
+  const canvas = document.getElementById('journal-perf-graph');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  
+  const width = rect.width;
+  const height = 120;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+  
+  const closed = h.filter(e => e.status === 'won' || e.status === 'lost');
+  if (closed.length < 1) {
+    ctx.clearRect(0,0,width,height);
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.font = '10px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('Institutional Analysis Grid Initializing...', width/2, height/2);
+    return;
+  }
+  
+  let points = [0];
+  let cur = 0;
+  [...closed].reverse().forEach(e => {
+    cur += (e.status === 'won' ? 2.2 : -1.0);
+    points.push(cur);
+  });
+  
+  const min = Math.min(...points, -1);
+  const max = Math.max(...points, 1);
+  const range = max - min;
+  const pad = 20;
+  const getY = v => height - pad - ((v - min) / range) * (height - pad * 2);
+  const getX = i => pad + (i / (points.length - 1)) * (width - pad * 2);
+
+  ctx.clearRect(0,0,width,height);
+  
+  // Background Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad + (i/4)*(height - pad*2);
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+  }
+
+  // Zero line
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, getY(0)); ctx.lineTo(width, getY(0));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Bezier Path
+  if (points.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(getX(0), getY(points[0]));
+    
+    for (let i = 0; i < points.length - 1; i++) {
+      const x1 = getX(i), y1 = getY(points[i]);
+      const x2 = getX(i+1), y2 = getY(points[i+1]);
+      const xc = (x1 + x2) / 2;
+      ctx.quadraticCurveTo(x1, y1, xc, (y1 + y2) / 2);
+    }
+    
+    const lastIdx = points.length - 1;
+    ctx.lineTo(getX(lastIdx), getY(points[lastIdx]));
+    
+    // Stroke
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(79, 172, 254, 0.4)';
+    ctx.strokeStyle = '#4FACFE';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Gradient Fill
+    ctx.lineTo(getX(lastIdx), height);
+    ctx.lineTo(getX(0), height);
+    const grad = ctx.createLinearGradient(0, getY(max), 0, height);
+    grad.addColorStop(0, 'rgba(79, 172, 254, 0.15)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
+
+  // Data points
+  points.forEach((p, i) => {
+    ctx.beginPath();
+    ctx.arc(getX(i), getY(p), 3.5, 0, Math.PI*2);
+    ctx.fillStyle = i === 0 ? '#fff' : (points[i] >= points[i-1] ? '#00E676' : '#FF5252');
+    ctx.fill();
+    ctx.strokeStyle = '#080814';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // End label
+  const lastP = points[points.length-1];
+  ctx.fillStyle = lastP >= 0 ? '#00E676' : '#FF5252';
+  ctx.font = 'bold 10px JetBrains Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(`${lastP >= 0 ? '+' : ''}${lastP.toFixed(1)}R`, width - 5, getY(lastP) - 10);
+}
