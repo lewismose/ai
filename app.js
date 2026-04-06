@@ -17,6 +17,48 @@ if (_logoutBtn) {
   });
 }
 
+/* ── Performance Mode & Low-End Detection ───────────────────────────────────
+   Detects weak devices and provides a manual "Extreme Performance" toggle.
+   Strips heavy CSS effects and throttles background tasks for maximum speed.
+   ─────────────────────────────────────────────────────────────────────────── */
+let isLowEnd = (
+  (navigator.hardwareConcurrency || 4) <= 4 ||
+  (navigator.deviceMemory || 4) <= 2 ||
+  ['2g', 'slow-2g'].includes(navigator.connection?.effectiveType)
+);
+
+// Manual override from persistence
+if (localStorage.getItem('tv_perf_mode') === 'extreme') {
+  isLowEnd = true;
+}
+
+if (isLowEnd) document.body.classList.add('low-end');
+
+// Performance Toggle Handler
+document.addEventListener('DOMContentLoaded', () => {
+  const pToggle = document.getElementById('perf-toggle');
+  if (pToggle) {
+    if (isLowEnd) pToggle.classList.add('active');
+    pToggle.addEventListener('click', () => {
+      const active = document.body.classList.toggle('low-end');
+      pToggle.classList.toggle('active', active);
+      isLowEnd = active;
+      localStorage.setItem('tv_perf_mode', active ? 'extreme' : 'normal');
+      toast(active ? '🚀 Extreme Performance ON' : '✨ Quality Mode ON', active ? 'warn' : 'ok');
+      
+      // Force UI updates for new performance state
+      if (active) {
+        // Stop expensive canvas if it was running
+        const cv = document.getElementById('particles-canvas');
+        if (cv) cv.style.display = 'none';
+      } else {
+        // Optionally reload or restart effects, but simple hide/show is safer
+        window.location.reload(); // Simplest way to restart complex canvas/orb logic
+      }
+    });
+  }
+});
+
 /* ═══════════════════════════════════════════════
    TRADEVISION AI  —  TradingView Data Engine
    • Primary source: TradingView UDF (all pairs)
@@ -114,7 +156,54 @@ const S = {
   lastCandles: null,
   lastTA: null,
   lastSig: null,
+  dxyTrend: 'NEUTRAL',
+  newsData: [],
+  config: { showIndicators: true }
 };
+
+async function fetchDXYTrend() {
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/DX=F?interval=1d&range=5d';
+  try {
+    const data = await Promise.any(PROXIES.map(async mkProxy => {
+      const res = await fetchT(mkProxy(url), 5000);
+      if (!res.ok) throw new Error('DXY failed');
+      const text = await res.text();
+      let d = JSON.parse(text);
+      if (d.contents) d = JSON.parse(d.contents);
+      return d;
+    }));
+    const closes = data.chart.result[0].indicators.quote[0].close.filter(v => v !== null);
+    if (closes.length > 2) return closes[closes.length-1] > closes[0] ? 'BULLISH' : 'BEARISH';
+  } catch(e) {}
+  return 'NEUTRAL';
+}
+
+async function fetchNewsSentiment(symbol) {
+  const baseSym = symbol.split('/')[0].split('=')[0].split('-')[0];
+  const url = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(baseSym)}&newsCount=5`;
+  try {
+    const data = await Promise.any(PROXIES.map(async mkProxy => {
+      const res = await fetchT(mkProxy(url), 6000);
+      if (!res.ok) throw new Error('News failed');
+      const text = await res.text();
+      let d = JSON.parse(text);
+      if (d.contents) d = JSON.parse(d.contents);
+      return d;
+    }));
+    if (data.news && data.news.length > 0) {
+      return data.news.map(n => {
+        let title = n.title;
+        let tLow = title.toLowerCase();
+        let score = 0;
+        if (tLow.match(/surge|jump|record|bull|upgrade|positive|high|gain|rally|buy|grow|soar/)) score += 1;
+        if (tLow.match(/plunge|drop|hack|bear|downgrade|negative|cut|sell|low|loss|fall|sink/)) score -= 1;
+        return { title, time: new Date(n.providerPublishTime*1000), score };
+      });
+    }
+  } catch(e) {}
+  return [];
+}
+
 
 // ─── Data: Yahoo Finance ─────────────────────────────────────────────────────
 // Races ALL proxies simultaneously for BOTH Yahoo endpoints.
@@ -638,6 +727,147 @@ function mfi(candles, p = 14) {
   return mfiArr;
 }
 
+// ─── Volume SMA / Anomaly ───────────────────────────────────────────────────
+function volumeSMA(candles, p = 20) {
+  return sma(candles.map(c => c.volume || 0), p);
+}
+
+// ─── SuperTrend ───────────────────────────────────────────────────────────────
+function supertrend(candles, atrArr, p = 10, mult = 3) {
+  const st = [], dir = [];
+  let isUp = true, upper = 0, lower = 0;
+  for (let i = 0; i < candles.length; i++) {
+    if (i < p || atrArr[i] == null) {
+      st.push(null); dir.push(null);
+      continue;
+    }
+    const c = candles[i];
+    const prevC = candles[i - 1];
+    const hl2 = (c.high + c.low) / 2;
+    const bUp = hl2 + mult * atrArr[i];
+    const bDn = hl2 - mult * atrArr[i];
+    
+    // Trailing logic
+    if (i === p) {
+      upper = bUp; lower = bDn;
+    } else {
+      upper = (bUp < upper || prevC.close > upper) ? bUp : upper;
+      lower = (bDn > lower || prevC.close < lower) ? bDn : lower;
+    }
+    
+    if (isUp && c.close <= lower) {
+      isUp = false;
+    } else if (!isUp && c.close >= upper) {
+      isUp = true;
+    }
+    
+    st.push(isUp ? lower : upper);
+    dir.push(isUp ? 'bull' : 'bear');
+  }
+  return { trendLine: st, direction: dir };
+}
+
+// ─── Stochastic RSI ───────────────────────────────────────────────────────────
+function stochRsi(rsiArr, p = 14, k = 3, d = 3) {
+  const stoch = rsiArr.map((v, i) => {
+    if (i < p - 1 || v == null) return null;
+    const window = rsiArr.slice(i - p + 1, i + 1);
+    if (window.some(x => x == null)) return null;
+    const hi = Math.max(...window);
+    const lo = Math.min(...window);
+    if (hi === lo) return 0;
+    return 100 * ((v - lo) / (hi - lo));
+  });
+  const kLine = sma(stoch, k);
+  const dLine = sma(kLine, d);
+  return { k: kLine, d: dLine };
+}
+
+// ─── Order Blocks (Institutional SMC) ─────────────────────────────────────────
+function detectOrderBlocks(candles, swings) {
+  const obs = { bullish: [], bearish: [] };
+  const { highs, lows } = swings;
+  // Bullish OB: last down close before an impulsive up move causing BOS/ChoCH (higher high)
+  for (let i = 1; i < lows.length; i++) {
+    const l = lows[i];
+    let obCandleIdx = -1;
+    for (let j = l.i - 1; j >= Math.max(0, l.i - 10); j--) {
+      if (candles[j].close < candles[j].open) { obCandleIdx = j; break; }
+    }
+    if (obCandleIdx !== -1) {
+      const obC = candles[obCandleIdx];
+      const prevHigh = highs.filter(h => h.i < l.i).pop();
+      if (prevHigh) {
+        let broken = false;
+        for (let k = l.i; k < Math.min(candles.length, l.i + 20); k++) {
+          if (candles[k].close > prevHigh.price) { broken = true; break; }
+        }
+        if (broken) obs.bullish.push({ i: obCandleIdx, top: obC.high, bottom: obC.low, mitigated: false });
+      }
+    }
+  }
+  
+  // Bearish OB: last up close before impulsive down move
+  for (let i = 1; i < highs.length; i++) {
+    const h = highs[i];
+    let obCandleIdx = -1;
+    for (let j = h.i - 1; j >= Math.max(0, h.i - 10); j--) {
+      if (candles[j].close > candles[j].open) { obCandleIdx = j; break; }
+    }
+    if (obCandleIdx !== -1) {
+      const obC = candles[obCandleIdx];
+      const prevLow = lows.filter(l => l.i < h.i).pop();
+      if (prevLow) {
+        let broken = false;
+        for (let k = h.i; k < Math.min(candles.length, h.i + 20); k++) {
+          if (candles[k].close < prevLow.price) { broken = true; break; }
+        }
+        if (broken) obs.bearish.push({ i: obCandleIdx, top: obC.high, bottom: obC.low, mitigated: false });
+      }
+    }
+  }
+  
+  // Mitigation check
+  const n = candles.length;
+  obs.bullish.forEach(ob => {
+    for (let j = ob.i + 2; j < n; j++) { if (candles[j].low <= ob.top) ob.mitigated = true; }
+  });
+  obs.bearish.forEach(ob => {
+    for (let j = ob.i + 2; j < n; j++) { if (candles[j].high >= ob.bottom) ob.mitigated = true; }
+  });
+  
+  return {
+    bullish: obs.bullish.filter(o => !o.mitigated).slice(-3),
+    bearish: obs.bearish.filter(o => !o.mitigated).slice(-3)
+  };
+}
+
+// ─── Liquidity Sweeps ───────────────────────────────────────────────────────
+function detectLiquiditySweeps(candles, swings) {
+  const sweeps = { bullish: [], bearish: [] };
+  const highs = swings.highs;
+  const lows = swings.lows;
+  for (let i = 1; i < lows.length; i++) {
+    const l = lows[i];
+    for (let k = l.i + 1; k < Math.min(candles.length, l.i + 40); k++) {
+      if (candles[k].low < l.price && Math.min(candles[k].open, candles[k].close) > l.price) {
+        sweeps.bullish.push({ i: k, price: candles[k].low, sweptLow: l.price });
+        break;
+      }
+    }
+  }
+  for (let i = 1; i < highs.length; i++) {
+    const h = highs[i];
+    for (let k = h.i + 1; k < Math.min(candles.length, h.i + 40); k++) {
+      if (candles[k].high > h.price && Math.max(candles[k].open, candles[k].close) < h.price) {
+        sweeps.bearish.push({ i: k, price: candles[k].high, sweptHigh: h.price });
+        break;
+      }
+    }
+  }
+  return sweeps;
+}
+
 // ─── AI Narrative ─────────────────────────────────────────────────────────────
 function generateNarrative(sig, ta, info) {
   const n = ta.ri.length - 1;
@@ -661,8 +891,13 @@ function generateNarrative(sig, ta, info) {
   if (bu && bl && ku && kl && bu < ku && bl > kl) smcStr += ' A <em>Volatility Squeeze</em> is active, expect an explosive move.';
   if (ta.fvgData?.bullish?.length > 0 && sig.signal === 'BUY') smcStr += ' Validated by a <em>Bullish FVG</em> injection.';
   else if (ta.fvgData?.bearish?.length > 0 && sig.signal === 'SELL') smcStr += ' Validated by a <em>Bearish FVG</em> rejection.';
+  if (ta.obData?.bullish?.length > 0 && sig.signal === 'BUY') smcStr += ' Price is tapping into a <em>Bullish Order Block</em>.';
+  else if (ta.obData?.bearish?.length > 0 && sig.signal === 'SELL') smcStr += ' Price is rejecting from a <em>Bearish Order Block</em>.';
 
-  return `<em>${info.display}</em> is in a <em>${tStr}</em> with ${adxStr}${vwapStr}. ${rsiStr}.${patStr}${divStr}${smcStr} ${tradeStr}`;
+  let volStr = sig.hasVolAnomaly ? ' <em>Volume anomaly</em> detected, signaling strong institutional participation.' : '';
+  const stStr = sig.stDir ? ` (SuperTrend: ${sig.stDir === 'bull' ? 'Bullish' : 'Bearish'})` : '';
+
+  return `<em>${info.display}</em> is in a <em>${tStr}</em>${stStr} with ${adxStr}${vwapStr}. ${rsiStr}.${patStr}${divStr}${smcStr}${volStr} ${tradeStr}`;
 }
 
 // ─── Multi-Timeframe ──────────────────────────────────────────────────────────
@@ -676,9 +911,15 @@ async function runMultiTF(info) {
       mc: macd(closes), bbs: bb(closes, 20), at: atr(candles, 14), adxData: adx(candles, 14),
       vwapLine: vwap(candles), dc: donchian(candles, 20), mfiArr: mfi(candles, 14)
     };
+    ta.volSma = volumeSMA(candles, 20);
+    ta.stochRsi = stochRsi(ta.ri, 14, 3, 3);
+    ta.superTrend = supertrend(candles, ta.at, 10, 3);
     ta.keltnerData = keltner(candles, ta.at, 20, 1.5);
     ta.fvgData = detectFVG(candles);
-    const swings = swingPoints(candles); ta.ms = detectMarketStructure(candles, swings);
+    const swings = swingPoints(candles); 
+    ta.ms = detectMarketStructure(candles, swings);
+    ta.obData = detectOrderBlocks(candles, swings);
+    ta.sweeps = detectLiquiditySweeps(candles, swings);
     return { tf, sig: generateSignal(candles, ta, info) };
   }));
   return results.map((r, i) => r.status === 'fulfilled' ? { tf: tfs[i], ...r.value.sig } : { tf: tfs[i], signal: 'ERR', confidence: 0 });
@@ -914,14 +1155,66 @@ function generateSignal(candles, ta, pInfo) {
 
   // SMC: Fair Value Gaps
   if (fvgData) {
-    fvgData.bullish.forEach(f => { if (close >= f.top && close <= f.bottom * 1.002) bull += 35; });
-    fvgData.bearish.forEach(f => { if (close <= f.bottom && close >= f.top * 0.998) bear += 35; });
+    fvgData.bullish.forEach(f => { if (close >= f.top && close <= f.bottom * 1.002) bull += 20; });
+    fvgData.bearish.forEach(f => { if (close <= f.bottom && close >= f.top * 0.998) bear += 20; });
+  }
+
+  // Institutional Order Blocks
+  if (ta.obData) {
+    ta.obData.bullish.forEach(ob => { if (close >= ob.top && close <= ob.top * 1.01) bull += 30; });
+    ta.obData.bearish.forEach(ob => { if (close <= ob.bottom && close >= ob.bottom * 0.99) bear += 30; });
+  }
+
+  // Stochastic RSI
+  const srK = ta.stochRsi?.k?.[n], srD = ta.stochRsi?.d?.[n];
+  if (srK != null && srD != null) {
+    if (srK < 20 && srK > srD) bull += 15; // Oversold crossover
+    if (srK > 80 && srK < srD) bear += 15; // Overbought crossover
+  }
+
+  // SuperTrend
+  const stDir = ta.superTrend?.direction?.[n];
+  if (stDir === 'bull') { bull += 20; bear -= 10; }
+  else if (stDir === 'bear') { bear += 20; bull -= 10; }
+
+  // Volume Anomaly
+  const vol = candles[n].volume || 0, vSma = ta.volSma?.[n] || 0;
+  let hasVolAnomaly = false;
+  if (vSma > 0 && vol > vSma * 1.5) {
+    hasVolAnomaly = true;
+    close > candles[n].open ? bull += 15 : bear += 15;
+  }
+
+  // ── Elite Institutional Confluence ──
+
+  // DXY Macro Check
+  if (pInfo.dxyTrend === 'BULLISH') {
+    if (pInfo.isUSDQuote) bear += 15;
+    if (pInfo.isUSDBase) bull += 15;
+  } else if (pInfo.dxyTrend === 'BEARISH') {
+    if (pInfo.isUSDQuote) bull += 15;
+    if (pInfo.isUSDBase) bear += 15;
+  }
+
+  // Liquidity Sweeps
+  if (ta.sweeps) {
+    if (ta.sweeps.bullish.some(s => n - s.i < 5)) bull += 20;
+    if (ta.sweeps.bearish.some(s => n - s.i < 5)) bear += 20;
   }
 
   const net = bull - bear;
-  const signal = net >= 0 ? 'BUY' : 'SELL';
+  let signal = net >= 0 ? 'BUY' : 'SELL';
+  
+  // SuperTrend hard filter: severely penalize signals fighting the macro trend
+  if (signal === 'BUY' && stDir === 'bear') bull -= 25;
+  if (signal === 'SELL' && stDir === 'bull') bear -= 25;
+  
+  const reNet = bull - bear;
+  signal = reNet >= 0 ? 'BUY' : 'SELL';
+
   // If net score is low, confidence is penalised
-  const confidence = Math.max(45, Math.min(96, 30 + Math.abs(net) * 0.55));
+  let confidence = Math.max(45, Math.min(96, 30 + Math.abs(reNet) * 0.45));
+  if (hasVolAnomaly) confidence = Math.min(99, confidence + 4);
 
   // Levels
   const atrV = at[n] ?? (close * 0.012);
@@ -939,7 +1232,7 @@ function generateSignal(candles, ta, pInfo) {
     entry = close; slV = Math.min(swH + atrV * 0.3, close + atrV * 1.8);
     const r = slV - entry; tp = entry - r * rrRatio;
   }
-  return { signal, confidence: Math.round(confidence), entry: f(entry), tp: f(tp), sl: f(slV), rr: `1:${rrRatio}`, rv, hv, bbPos, atrV, adxV: adxV?.toFixed(1), vwap: vw?.toFixed(5) };
+  return { signal, confidence: Math.round(confidence), entry: f(entry), tp: f(tp), sl: f(slV), rr: `1:${rrRatio}`, rv, hv, bbPos, atrV, adxV: adxV?.toFixed(1), vwap: vw?.toFixed(5), hasVolAnomaly, stDir };
 }
 
 // ─── Canvas Chart ─────────────────────────────────────────────────────────────
@@ -968,6 +1261,7 @@ function initColors() {
 initColors();
 
 function drawChart(canvas, candles, ta, sig) {
+  const CH_SHOW = S.config ? S.config.showIndicators : true;
   const W = canvas.clientWidth, H = canvas.clientHeight;
   if (W < 1 || H < 1 || !candles?.length) return;
   const dpr = window.devicePixelRatio || 1;
@@ -980,16 +1274,18 @@ function drawChart(canvas, candles, ta, sig) {
   if (n < 2) return;
 
   // Panel layout — price | vol | rsi | macd | adx | atr
-  const pH = Math.floor(H * 0.46),
-    vH = Math.floor(H * 0.07),
-    rH = Math.floor(H * 0.11),
-    mH = Math.floor(H * 0.11),
-    dxH = Math.floor(H * 0.11),
-    atH = H - pH - vH - rH - mH - dxH;
+  const pH = CH_SHOW ? Math.floor(H * 0.46) : Math.floor(H * 0.90),
+    vH = CH_SHOW ? Math.floor(H * 0.07) : 0,
+    rH = CH_SHOW ? Math.floor(H * 0.11) : 0,
+    mH = CH_SHOW ? Math.floor(H * 0.11) : 0,
+    dxH = CH_SHOW ? Math.floor(H * 0.11) : 0,
+    atH = CH_SHOW ? Math.floor(H * 0.08) : 0;
+  
   const vY = pH, rY = vY + vH, mY = rY + rH, dxY = mY + mH, atY = dxY + dxH;
   const rightPad = Math.max(15, Math.floor(n * 0.3));
   const cw = W / (n + rightPad), bw = Math.max(2, cw * 0.62);
   const xOf = i => (i + 0.5) * cw;
+  const startO = candles.length - Math.min(candles.length, MAX);
 
   // Price range — expand to include Donchian / VWAP
   const dcU = ta.dc?.upper.slice(-n) || [], dcL = ta.dc?.lower.slice(-n) || [];
@@ -1001,39 +1297,66 @@ function drawChart(canvas, candles, ta, sig) {
 
   // Update global chart state for drawing tools
   CS.pMin = pMin; CS.pMax = pMax; CS.pH = pH; CS.W = W;
+  // ── Session Killzones (Background) ────────────────────────────────────────
+  if (CH_SHOW && S.tf.endsWith('m') || S.tf === '1h') {
+    for (let i = 0; i < n; i++) {
+        const d = new Date(cs[i].time);
+        const uh = d.getUTCHours();
+        let cLog = null;
+        if (uh >= 22 || uh < 7) cLog = 'rgba(0, 242, 254, 0.02)'; // sydney
+        else if (uh >= 0 && uh < 9) cLog = 'rgba(255, 213, 79, 0.02)'; // tokyo
+        else if (uh >= 7 && uh < 16) cLog = 'rgba(123, 94, 167, 0.02)'; // london
+        else if (uh >= 12 && uh < 21) cLog = 'rgba(79, 172, 254, 0.02)'; // ny
+        
+        if (uh >= 12 && uh < 16) cLog = 'rgba(255, 82, 82, 0.04)'; // london-ny overlap kz
+        
+        if (cLog) {
+          ctx.fillStyle = cLog;
+          const wFill = cw;
+          ctx.fillRect(xOf(i) - wFill/2, 0, wFill, pH);
+        }
+    }
+  }
+
 
   // ── S/R Zones ────────────────────────────────────────────────────────────
-  (ta.srZones || []).forEach(z => {
-    const y1 = py(Math.min(z.top, pMax)), y2 = py(Math.max(z.bottom, pMin));
-    const h = Math.abs(y2 - y1) || 2;
-    ctx.fillStyle = z.type === 'resistance' ? 'rgba(255,82,82,0.07)' : 'rgba(0,230,118,0.07)';
-    ctx.fillRect(0, Math.min(y1, y2), W * 0.82, Math.max(h, 2));
-    ctx.strokeStyle = z.type === 'resistance' ? 'rgba(255,82,82,0.3)' : 'rgba(0,230,118,0.3)';
-    ctx.lineWidth = 0.8; ctx.setLineDash([4, 3]);
-    ctx.beginPath(); ctx.moveTo(0, py(z.mid)); ctx.lineTo(W * 0.82, py(z.mid)); ctx.stroke();
-    ctx.setLineDash([]);
-    if (py(z.mid) > 8 && py(z.mid) < pH - 4) {
-      ctx.fillStyle = z.type === 'resistance' ? 'rgba(255,82,82,0.55)' : 'rgba(0,230,118,0.55)';
-      ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
-      ctx.fillText(z.type === 'resistance' ? 'R' : 'S', 3, py(z.mid) - 2);
-    }
-  });
+  if (CH_SHOW) {
+    (ta.srZones || []).forEach(z => {
+      const y1 = py(Math.min(z.top, pMax)), y2 = py(Math.max(z.bottom, pMin));
+      const h = Math.abs(y2 - y1) || 2;
+      ctx.fillStyle = z.type === 'resistance' ? 'rgba(255,82,82,0.07)' : 'rgba(0,230,118,0.07)';
+      ctx.fillRect(0, Math.min(y1, y2), W * 0.82, Math.max(h, 2));
+      ctx.strokeStyle = z.type === 'resistance' ? 'rgba(255,82,82,0.3)' : 'rgba(0,230,118,0.3)';
+      ctx.lineWidth = 0.8; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(0, py(z.mid)); ctx.lineTo(W * 0.82, py(z.mid)); ctx.stroke();
+      ctx.setLineDash([]);
+      if (py(z.mid) > 8 && py(z.mid) < pH - 4) {
+        ctx.fillStyle = z.type === 'resistance' ? 'rgba(255,82,82,0.55)' : 'rgba(0,230,118,0.55)';
+        ctx.font = '8px JetBrains Mono'; ctx.textAlign = 'left';
+        ctx.fillText(z.type === 'resistance' ? 'R' : 'S', 3, py(z.mid) - 2);
+      }
+    });
+  }
 
   // Grid
-  ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
-  ctx.fillStyle = C.txt; ctx.font = `9px 'JetBrains Mono',monospace`;
-  for (let i = 0; i <= 5; i++) {
-    const v = pMin + pR * i / 5, yy = py(v);
-    ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
-    ctx.textAlign = 'right'; ctx.fillText(fmtP(v), W - 3, yy - 2);
+  if (CH_SHOW) {
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.fillStyle = C.txt; ctx.font = `9px 'JetBrains Mono',monospace`;
+    for (let i = 0; i <= 5; i++) {
+        const v = pMin + pR * i / 5, yy = py(v);
+        ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+        ctx.textAlign = 'right'; ctx.fillText(fmtP(v), W - 3, yy - 2);
+    }
   }
 
   // ── Donchian Cloud (cloud only, no border lines) ──────────────────────────
-  ctx.beginPath();
-  let dcStart = true;
-  dcU.forEach((v, i) => { if (v == null) { dcStart = true; return; } dcStart ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); dcStart = false; });
-  for (let i = n - 1; i >= 0; i--) { if (dcL[i] == null) continue; ctx.lineTo(xOf(i), py(dcL[i])); }
-  ctx.closePath(); ctx.fillStyle = C.dcFill; ctx.fill();
+  if (CH_SHOW) {
+    ctx.beginPath();
+    let dcStart = true;
+    dcU.forEach((v, i) => { if (v == null) { dcStart = true; return; } dcStart ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); dcStart = false; });
+    for (let i = n - 1; i >= 0; i--) { if (dcL[i] == null) continue; ctx.lineTo(xOf(i), py(dcL[i])); }
+    ctx.closePath(); ctx.fillStyle = C.dcFill; ctx.fill();
+  }
 
   // ── BB ────────────────────────────────────────────────────────────────────
   const bbU = ta.bbs.upper.slice(-n), bbL = ta.bbs.lower.slice(-n), bbM = ta.bbs.middle.slice(-n);
@@ -1041,23 +1364,28 @@ function drawChart(canvas, candles, ta, sig) {
   bbU.forEach((v, i) => { if (v == null) return; i === 0 || bbU[i - 1] == null ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); });
   for (let i = n - 1; i >= 0; i--) { if (bbL[i] == null) continue; ctx.lineTo(xOf(i), py(bbL[i])); }
   ctx.closePath(); ctx.fillStyle = C.bbFill; ctx.fill();
-  [[bbU, C.bbLine], [bbM, 'rgba(255,255,255,0.1)'], [bbL, C.bbLine]].forEach(([arr, cl]) => {
-    ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = 1; let s = true;
-    arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); s = false; });
-    ctx.stroke();
-  });
+  if (CH_SHOW) {
+    [[bbU, C.bbLine], [bbM, 'rgba(255,255,255,0.1)'], [bbL, C.bbLine]].forEach(([arr, cl]) => {
+      ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = 1; let s = true;
+      arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); s = false; });
+      ctx.stroke();
+    });
+  }
 
-  // ── EMAs ──────────────────────────────────────────────────────────────────
-  [[ta.e20.slice(-n), C.e20, 1.5], [ta.e50.slice(-n), C.e50, 1.5], [ta.e200.slice(-n), C.e200, 1.2]].forEach(([arr, cl, lw]) => {
-    ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
-    arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); s = false; });
-    ctx.stroke();
-  });
+  if (CH_SHOW) {
+    [[ta.e20.slice(-n), C.e20, 1.5], [ta.e50.slice(-n), C.e50, 1.5], [ta.e200.slice(-n), C.e200, 1.2]].forEach(([arr, cl, lw]) => {
+      ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
+      arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); s = false; });
+      ctx.stroke();
+    });
+  }
 
   // ── VWAP ──────────────────────────────────────────────────────────────────
-  ctx.beginPath(); ctx.strokeStyle = C.vwap; ctx.lineWidth = 1.6; ctx.setLineDash([5, 3]); let vwFirst = true;
-  vwapArr.forEach((v, i) => { if (v == null) { vwFirst = true; return; } vwFirst ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); vwFirst = false; });
-  ctx.stroke(); ctx.setLineDash([]);
+  if (CH_SHOW) {
+    ctx.beginPath(); ctx.strokeStyle = C.vwap; ctx.lineWidth = 1.6; ctx.setLineDash([5, 3]); let vwFirst = true;
+    vwapArr.forEach((v, i) => { if (v == null) { vwFirst = true; return; } vwFirst ? ctx.moveTo(xOf(i), py(v)) : ctx.lineTo(xOf(i), py(v)); vwFirst = false; });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
 
   // ── Candles ───────────────────────────────────────────────────────────────
   cs.forEach((cd, i) => {
@@ -1100,8 +1428,7 @@ function drawChart(canvas, candles, ta, sig) {
   }
 
   // ── Fibonacci Levels ──────────────────────────────────────────────────────
-  const startO = candles.length - Math.min(candles.length, MAX);
-  if (ta.fib) {
+  if (CH_SHOW && ta.fib) {
     ta.fib.levels.forEach(lv => {
       if (lv.price < pMin || lv.price > pMax) return;
       const yy = py(lv.price);
@@ -1117,7 +1444,7 @@ function drawChart(canvas, candles, ta, sig) {
   }
 
   // ── Market Structure Labels ───────────────────────────────────────────────
-  if (ta.ms?.labels) {
+  if (CH_SHOW && ta.ms?.labels) {
     ta.ms.labels.forEach(lb => {
       const idx = lb.i - startO;
       if (idx < 0 || idx >= n) return;
@@ -1129,51 +1456,58 @@ function drawChart(canvas, candles, ta, sig) {
   }
 
   // ── Pattern Badges ────────────────────────────────────────────────────────
-  (ta.patterns || []).slice(-8).forEach(pt => {
-    const idx = pt.i - startO;
-    if (idx < 0 || idx >= n) return;
-    const cd = cs[idx]; if (!cd) return;
-    const x = xOf(idx);
-    const yBase = pt.type === 'bull' ? py(cd.low) + 14 : py(cd.high) - 8;
-    ctx.save(); ctx.font = 'bold 7px Inter'; ctx.textAlign = 'center';
-    ctx.fillStyle = pt.type === 'bull' ? 'rgba(0,230,118,0.75)' : pt.type === 'bear' ? 'rgba(255,82,82,0.75)' : 'rgba(255,213,79,0.65)';
-    ctx.fillText(pt.name, x, yBase); ctx.restore();
-  });
+  if (CH_SHOW) {
+    (ta.patterns || []).slice(-8).forEach(pt => {
+        const idx = pt.i - startO;
+        if (idx < 0 || idx >= n) return;
+        const cd = cs[idx]; if (!cd) return;
+        const x = xOf(idx);
+        const yBase = pt.type === 'bull' ? py(cd.low) + 14 : py(cd.high) - 8;
+        ctx.save(); ctx.font = 'bold 7px Inter'; ctx.textAlign = 'center';
+        ctx.fillStyle = pt.type === 'bull' ? 'rgba(0,230,118,0.75)' : pt.type === 'bear' ? 'rgba(255,82,82,0.75)' : 'rgba(255,213,79,0.65)';
+        ctx.fillText(pt.name, x, yBase); ctx.restore();
+    });
+  }
 
   // ── Volume ────────────────────────────────────────────────────────────────
-  const maxV = Math.max(...cs.map(c => c.volume)) || 1;
-  cs.forEach((cd, i) => {
-    const vh = (cd.volume / maxV) * vH;
-    ctx.fillStyle = cd.close >= cd.open ? C.vol_bull : C.vol_bear;
-    ctx.fillRect(xOf(i) - bw / 2, vY + vH - vh, bw, vh);
-  });
-  ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('VOL', 4, vY + 12);
+  if (CH_SHOW) {
+    const maxV = Math.max(...cs.map(c => c.volume)) || 1;
+    cs.forEach((cd, i) => {
+        const vh = (cd.volume / maxV) * vH;
+        ctx.fillStyle = cd.close >= cd.open ? C.vol_bull : C.vol_bear;
+        ctx.fillRect(xOf(i) - bw / 2, vY + vH - vh, bw, vh);
+    });
+    ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('VOL', 4, vY + 12);
+  }
 
-  // ── RSI ───────────────────────────────────────────────────────────────────
-  const ri = ta.ri.slice(-n);
-  const rpy = v => rY + rH * (1 - v / 100);
-  ctx.fillStyle = 'rgba(255,82,82,0.10)'; ctx.fillRect(0, rY, W, rH * 0.3);
-  ctx.fillStyle = 'rgba(0,230,118,0.08)'; ctx.fillRect(0, rY + rH * 0.7, W, rH * 0.3);
-  [30, 50, 70].forEach(v => {
-    ctx.strokeStyle = v === 50 ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = 0.8;
-    ctx.beginPath(); ctx.moveTo(0, rpy(v)); ctx.lineTo(W, rpy(v)); ctx.stroke();
-    ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right'; ctx.fillText(v, W - 2, rpy(v) - 2);
-  });
-  ctx.beginPath(); ctx.strokeStyle = C.rsiLine; ctx.lineWidth = 1.5; let rFirst = true;
-  ri.forEach((v, i) => { if (v == null) { rFirst = true; return; } rFirst ? ctx.moveTo(xOf(i), rpy(v)) : ctx.lineTo(xOf(i), rpy(v)); rFirst = false; });
-  ctx.stroke();
-  // RSI divergence arrows
-  const drawDivArrow = (xi, rsiV, isBull) => {
-    if (xi < 0 || xi >= n) return;
-    const x = xOf(xi), y = rpy(rsiV);
-    ctx.save(); ctx.fillStyle = isBull ? 'rgba(0,230,118,0.85)' : 'rgba(255,82,82,0.85)';
-    ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
-    ctx.fillText(isBull ? '▲' : '▼', x, isBull ? y + 12 : y - 4);
-    ctx.restore();
-  };
-  (ta.divergence?.bullish || []).forEach(d => { const si = d.endI - startO; drawDivArrow(si, d.endRSI, true); });
-  (ta.divergence?.bearish || []).forEach(d => { const si = d.endI - startO; drawDivArrow(si, d.endRSI, false); });
-  ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('RSI(14)', 4, rY + 12);
+  // ─── RSI ──────────────────────────────────────────────────────────────────
+  if (CH_SHOW) {
+    const ri = ta.ri.slice(-n);
+    const rpy = v => rY + rH * (1 - v / 100);
+    ctx.fillStyle = 'rgba(255,82,82,0.10)'; ctx.fillRect(0, rY, W, rH * 0.3);
+    ctx.fillStyle = 'rgba(0,230,118,0.08)'; ctx.fillRect(0, rY + rH * 0.7, W, rH * 0.3);
+    [30, 50, 70].forEach(v => {
+        ctx.strokeStyle = v === 50 ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(0, rpy(v)); ctx.lineTo(W, rpy(v)); ctx.stroke();
+        ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right'; ctx.fillText(v, W - 2, rpy(v) - 2);
+    });
+    ctx.beginPath(); ctx.strokeStyle = C.rsiLine; ctx.lineWidth = 1.5; let rFirst = true;
+    ri.forEach((v, i) => { if (v == null) { rFirst = true; return; } rFirst ? ctx.moveTo(xOf(i), rpy(v)) : ctx.lineTo(xOf(i), rpy(v)); rFirst = false; });
+    ctx.stroke();
+
+    // RSI divergence arrows (within RSI block scope)
+    const drawDivArrow = (xi, rsiV, isBull) => {
+        if (xi < 0 || xi >= n) return;
+        const x = xOf(xi), y = rpy(rsiV);
+        ctx.save(); ctx.fillStyle = isBull ? 'rgba(0,230,118,0.85)' : 'rgba(255,82,82,0.85)';
+        ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
+        ctx.fillText(isBull ? '▲' : '▼', x, isBull ? y + 12 : y - 4);
+        ctx.restore();
+    };
+    (ta.divergence?.bullish || []).forEach(d => { const si = d.endI - startO; drawDivArrow(si, d.endRSI, true); });
+    (ta.divergence?.bearish || []).forEach(d => { const si = d.endI - startO; drawDivArrow(si, d.endRSI, false); });
+    ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('RSI(14)', 4, rY + 12);
+  }
 
   // ── MACD ──────────────────────────────────────────────────────────────────
   const ml = ta.mc.macd.slice(-n), sl2 = ta.mc.signal.slice(-n), hl = ta.mc.histogram.slice(-n);
@@ -1187,12 +1521,14 @@ function drawChart(canvas, candles, ta, sig) {
     const hh = Math.abs(v) * mH / (2 * mMax), yt = v >= 0 ? mpy(v) : mpy(0);
     ctx.fillStyle = v >= 0 ? C.mBull : C.mBear; ctx.fillRect(xOf(i) - bw / 2, yt, bw, Math.max(1, hh));
   });
-  [[ml, C.macdL, 1.5], [sl2, C.macdS, 1.2]].forEach(([arr, cl, lw]) => {
+  if (CH_SHOW) {
+    [[ml, C.macdL, 1.5], [sl2, C.macdS, 1.2]].forEach(([arr, cl, lw]) => {
     ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
     arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), mpy(v)) : ctx.lineTo(xOf(i), mpy(v)); s = false; });
     ctx.stroke();
   });
   ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('MACD', 4, mY + 12);
+  }
 
   // ── ADX panel ─────────────────────────────────────────────────────────────
   const adxArr = ta.adxData?.adx.slice(-n) || [], diPArr = ta.adxData?.diP.slice(-n) || [], diNArr = ta.adxData?.diN.slice(-n) || [];
@@ -1203,30 +1539,38 @@ function drawChart(canvas, candles, ta, sig) {
   ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 0.8;
   ctx.beginPath(); ctx.moveTo(0, adxPy(25)); ctx.lineTo(W, adxPy(25)); ctx.stroke();
   ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right'; ctx.fillText('25', W - 2, adxPy(25) - 2);
-  [[adxArr, C.adxLine, 1.6], [diPArr, C.diPLine, 1.2], [diNArr, C.diNLine, 1.2]].forEach(([arr, cl, lw]) => {
+  if (CH_SHOW) {
+    [[adxArr, C.adxLine, 1.6], [diPArr, C.diPLine, 1.2], [diNArr, C.diNLine, 1.2]].forEach(([arr, cl, lw]) => {
     ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
     arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), adxPy(v)) : ctx.lineTo(xOf(i), adxPy(v)); s = false; });
     ctx.stroke();
   });
   ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('ADX(14)', 4, dxY + 12);
+  }
 
   // ── ATR panel ─────────────────────────────────────────────────────────────
   const atrArr = ta.at.slice(-n);
   const atrMax = Math.max(...atrArr.filter(Boolean)) || 1;
   const atrPy = v => atY + atH * (1 - v / atrMax);
-  ctx.beginPath(); ctx.strokeStyle = C.atrLine; ctx.lineWidth = 1.5; let aFirst = true;
-  atrArr.forEach((v, i) => { if (v == null) { aFirst = true; return; } aFirst ? ctx.moveTo(xOf(i), atrPy(v)) : ctx.lineTo(xOf(i), atrPy(v)); aFirst = false; });
-  ctx.stroke();
-  ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('ATR(14)', 4, atY + 12);
+  if (CH_SHOW) {
+    ctx.beginPath(); ctx.strokeStyle = C.atrLine; ctx.lineWidth = 1.5; let aFirst = true;
+    atrArr.forEach((v, i) => { if (v == null) { aFirst = true; return; } aFirst ? ctx.moveTo(xOf(i), atrPy(v)) : ctx.lineTo(xOf(i), atrPy(v)); aFirst = false; });
+    ctx.stroke();
+    ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('ATR(14)', 4, atY + 12);
+  }
 
   // ── Dividers ──────────────────────────────────────────────────────────────
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
-  [vY, rY, mY, dxY, atY].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); });
+  if (CH_SHOW) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
+    [vY, rY, mY, dxY, atY].forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); });
+  }
 
   // ── X-axis time ───────────────────────────────────────────────────────────
-  ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
-  const tStep = Math.max(1, Math.floor(n / 7));
-  for (let i = 0; i < n; i += tStep) ctx.fillText(fmtT(cs[i].time), xOf(i), H - 2);
+  if (CH_SHOW) {
+    ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'center';
+    const tStep = Math.max(1, Math.floor(n / 7));
+    for (let i = 0; i < n; i += tStep) ctx.fillText(fmtT(cs[i].time), xOf(i), H - 2);
+  }
 
   // ── User Drawings ─────────────────────────────────────────────────────────
   drawDrawings(ctx, W);
@@ -1246,9 +1590,13 @@ function fmtT(ts) {
 
 // ─── Particles ────────────────────────────────────────────────────────────────
 (function () {
-  const cv = document.getElementById('particles-canvas'), cx = cv.getContext('2d');
+  const cv = document.getElementById('particles-canvas');
+  // Skip entirely on low-end devices
+  if (isLowEnd) { cv.style.display = 'none'; return; }
+  const cx = cv.getContext('2d');
   let W, H, P;
-  const init = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; P = Array.from({ length: 48 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.2 + .3, vx: (Math.random() - .5) * .2, vy: (Math.random() - .5) * .2, a: Math.random() * .38 + .07, h: Math.random() > .5 ? 220 : 270 })) };
+  const COUNT = 24; // reduced from 48 for better perf everywhere
+  const init = () => { W = cv.width = innerWidth; H = cv.height = innerHeight; P = Array.from({ length: COUNT }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.1 + .3, vx: (Math.random() - .5) * .18, vy: (Math.random() - .5) * .18, a: Math.random() * .32 + .06, h: Math.random() > .5 ? 220 : 270 })) };
   const draw = () => { cx.clearRect(0, 0, W, H); P.forEach(p => { p.x = (p.x + p.vx + W) % W; p.y = (p.y + p.vy + H) % H; cx.beginPath(); cx.arc(p.x, p.y, p.r, 0, Math.PI * 2); cx.fillStyle = `hsla(${p.h},70%,75%,${p.a})`; cx.fill() }); requestAnimationFrame(draw) };
   init(); draw(); window.addEventListener('resize', init);
 })();
@@ -1502,18 +1850,36 @@ async function doAnalyze() {
       dc: donchian(candles, 20),
       mfiArr: mfi(candles, 14),
     };
+    ta.volSma = volumeSMA(candles, 20);
+    ta.stochRsi = stochRsi(ta.ri, 14, 3, 3);
+    ta.superTrend = supertrend(candles, ta.at, 10, 3);
     ta.keltnerData = keltner(candles, ta.at, 20, 1.5);
     ta.fvgData = detectFVG(candles);
     // Advanced analysis layers
     const swings = swingPoints(candles);
     ta.ms = detectMarketStructure(candles, swings);
+    ta.obData = detectOrderBlocks(candles, swings);
+    ta.sweeps = detectLiquiditySweeps(candles, swings);
     ta.srZones = detectSRZones(candles, swings);
     ta.patterns = detectPatterns(candles);
     ta.divergence = detectDivergence(candles, ta.ri, swings);
     ta.fib = fibonacci(candles);
-    const sig = generateSignal(candles, ta, info);
+    let sig = generateSignal(candles, ta, info);
 
     S.lastCandles = candles; S.lastTA = ta; S.lastSig = sig;
+    const isUSD = raw.includes('USD');
+    S.dxyTrend = isUSD ? await fetchDXYTrend() : 'NEUTRAL';
+    info.dxyTrend = S.dxyTrend;
+    info.isUSDBase = raw.startsWith('USD');
+    info.isUSDQuote = raw.endsWith('USD');
+    
+    S.newsData = await fetchNewsSentiment(raw);
+    renderNews(S.newsData);
+    
+    // Re-generate signal with DXY and News data for final institutional confluence
+    sig = generateSignal(candles, ta, info);
+    S.lastSig = sig;
+
 
     stopSteps();
     await new Promise(r => setTimeout(r, 300));
@@ -1549,7 +1915,15 @@ async function doAnalyze() {
     await new Promise(r => setTimeout(r, 40));
     drawChart(document.getElementById('main-canvas'), candles, ta, sig);
     renderSignal(sig, info, ta);
-    saveHistory({ pair: pairInput.value.toUpperCase(), tf: S.tf, signal: sig.signal, confidence: sig.confidence, date: new Date().toLocaleString() });
+    saveHistory({
+      pair: pairInput.value.toUpperCase(), tf: S.tf,
+      signal: sig.signal, confidence: sig.confidence,
+      date: new Date().toLocaleString(),
+      entryPrice: parseFloat(sig.entry.replace(/,/g, '')),
+      tp: parseFloat(sig.tp.replace(/,/g, '')),
+      sl: parseFloat(sig.sl.replace(/,/g, '')),
+      symInfo: { useBinance: info.useBinance, binSym: info.binSym, yahooSym: info.yahooSym, type: info.type }
+    });
     renderHistory();
     toast(`${pairInput.value.toUpperCase()} · ${sig.signal} · ${sig.confidence}% confidence`, 'ok');
     // Multi-TF (async, non-blocking)
@@ -1795,10 +2169,10 @@ if (pCalcUnl && pCalcLevInp) {
 
 /* ── MARKET SESSIONS LOGIC ── */
 const SESSION_CONFIG = [
-  { id: 'sydney', name: 'Sydney', start: 22, end: 7, color: '#00F2FE' },
-  { id: 'tokyo', name: 'Tokyo', start: 0, end: 9, color: '#FFD54F' },
-  { id: 'london', name: 'London', start: 7, end: 16, color: '#7B5EA7' },
-  { id: 'newyork', name: 'New York', start: 12, end: 21, color: '#4FACFE' }
+  { id: 'sydney', name: 'Sydney', start: 22, end: 7, times: '22:00 - 07:00 UTC', color: '#00F2FE' },
+  { id: 'tokyo', name: 'Tokyo', start: 0, end: 9, times: '00:00 - 09:00 UTC', color: '#FFD54F' },
+  { id: 'london', name: 'London', start: 7, end: 16, times: '07:00 - 16:00 UTC', color: '#7B5EA7' },
+  { id: 'newyork', name: 'New York', start: 12, end: 21, times: '12:00 - 21:00 UTC', color: '#4FACFE' }
 ];
 
 function updateMarketSessions() {
@@ -1853,9 +2227,20 @@ async function fetchEconomicCalendar() {
   if (!listEl) return;
 
   try {
-    const res = await fetchT('https://nfs.faireconomy.media/ff_calendar_thisweek.json', 8000);
-    if (!res.ok) throw new Error('Calendar fetch failed');
-    const events = await res.json();
+    const url = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+    const events = await Promise.any(PROXIES.map(async mkProxy => {
+      const res = await fetchT(mkProxy(url), 10000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { throw new Error('Bad JSON'); }
+      if (typeof data.contents === 'string') {
+        if (data.status?.http_code && data.status.http_code !== 200) throw new Error(`Upstream ${data.status.http_code}`);
+        try { data = JSON.parse(data.contents); } catch { throw new Error('Bad wrapper'); }
+      }
+      if (!Array.isArray(data)) throw new Error('Not an array');
+      return data;
+    }));
     
     const now = new Date();
     // Filter: High impact, strictly upcoming
@@ -1952,11 +2337,279 @@ window.quickAnalyze = (symbol) => {
 };
 
 /* ── INITIALIZE NEW FEATURES ── */
-setInterval(updateMarketSessions, 1000);
+// On low-end devices update sessions every 10s (not every 1s)
+setInterval(updateMarketSessions, isLowEnd ? 10000 : 1000);
 updateMarketSessions();
 
-fetchEconomicCalendar();
-setInterval(fetchEconomicCalendar, 300000); // 5 mins
+// On low-end delay calendar a bit so page renders first
+setTimeout(fetchEconomicCalendar, isLowEnd ? 4000 : 0);
+setInterval(fetchEconomicCalendar, 300000);
 
-setTimeout(scanSmartWatchlist, 1000);
-setInterval(scanSmartWatchlist, 180000); // 3 mins
+// Delay watchlist on low-end (heavy — 6 parallel API calls)
+setTimeout(scanSmartWatchlist, isLowEnd ? 8000 : 1500);
+setInterval(scanSmartWatchlist, isLowEnd ? 300000 : 180000);
+
+// ─── News Output ─────────────────────────────────────────────────────────────
+function renderNews(news) {
+  const list = document.getElementById('news-list');
+  if (!list) return;
+  if (!news.length) { list.innerHTML = '<div style="padding: 12px; color: var(--text3); font-size: 0.75rem;">No actionable news recently.</div>'; return; }
+  
+  list.innerHTML = news.map(n => {
+    let sentCls = n.score > 0 ? 'bull' : n.score < 0 ? 'bear' : 'neu';
+    let sentTxt = n.score > 0 ? 'BULLISH' : n.score < 0 ? 'BEARISH' : 'NEUTRAL';
+    const tStr = n.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `<div class="news-item">
+      <div class="news-title">${n.title}</div>
+      <div class="news-meta">
+        <span>${n.time.toLocaleDateString()} ${tStr}</span>
+        <span class="news-sentiment ${sentCls}">${sentTxt}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Auto TP/SL Trade Tracker ───────────────────────────────────────────────
+async function autoTrackTrades() {
+  const h = loadHistory();
+  let anyUpdated = false;
+
+  for (let i = 0; i < h.length; i++) {
+    const e = h[i];
+    // Only track pending entries that have all data
+    if ((e.status && e.status !== 'pending') || !e.tp || !e.sl || !e.symInfo) continue;
+
+    try {
+      let price = null;
+      const sym = e.symInfo;
+
+      if (sym.useBinance && sym.binSym) {
+        const r = await fetchT(`https://api.binance.com/api/v3/ticker/price?symbol=${sym.binSym}`, 6000);
+        if (r.ok) price = parseFloat((await r.json()).price);
+      } else if (sym.yahooSym) {
+        const candles = await fetchYahoo(sym.yahooSym, '1h');
+        price = candles[candles.length - 1].close;
+      }
+
+      if (!price || isNaN(price)) continue;
+
+      const isBuy = e.signal === 'BUY';
+      const hitTP = isBuy ? price >= e.tp : price <= e.tp;
+      const hitSL = isBuy ? price <= e.sl : price >= e.sl;
+
+      if (hitTP) {
+        h[i].status = 'won';
+        h[i].closedAt = fmtP(price);
+        h[i].closedDate = new Date().toLocaleString();
+        anyUpdated = true;
+        toast(`🎯 ${e.pair} hit Take Profit! Auto-marked as Win ✓`, 'ok');
+      } else if (hitSL) {
+        h[i].status = 'lost';
+        h[i].closedAt = fmtP(price);
+        h[i].closedDate = new Date().toLocaleString();
+        anyUpdated = true;
+        toast(`🛑 ${e.pair} hit Stop Loss. Auto-marked as Loss ✗`, 'warn');
+      }
+    } catch (err) { /* silent — don't block other trades */ }
+  }
+
+  if (anyUpdated) {
+    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+    _patchHist();
+  }
+}
+
+// Run tracker every 90 seconds (skip on low-end — use 5 min)
+setTimeout(() => {
+  autoTrackTrades();
+  setInterval(autoTrackTrades, isLowEnd ? 300000 : 90000);
+}, 5000);
+
+// ─── Extended Journal Logic ─────────────────────────────
+let _journalFilter = 'all';
+
+function _patchHist() {
+  const h = loadHistory();
+  const list = document.getElementById('history-list');
+  const statsEl = document.getElementById('journal-stats');
+  if (!list) return;
+
+  // Compute stats from ALL entries
+  let w = 0, l = 0;
+  h.forEach(e => {
+    if (e.status === 'won') w++;
+    else if (e.status === 'lost') l++;
+  });
+  const total = w + l;
+  const wr = total > 0 ? Math.round((w / total) * 100) : 0;
+  const pnl = (w * 2.2 - l * 1) * 10; // Estimated P&L at fixed $10/R
+
+  // Stats grid
+  if (statsEl) {
+    statsEl.style.display = 'grid';
+    statsEl.innerHTML = `
+      <div class="j-stat wr"><span>Win Rate</span><span class="val">${wr}%</span></div>
+      <div class="j-stat wins"><span>Wins</span><span class="val">${w}</span></div>
+      <div class="j-stat losses"><span>Losses</span><span class="val">${l}</span></div>
+      <div class="j-stat pnl"><span>Est. P&L</span><span class="val ${pnl >= 0 ? 'pos' : 'neg'}">${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toFixed(0)}</span></div>
+    `;
+  }
+
+  // Equity bar
+  const eqFill = document.getElementById('journal-equity-fill');
+  const eqPct  = document.getElementById('journal-equity-pct');
+  if (eqFill && eqPct) {
+    const fillPct = total > 0 ? wr : 0;
+    setTimeout(() => { eqFill.style.width = fillPct + '%'; }, 120);
+    eqPct.textContent = total > 0 ? wr + '% win rate' : 'No trades closed yet';
+    eqFill.style.background = wr >= 55
+      ? 'linear-gradient(90deg,var(--purple),var(--green))'
+      : wr >= 40
+        ? 'linear-gradient(90deg,var(--purple),var(--gold))'
+        : 'linear-gradient(90deg,var(--purple),var(--red))';
+  }
+
+  if (!h.length) {
+    list.innerHTML = '<div class="hist-empty">📋 No trades yet.<br>Run an analysis to auto-log signals.</div>';
+    return;
+  }
+
+  // Apply filter
+  const visible = _journalFilter === 'all' ? h : h.filter(e => {
+    if (_journalFilter === 'pending') return !e.status || e.status === 'pending';
+    return e.status === _journalFilter;
+  });
+
+  if (!visible.length) {
+    list.innerHTML = `<div class="hist-empty">No ${_journalFilter} trades found.</div>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(e => {
+    const realIdx = h.indexOf(e);
+    const cls     = e.signal === 'BUY' ? 'buy' : 'sell';
+    const status  = e.status || 'pending';
+    const rowCls  = status === 'won' ? 'won' : status === 'lost' ? 'lost' : '';
+    const note    = e.note || '';
+    const dateStr = e.date ? `<span class="hist-date">${e.date}</span>` : '';
+
+    // Auto-track info
+    const hasLevels = e.tp && e.sl;
+    let trackStr = '';
+    if (status === 'won' && e.closedAt) {
+      trackStr = `<div class="hist-closed-info">🎯 Closed @ <span class="closed-price">${e.closedAt}</span> <span class="hist-auto-badge">⚡ Auto</span>${e.closedDate ? ` · ${e.closedDate}` : ''}</div>`;
+    } else if (status === 'lost' && e.closedAt) {
+      trackStr = `<div class="hist-closed-info">🛑 Closed @ <span class="closed-price">${e.closedAt}</span> <span class="hist-auto-badge">⚡ Auto</span>${e.closedDate ? ` · ${e.closedDate}` : ''}</div>`;
+    } else if (status !== 'won' && status !== 'lost' && hasLevels) {
+      trackStr = `<div class="hist-closed-info">TP <span class="closed-price">${fmtP(e.tp)}</span> · SL <span class="closed-price">${fmtP(e.sl)}</span> <span class="hist-auto-badge">🔍 Tracking</span></div>`;
+    }
+
+    return `
+      <div class="hist-row ${rowCls}">
+        <div class="hist-row-top">
+          <span class="hist-pair">${e.pair}</span>
+          <span class="hist-tf">${e.tf}</span>
+          <span class="hist-sig ${cls}">${e.signal}</span>
+          <span class="hist-conf">${e.confidence}%</span>
+          <span class="hist-outcome ${status}">${status === 'won' ? '✓ Win' : status === 'lost' ? '✗ Loss' : '⏳ Open'}</span>
+        </div>
+        ${dateStr}
+        ${trackStr}
+        <textarea class="hist-notes" placeholder="Add trade notes…" onchange="saveNote(${realIdx},this.value)">${note}</textarea>
+        <div class="hist-btn-group">
+          <button class="hist-btn ${status === 'won' ? 'won' : ''}" onclick="setHistStatus(${realIdx},'won')">✓ Win</button>
+          <button class="hist-btn ${status === 'lost' ? 'lost' : ''}" onclick="setHistStatus(${realIdx},'lost')">✗ Loss</button>
+          <button class="hist-btn del" onclick="deleteHistEntry(${realIdx})" title="Delete">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+window.setHistStatus = (index, status) => {
+  const h = loadHistory();
+  if (h[index]) {
+    h[index].status = h[index].status === status ? 'pending' : status;
+    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+    _patchHist();
+    toast(h[index].status === 'won' ? '✓ Logged as Win!' : h[index].status === 'lost' ? '✗ Logged as Loss.' : 'Reset to Open.', h[index].status === 'won' ? 'ok' : 'warn');
+  }
+};
+
+window.saveNote = (index, text) => {
+  const h = loadHistory();
+  if (h[index]) {
+    h[index].note = text.trim();
+    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+  }
+};
+
+window.deleteHistEntry = (index) => {
+  const h = loadHistory();
+  h.splice(index, 1);
+  try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+  _patchHist();
+  toast('Entry deleted', 'info');
+};
+
+function _bindJournalFilters() {
+  document.querySelectorAll('.j-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.j-filter-btn').forEach(b => b.classList.remove('active','won','lost'));
+      btn.classList.add('active');
+      _journalFilter = btn.dataset.filter;
+      if (_journalFilter === 'won') btn.classList.add('won');
+      if (_journalFilter === 'lost') btn.classList.add('lost');
+      _patchHist();
+    });
+  });
+}
+
+const _renderH = window.renderHistory || function(){};
+window.renderHistory = _patchHist;
+
+document.addEventListener('DOMContentLoaded', () => {
+  _bindJournalFilters();
+
+  // ── Toggle Indicators — with proper mobile resize ──────────────────
+  const indBtn      = document.getElementById('toggle-indicators');
+  const chartPanel  = document.querySelector('.chart-panel');
+  const chartLegend = document.getElementById('chart-legend');
+
+  if (indBtn) {
+    indBtn.addEventListener('click', () => {
+      S.config.showIndicators = !S.config.showIndicators;
+      const isClean = !S.config.showIndicators;
+
+      indBtn.classList.toggle('cleaned', isClean);
+      indBtn.innerHTML = isClean ? '👁‍🗨 Cleaned' : '👁 Options';
+
+      // On mobile, shrink/expand the chart panel height
+      if (chartPanel) chartPanel.classList.toggle('clean-mode', isClean);
+      // Hide legend when indicators hidden
+      if (chartLegend) chartLegend.classList.toggle('hidden', isClean);
+
+      // Redraw after browser has recalculated layout
+      if (S.lastCandles) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const canvas = document.getElementById('main-canvas');
+            if (canvas) drawChart(canvas, S.lastCandles, S.lastTA, S.lastSig);
+          }, 80);
+        });
+      }
+    });
+  }
+
+  // ResizeObserver keeps canvas sharp as container size changes
+  if (typeof ResizeObserver !== 'undefined') {
+    const container = document.querySelector('.canvas-container');
+    if (container) {
+      new ResizeObserver(() => {
+        if (S.lastCandles && S.lastTA && S.lastSig) {
+          const canvas = document.getElementById('main-canvas');
+          if (canvas) drawChart(canvas, S.lastCandles, S.lastTA, S.lastSig);
+        }
+      }).observe(container);
+    }
+  }
+});
