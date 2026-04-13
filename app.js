@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isLowEnd = active;
       localStorage.setItem('tv_perf_mode', active ? 'extreme' : 'normal');
       toast(active ? '🚀 Extreme Performance ON' : '✨ Quality Mode ON', active ? 'warn' : 'ok');
-      
+
       // Force UI updates for new performance state
       if (active) {
         // Stop expensive canvas if it was running
@@ -92,8 +92,22 @@ const CG_IDS = {
 
 const TV_SEARCH = 'https://symbol-search.tradingview.com/symbol_search/';
 const TV_SCANNER = 'https://scanner.tradingview.com'; // live price fallback
-const TF_RES = { '15m': '15', '1h': '60', '4h': '240', '1d': 'D' };
-const TF_SECS = { '15m': 200 * 900, '1h': 200 * 3600, '4h': 200 * 14400, '1d': 200 * 86400 };
+const TF_RES = { '1m': '1', '3m': '1', '5m': '5', '15m': '15', '1h': '60', '4h': '240', '1d': 'D' };
+const TF_SECS = { '1m': 200 * 60, '3m': 200 * 180, '5m': 200 * 300, '15m': 200 * 900, '1h': 200 * 3600, '4h': 200 * 14400, '1d': 200 * 86400 };
+
+const TF_INDICATOR_PARAMS = {
+  '1m': { ema: [8, 21, 55], rsi: 7, macd: [6, 13, 5], bb: [14, 2], atr: 7, adx: 7, donchian: 14, mfi: 7, volSma: 10, stoch: [7, 3, 3], superTrend: [7, 2.5], keltner: [14, 1.3] },
+  '3m': { ema: [9, 21, 55], rsi: 9, macd: [8, 17, 5], bb: [14, 2], atr: 9, adx: 9, donchian: 16, mfi: 9, volSma: 12, stoch: [9, 3, 3], superTrend: [8, 2.6], keltner: [16, 1.35] },
+  '5m': { ema: [12, 26, 55], rsi: 10, macd: [10, 20, 6], bb: [16, 2], atr: 10, adx: 10, donchian: 16, mfi: 10, volSma: 14, stoch: [10, 3, 3], superTrend: [9, 2.7], keltner: [18, 1.4] },
+  '15m': { ema: [20, 50, 200], rsi: 14, macd: [12, 26, 9], bb: [20, 2], atr: 14, adx: 14, donchian: 20, mfi: 14, volSma: 20, stoch: [14, 3, 3], superTrend: [10, 3], keltner: [20, 1.5] },
+  '1h': { ema: [21, 55, 200], rsi: 16, macd: [14, 28, 9], bb: [20, 2], atr: 16, adx: 16, donchian: 22, mfi: 16, volSma: 22, stoch: [16, 3, 3], superTrend: [11, 3], keltner: [22, 1.5] },
+  '4h': { ema: [34, 89, 200], rsi: 18, macd: [16, 32, 9], bb: [24, 2.1], atr: 18, adx: 18, donchian: 24, mfi: 18, volSma: 24, stoch: [18, 3, 3], superTrend: [12, 3], keltner: [24, 1.55] },
+  '1d': { ema: [50, 150, 250], rsi: 21, macd: [18, 36, 9], bb: [30, 2.2], atr: 21, adx: 21, donchian: 30, mfi: 21, volSma: 30, stoch: [21, 3, 3], superTrend: [14, 3.2], keltner: [30, 1.6] },
+};
+
+function getTAParams(tf) {
+  return TF_INDICATOR_PARAMS[tf] || TF_INDICATOR_PARAMS['15m'];
+}
 
 const FOREX_CCY = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'SGD', 'HKD',
   'NOK', 'SEK', 'DKK', 'TRY', 'ZAR', 'MXN', 'BRL', 'INR', 'THB', 'CNY', 'CNH', 'PLN'];
@@ -174,8 +188,8 @@ async function fetchDXYTrend() {
       return d;
     }));
     const closes = data.chart.result[0].indicators.quote[0].close.filter(v => v !== null);
-    if (closes.length > 2) return closes[closes.length-1] > closes[0] ? 'BULLISH' : 'BEARISH';
-  } catch(e) {}
+    if (closes.length > 2) return closes[closes.length - 1] > closes[0] ? 'BULLISH' : 'BEARISH';
+  } catch (e) { }
   return 'NEUTRAL';
 }
 
@@ -198,10 +212,10 @@ async function fetchNewsSentiment(symbol) {
         let score = 0;
         if (tLow.match(/surge|jump|record|bull|upgrade|positive|high|gain|rally|buy|grow|soar/)) score += 1;
         if (tLow.match(/plunge|drop|hack|bear|downgrade|negative|cut|sell|low|loss|fall|sink/)) score -= 1;
-        return { title, time: new Date(n.providerPublishTime*1000), score };
+        return { title, time: new Date(n.providerPublishTime * 1000), score };
       });
     }
-  } catch(e) {}
+  } catch (e) { }
   return [];
 }
 
@@ -719,7 +733,7 @@ function mfi(candles, p = 14) {
     if (i < p) { mfiArr.push(null); continue; }
     let posMf = 0, negMf = 0;
     for (let j = i - p + 1; j <= i; j++) {
-      const change = typ[j] - typ[j-1];
+      const change = typ[j] - typ[j - 1];
       if (change > 0) posMf += rm[j];
       else if (change < 0) negMf += rm[j];
     }
@@ -747,7 +761,7 @@ function supertrend(candles, atrArr, p = 10, mult = 3) {
     const hl2 = (c.high + c.low) / 2;
     const bUp = hl2 + mult * atrArr[i];
     const bDn = hl2 - mult * atrArr[i];
-    
+
     // Trailing logic
     if (i === p) {
       upper = bUp; lower = bDn;
@@ -755,13 +769,13 @@ function supertrend(candles, atrArr, p = 10, mult = 3) {
       upper = (bUp < upper || prevC.close > upper) ? bUp : upper;
       lower = (bDn > lower || prevC.close < lower) ? bDn : lower;
     }
-    
+
     if (isUp && c.close <= lower) {
       isUp = false;
     } else if (!isUp && c.close >= upper) {
       isUp = true;
     }
-    
+
     st.push(isUp ? lower : upper);
     dir.push(isUp ? 'bull' : 'bear');
   }
@@ -807,7 +821,7 @@ function detectOrderBlocks(candles, swings) {
       }
     }
   }
-  
+
   // Bearish OB: last up close before impulsive down move
   for (let i = 1; i < highs.length; i++) {
     const h = highs[i];
@@ -827,7 +841,7 @@ function detectOrderBlocks(candles, swings) {
       }
     }
   }
-  
+
   // Mitigation check
   const n = candles.length;
   obs.bullish.forEach(ob => {
@@ -836,7 +850,7 @@ function detectOrderBlocks(candles, swings) {
   obs.bearish.forEach(ob => {
     for (let j = ob.i + 2; j < n; j++) { if (candles[j].high >= ob.bottom) ob.mitigated = true; }
   });
-  
+
   return {
     bullish: obs.bullish.filter(o => !o.mitigated).slice(-3),
     bearish: obs.bearish.filter(o => !o.mitigated).slice(-3)
@@ -885,7 +899,7 @@ function generateNarrative(sig, ta, info) {
   const divB = ta.divergence?.bullish?.length > 0, divBr = ta.divergence?.bearish?.length > 0;
   const divStr = divB ? ' <em>Bullish RSI divergence</em> adds long confluence.' : divBr ? ' <em>Bearish RSI divergence</em> warns of reversal.' : '';
   const tradeStr = sig.signal === 'BUY' ? `Look for longs near <em>${sig.entry}</em>, target <em>${sig.tp}</em>, stop <em>${sig.sl}</em>.` : `Look for shorts near <em>${sig.entry}</em>, target <em>${sig.tp}</em>, stop <em>${sig.sl}</em>.`;
-  
+
   let smcStr = '';
   const bu = ta.bbs?.upper[n], bl = ta.bbs?.lower[n];
   const ku = ta.keltnerData?.upper?.[n], kl = ta.keltnerData?.lower?.[n];
@@ -906,18 +920,19 @@ async function runMultiTF(info) {
   const tfs = ['15m', '1h', '4h', '1d'];
   const results = await Promise.allSettled(tfs.map(async tf => {
     const candles = info.useBinance ? await fetchBinance(info.binSym, tf) : await fetchData(info, tf);
+    const params = getTAParams(tf);
     const closes = candles.map(c => c.close);
     const ta = {
-      e20: ema(closes, 20), e50: ema(closes, 50), e200: ema(closes, 200), ri: rsi(closes, 14),
-      mc: macd(closes), bbs: bb(closes, 20), at: atr(candles, 14), adxData: adx(candles, 14),
-      vwapLine: vwap(candles), dc: donchian(candles, 20), mfiArr: mfi(candles, 14)
+      e20: ema(closes, params.ema[0]), e50: ema(closes, params.ema[1]), e200: ema(closes, params.ema[2]), ri: rsi(closes, params.rsi),
+      mc: macd(closes, params.macd[0], params.macd[1], params.macd[2]), bbs: bb(closes, params.bb[0], params.bb[1]), at: atr(candles, params.atr), adxData: adx(candles, params.adx),
+      vwapLine: vwap(candles), dc: donchian(candles, params.donchian), mfiArr: mfi(candles, params.mfi)
     };
-    ta.volSma = volumeSMA(candles, 20);
-    ta.stochRsi = stochRsi(ta.ri, 14, 3, 3);
-    ta.superTrend = supertrend(candles, ta.at, 10, 3);
-    ta.keltnerData = keltner(candles, ta.at, 20, 1.5);
+    ta.volSma = volumeSMA(candles, params.volSma);
+    ta.stochRsi = stochRsi(ta.ri, params.stoch[0], params.stoch[1], params.stoch[2]);
+    ta.superTrend = supertrend(candles, ta.at, params.superTrend[0], params.superTrend[1]);
+    ta.keltnerData = keltner(candles, ta.at, params.keltner[0], params.keltner[1]);
     ta.fvgData = detectFVG(candles);
-    const swings = swingPoints(candles); 
+    const swings = swingPoints(candles);
     ta.ms = detectMarketStructure(candles, swings);
     ta.obData = detectOrderBlocks(candles, swings);
     ta.sweeps = detectLiquiditySweeps(candles, swings);
@@ -1109,7 +1124,7 @@ function generateSignal(candles, ta, pInfo) {
   // EMA
   if (e20[n] && e50[n]) { close > e20[n] ? bull += 10 : bear += 10; e20[n] > e50[n] ? bull += 10 : bear += 10; }
   if (e50[n] && e200[n]) { e50[n] > e200[n] ? bull += 10 : bear += 10; }
-  
+
   // RSI & MFI
   const rv = ri[n], mv = mfiArr?.[n];
   if (rv != null) {
@@ -1205,11 +1220,11 @@ function generateSignal(candles, ta, pInfo) {
 
   const net = bull - bear;
   let signal = net >= 0 ? 'BUY' : 'SELL';
-  
+
   // SuperTrend hard filter: severely penalize signals fighting the macro trend
   if (signal === 'BUY' && stDir === 'bear') bull -= 25;
   if (signal === 'SELL' && stDir === 'bull') bear -= 25;
-  
+
   const reNet = bull - bear;
   signal = reNet >= 0 ? 'BUY' : 'SELL';
 
@@ -1281,7 +1296,7 @@ function drawChart(canvas, candles, ta, sig) {
     mH = CH_SHOW ? Math.floor(H * 0.11) : 0,
     dxH = CH_SHOW ? Math.floor(H * 0.11) : 0,
     atH = CH_SHOW ? Math.floor(H * 0.08) : 0;
-  
+
   const vY = pH, rY = vY + vH, mY = rY + rH, dxY = mY + mH, atY = dxY + dxH;
   const rightPad = Math.max(15, Math.floor(n * 0.3));
   const cw = W / (n + rightPad), bw = Math.max(2, cw * 0.62);
@@ -1301,21 +1316,21 @@ function drawChart(canvas, candles, ta, sig) {
   // ── Session Killzones (Background) ────────────────────────────────────────
   if (CH_SHOW && S.tf.endsWith('m') || S.tf === '1h') {
     for (let i = 0; i < n; i++) {
-        const d = new Date(cs[i].time);
-        const uh = d.getUTCHours();
-        let cLog = null;
-        if (uh >= 22 || uh < 7) cLog = 'rgba(0, 242, 254, 0.02)'; // sydney
-        else if (uh >= 0 && uh < 9) cLog = 'rgba(255, 213, 79, 0.02)'; // tokyo
-        else if (uh >= 7 && uh < 16) cLog = 'rgba(123, 94, 167, 0.02)'; // london
-        else if (uh >= 12 && uh < 21) cLog = 'rgba(79, 172, 254, 0.02)'; // ny
-        
-        if (uh >= 12 && uh < 16) cLog = 'rgba(255, 82, 82, 0.04)'; // london-ny overlap kz
-        
-        if (cLog) {
-          ctx.fillStyle = cLog;
-          const wFill = cw;
-          ctx.fillRect(xOf(i) - wFill/2, 0, wFill, pH);
-        }
+      const d = new Date(cs[i].time);
+      const uh = d.getUTCHours();
+      let cLog = null;
+      if (uh >= 22 || uh < 7) cLog = 'rgba(0, 242, 254, 0.02)'; // sydney
+      else if (uh >= 0 && uh < 9) cLog = 'rgba(255, 213, 79, 0.02)'; // tokyo
+      else if (uh >= 7 && uh < 16) cLog = 'rgba(123, 94, 167, 0.02)'; // london
+      else if (uh >= 12 && uh < 21) cLog = 'rgba(79, 172, 254, 0.02)'; // ny
+
+      if (uh >= 12 && uh < 16) cLog = 'rgba(255, 82, 82, 0.04)'; // london-ny overlap kz
+
+      if (cLog) {
+        ctx.fillStyle = cLog;
+        const wFill = cw;
+        ctx.fillRect(xOf(i) - wFill / 2, 0, wFill, pH);
+      }
     }
   }
 
@@ -1344,9 +1359,9 @@ function drawChart(canvas, candles, ta, sig) {
     ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
     ctx.fillStyle = C.txt; ctx.font = `9px 'JetBrains Mono',monospace`;
     for (let i = 0; i <= 5; i++) {
-        const v = pMin + pR * i / 5, yy = py(v);
-        ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
-        ctx.textAlign = 'right'; ctx.fillText(fmtP(v), W - 3, yy - 2);
+      const v = pMin + pR * i / 5, yy = py(v);
+      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+      ctx.textAlign = 'right'; ctx.fillText(fmtP(v), W - 3, yy - 2);
     }
   }
 
@@ -1459,14 +1474,14 @@ function drawChart(canvas, candles, ta, sig) {
   // ── Pattern Badges ────────────────────────────────────────────────────────
   if (CH_SHOW) {
     (ta.patterns || []).slice(-8).forEach(pt => {
-        const idx = pt.i - startO;
-        if (idx < 0 || idx >= n) return;
-        const cd = cs[idx]; if (!cd) return;
-        const x = xOf(idx);
-        const yBase = pt.type === 'bull' ? py(cd.low) + 14 : py(cd.high) - 8;
-        ctx.save(); ctx.font = 'bold 7px Inter'; ctx.textAlign = 'center';
-        ctx.fillStyle = pt.type === 'bull' ? 'rgba(0,230,118,0.75)' : pt.type === 'bear' ? 'rgba(255,82,82,0.75)' : 'rgba(255,213,79,0.65)';
-        ctx.fillText(pt.name, x, yBase); ctx.restore();
+      const idx = pt.i - startO;
+      if (idx < 0 || idx >= n) return;
+      const cd = cs[idx]; if (!cd) return;
+      const x = xOf(idx);
+      const yBase = pt.type === 'bull' ? py(cd.low) + 14 : py(cd.high) - 8;
+      ctx.save(); ctx.font = 'bold 7px Inter'; ctx.textAlign = 'center';
+      ctx.fillStyle = pt.type === 'bull' ? 'rgba(0,230,118,0.75)' : pt.type === 'bear' ? 'rgba(255,82,82,0.75)' : 'rgba(255,213,79,0.65)';
+      ctx.fillText(pt.name, x, yBase); ctx.restore();
     });
   }
 
@@ -1474,9 +1489,9 @@ function drawChart(canvas, candles, ta, sig) {
   if (CH_SHOW) {
     const maxV = Math.max(...cs.map(c => c.volume)) || 1;
     cs.forEach((cd, i) => {
-        const vh = (cd.volume / maxV) * vH;
-        ctx.fillStyle = cd.close >= cd.open ? C.vol_bull : C.vol_bear;
-        ctx.fillRect(xOf(i) - bw / 2, vY + vH - vh, bw, vh);
+      const vh = (cd.volume / maxV) * vH;
+      ctx.fillStyle = cd.close >= cd.open ? C.vol_bull : C.vol_bear;
+      ctx.fillRect(xOf(i) - bw / 2, vY + vH - vh, bw, vh);
     });
     ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('VOL', 4, vY + 12);
   }
@@ -1488,9 +1503,9 @@ function drawChart(canvas, candles, ta, sig) {
     ctx.fillStyle = 'rgba(255,82,82,0.10)'; ctx.fillRect(0, rY, W, rH * 0.3);
     ctx.fillStyle = 'rgba(0,230,118,0.08)'; ctx.fillRect(0, rY + rH * 0.7, W, rH * 0.3);
     [30, 50, 70].forEach(v => {
-        ctx.strokeStyle = v === 50 ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = 0.8;
-        ctx.beginPath(); ctx.moveTo(0, rpy(v)); ctx.lineTo(W, rpy(v)); ctx.stroke();
-        ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right'; ctx.fillText(v, W - 2, rpy(v) - 2);
+      ctx.strokeStyle = v === 50 ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.07)'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(0, rpy(v)); ctx.lineTo(W, rpy(v)); ctx.stroke();
+      ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right'; ctx.fillText(v, W - 2, rpy(v) - 2);
     });
     ctx.beginPath(); ctx.strokeStyle = C.rsiLine; ctx.lineWidth = 1.5; let rFirst = true;
     ri.forEach((v, i) => { if (v == null) { rFirst = true; return; } rFirst ? ctx.moveTo(xOf(i), rpy(v)) : ctx.lineTo(xOf(i), rpy(v)); rFirst = false; });
@@ -1498,12 +1513,12 @@ function drawChart(canvas, candles, ta, sig) {
 
     // RSI divergence arrows (within RSI block scope)
     const drawDivArrow = (xi, rsiV, isBull) => {
-        if (xi < 0 || xi >= n) return;
-        const x = xOf(xi), y = rpy(rsiV);
-        ctx.save(); ctx.fillStyle = isBull ? 'rgba(0,230,118,0.85)' : 'rgba(255,82,82,0.85)';
-        ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
-        ctx.fillText(isBull ? '▲' : '▼', x, isBull ? y + 12 : y - 4);
-        ctx.restore();
+      if (xi < 0 || xi >= n) return;
+      const x = xOf(xi), y = rpy(rsiV);
+      ctx.save(); ctx.fillStyle = isBull ? 'rgba(0,230,118,0.85)' : 'rgba(255,82,82,0.85)';
+      ctx.font = 'bold 10px Inter'; ctx.textAlign = 'center';
+      ctx.fillText(isBull ? '▲' : '▼', x, isBull ? y + 12 : y - 4);
+      ctx.restore();
     };
     (ta.divergence?.bullish || []).forEach(d => { const si = d.endI - startO; drawDivArrow(si, d.endRSI, true); });
     (ta.divergence?.bearish || []).forEach(d => { const si = d.endI - startO; drawDivArrow(si, d.endRSI, false); });
@@ -1524,11 +1539,11 @@ function drawChart(canvas, candles, ta, sig) {
   });
   if (CH_SHOW) {
     [[ml, C.macdL, 1.5], [sl2, C.macdS, 1.2]].forEach(([arr, cl, lw]) => {
-    ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
-    arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), mpy(v)) : ctx.lineTo(xOf(i), mpy(v)); s = false; });
-    ctx.stroke();
-  });
-  ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('MACD', 4, mY + 12);
+      ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
+      arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), mpy(v)) : ctx.lineTo(xOf(i), mpy(v)); s = false; });
+      ctx.stroke();
+    });
+    ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('MACD', 4, mY + 12);
   }
 
   // ── ADX panel ─────────────────────────────────────────────────────────────
@@ -1542,11 +1557,11 @@ function drawChart(canvas, candles, ta, sig) {
   ctx.fillStyle = C.txt; ctx.font = '9px JetBrains Mono'; ctx.textAlign = 'right'; ctx.fillText('25', W - 2, adxPy(25) - 2);
   if (CH_SHOW) {
     [[adxArr, C.adxLine, 1.6], [diPArr, C.diPLine, 1.2], [diNArr, C.diNLine, 1.2]].forEach(([arr, cl, lw]) => {
-    ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
-    arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), adxPy(v)) : ctx.lineTo(xOf(i), adxPy(v)); s = false; });
-    ctx.stroke();
-  });
-  ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('ADX(14)', 4, dxY + 12);
+      ctx.beginPath(); ctx.strokeStyle = cl; ctx.lineWidth = lw; let s = true;
+      arr.forEach((v, i) => { if (v == null) { s = true; return; } s ? ctx.moveTo(xOf(i), adxPy(v)) : ctx.lineTo(xOf(i), adxPy(v)); s = false; });
+      ctx.stroke();
+    });
+    ctx.fillStyle = C.txt; ctx.font = '9px Inter'; ctx.textAlign = 'left'; ctx.fillText('ADX(14)', 4, dxY + 12);
   }
 
   // ── ATR panel ─────────────────────────────────────────────────────────────
@@ -1836,25 +1851,26 @@ async function doAnalyze() {
       candles = await fetchData(info, S.tf);
     }
 
-    // Run TA
+    // Run TA with timeframe-specific indicator lengths
+    const params = getTAParams(S.tf);
     const closes = candles.map(c => c.close);
     const ta = {
-      e20: ema(closes, 20),
-      e50: ema(closes, 50),
-      e200: ema(closes, 200),
-      ri: rsi(closes, 14),
-      mc: macd(closes),
-      bbs: bb(closes, 20),
-      at: atr(candles, 14),
-      adxData: adx(candles, 14),
+      e20: ema(closes, params.ema[0]),
+      e50: ema(closes, params.ema[1]),
+      e200: ema(closes, params.ema[2]),
+      ri: rsi(closes, params.rsi),
+      mc: macd(closes, params.macd[0], params.macd[1], params.macd[2]),
+      bbs: bb(closes, params.bb[0], params.bb[1]),
+      at: atr(candles, params.atr),
+      adxData: adx(candles, params.adx),
       vwapLine: vwap(candles),
-      dc: donchian(candles, 20),
-      mfiArr: mfi(candles, 14),
+      dc: donchian(candles, params.donchian),
+      mfiArr: mfi(candles, params.mfi),
     };
-    ta.volSma = volumeSMA(candles, 20);
-    ta.stochRsi = stochRsi(ta.ri, 14, 3, 3);
-    ta.superTrend = supertrend(candles, ta.at, 10, 3);
-    ta.keltnerData = keltner(candles, ta.at, 20, 1.5);
+    ta.volSma = volumeSMA(candles, params.volSma);
+    ta.stochRsi = stochRsi(ta.ri, params.stoch[0], params.stoch[1], params.stoch[2]);
+    ta.superTrend = supertrend(candles, ta.at, params.superTrend[0], params.superTrend[1]);
+    ta.keltnerData = keltner(candles, ta.at, params.keltner[0], params.keltner[1]);
     ta.fvgData = detectFVG(candles);
     // Advanced analysis layers
     const swings = swingPoints(candles);
@@ -1873,10 +1889,10 @@ async function doAnalyze() {
     info.dxyTrend = S.dxyTrend;
     info.isUSDBase = raw.startsWith('USD');
     info.isUSDQuote = raw.endsWith('USD');
-    
+
     S.newsData = await fetchNewsSentiment(raw);
     renderNews(S.newsData);
-    
+
     // Re-generate signal with DXY and News data for final institutional confluence
     sig = generateSignal(candles, ta, info);
     S.lastSig = sig;
@@ -2048,16 +2064,16 @@ function calculatePositionSize() {
     toast('Run an analysis first', 'warn');
     return;
   }
-  
+
   const eqStr = document.getElementById('calc-equity').value;
   const riskStr = document.getElementById('calc-risk').value;
   const levInp = document.getElementById('calc-lev');
   const levUnl = document.getElementById('calc-unlimited');
-  
+
   const equity = parseFloat(eqStr);
   const riskPct = parseFloat(riskStr);
   const leverage = levUnl.checked ? Infinity : parseFloat(levInp.value);
-  
+
   if (isNaN(equity) || equity <= 0 || isNaN(riskPct) || riskPct <= 0) {
     toast('Enter valid Equity and Risk values', 'warn');
     return;
@@ -2066,22 +2082,22 @@ function calculatePositionSize() {
   const entry = parseFloat(S.lastSig.entry.replace(/,/g, ''));
   const sl = parseFloat(S.lastSig.sl.replace(/,/g, ''));
   const tp = parseFloat(S.lastSig.tp.replace(/,/g, ''));
-  
+
   const type = S.active.type;
   const pair = S.active.display.replace(/[^A-Z]/g, '');
-  
+
   const riskUsd = equity * (riskPct / 100);
   const priceDist = Math.abs(entry - sl);
   if (priceDist === 0) return;
 
   let lotSize = 0;
   let pipVal = 10;
-  
+
   if (type === 'forex') {
     const isJpy = pair.includes('JPY');
     const multiplier = isJpy ? 100 : 10000;
     const pipDist = priceDist * multiplier;
-    
+
     if (pair.endsWith('USD')) pipVal = 10;
     else if (isJpy) pipVal = 1000 / 150; // Approximated cross rate for JPY crosses
     else if (pair.endsWith('CAD')) pipVal = 10 / 1.35;
@@ -2089,7 +2105,7 @@ function calculatePositionSize() {
     else if (pair.endsWith('GBP')) pipVal = 10 * 1.26;
     else if (pair.endsWith('AUD')) pipVal = 10 * 0.65;
     else if (pair.endsWith('NZD')) pipVal = 10 * 0.6;
-    
+
     lotSize = riskUsd / (pipDist * pipVal);
   } else if (type === 'commodity' && (pair.includes('GOLD') || pair.includes('XAU'))) {
     // Gold 1 lot = 100oz.
@@ -2117,7 +2133,7 @@ function calculatePositionSize() {
   } else {
     marginPerLot = entry / leverage;
   }
-  
+
   if (marginPerLot > 0 && isFinite(leverage)) {
     const maxLots = equity / marginPerLot;
     if (lotSize > maxLots) {
@@ -2147,7 +2163,7 @@ function calculatePositionSize() {
   document.getElementById('calc-loss').textContent = '$' + (type === 'forex' ? (priceDist * (pair.includes('JPY') ? 100 : 10000) * pipVal * lotSize) : type === 'commodity' ? (priceDist * 100 * lotSize) : (priceDist * lotSize)).toFixed(2);
   document.getElementById('calc-gain').textContent = '$' + rewardUsd.toFixed(2);
   document.getElementById('calc-results').style.opacity = '1';
-  if (lotSize === equity/marginPerLot) {
+  if (lotSize === equity / marginPerLot) {
     // Only toast on limit, prevent spam if they click repeatedly unless they reset. Note we toasted already above!
   } else {
     toast('Position calculated', 'ok');
@@ -2181,14 +2197,14 @@ function updateMarketSessions() {
   const utcHour = now.getUTCHours();
   const utcMin = now.getUTCMinutes();
   const utcSec = now.getUTCSeconds();
-  
+
   let londonOpen = false;
   let nyOpen = false;
 
   SESSION_CONFIG.forEach(s => {
     const el = document.getElementById(`sess-${s.id}`);
     if (!el) return;
-    
+
     let isOpen = false;
     if (s.start < s.end) {
       isOpen = utcHour >= s.start && utcHour < s.end;
@@ -2201,16 +2217,16 @@ function updateMarketSessions() {
 
     el.classList.toggle('active', isOpen);
     el.querySelector('.sess-status').textContent = isOpen ? 'Open' : 'Closed';
-    
+
     // Countdown logic
     let targetHour = isOpen ? s.end : s.start;
     let diffHours = targetHour - utcHour;
     if (diffHours <= 0) diffHours += 24;
-    
+
     let mins = 59 - utcMin;
     let secs = 59 - utcSec;
     let hrs = diffHours - 1;
-    
+
     el.querySelector('.sess-timer').textContent = `${hrs}h ${mins}m`;
   });
 
@@ -2242,7 +2258,7 @@ async function fetchEconomicCalendar() {
       if (!Array.isArray(data)) throw new Error('Not an array');
       return data;
     }));
-    
+
     const now = new Date();
     // Filter: High impact, strictly upcoming
     const highEvents = events
@@ -2262,7 +2278,7 @@ async function fetchEconomicCalendar() {
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
       const timeStr = e.dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-      
+
       return `
         <div class="econ-item">
           <div class="econ-impact high"></div>
@@ -2308,17 +2324,17 @@ async function scanSmartWatchlist() {
     const candles = info.useBinance ? await fetchBinance(info.binSym, '1h') : await fetchData(info, '1h');
     const last = candles[candles.length - 1];
     const closes = candles.map(c => c.close);
-    
+
     // Fast TA for bias
     const e20 = ema(closes, 20);
     const e50 = ema(closes, 50);
     const ri = rsi(closes, 14);
-    
+
     const n = candles.length - 1;
     let bias = 'neutral';
     if (e20[n] > e50[n] && ri[n] > 50) bias = 'bullish';
     else if (e20[n] < e50[n] && ri[n] < 50) bias = 'bearish';
-    
+
     return { pair: p, price: last.close, bias, info };
   }));
 
@@ -2326,7 +2342,7 @@ async function scanSmartWatchlist() {
     if (r.status === 'rejected') return '';
     const d = r.value;
     const priceFmt = d.info.type === 'crypto' ? d.price.toFixed(2) : d.price.toFixed(d.price < 10 ? 4 : 2);
-    
+
     return `
       <div class="wl-item" onclick="quickAnalyze('${d.pair}')">
         <div class="wl-bias-dot ${d.bias}"></div>
@@ -2368,7 +2384,7 @@ function renderNews(news) {
   const list = document.getElementById('news-list');
   if (!list) return;
   if (!news.length) { list.innerHTML = '<div style="padding: 12px; color: var(--text3); font-size: 0.75rem;">No actionable news recently.</div>'; return; }
-  
+
   list.innerHTML = news.map(n => {
     let sentCls = n.score > 0 ? 'bull' : n.score < 0 ? 'bear' : 'neu';
     let sentTxt = n.score > 0 ? 'BULLISH' : n.score < 0 ? 'BEARISH' : 'NEUTRAL';
@@ -2428,7 +2444,7 @@ async function autoTrackTrades() {
   }
 
   if (anyUpdated) {
-    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) { }
     _patchHist();
   }
 }
@@ -2487,7 +2503,7 @@ function _patchHist() {
 
   // Equity bar
   const eqFill = document.getElementById('journal-equity-fill');
-  const eqPct  = document.getElementById('journal-equity-pct');
+  const eqPct = document.getElementById('journal-equity-pct');
   if (eqFill && eqPct) {
     const fillPct = total > 0 ? wr : 0;
     setTimeout(() => { eqFill.style.width = fillPct + '%'; }, 120);
@@ -2517,12 +2533,12 @@ function _patchHist() {
 
   list.innerHTML = visible.map(e => {
     const realIdx = h.indexOf(e);
-    const cls     = e.signal === 'BUY' ? 'buy' : 'sell';
-    const status  = e.status || 'pending';
-    const rowCls  = status === 'won' ? 'won' : status === 'lost' ? 'lost' : '';
-    const note    = e.note || '';
+    const cls = e.signal === 'BUY' ? 'buy' : 'sell';
+    const status = e.status || 'pending';
+    const rowCls = status === 'won' ? 'won' : status === 'lost' ? 'lost' : '';
+    const note = e.note || '';
     const dateStr = e.date ? `<span class="hist-date">${e.date}</span>` : '';
-    const rVal    = status === 'won' ? '+2.2R' : status === 'lost' ? '-1.0R' : '--';
+    const rVal = status === 'won' ? '+2.2R' : status === 'lost' ? '-1.0R' : '--';
     const profCls = status === 'won' ? 'pos' : status === 'lost' ? 'neg' : '';
 
     // Auto-track info
@@ -2563,7 +2579,7 @@ window.setHistStatus = (index, status) => {
   const h = loadHistory();
   if (h[index]) {
     h[index].status = h[index].status === status ? 'pending' : status;
-    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) { }
     _patchHist();
     toast(h[index].status === 'won' ? '✓ Logged as Win!' : h[index].status === 'lost' ? '✗ Logged as Loss.' : 'Reset to Open.', h[index].status === 'won' ? 'ok' : 'warn');
   }
@@ -2573,14 +2589,14 @@ window.saveNote = (index, text) => {
   const h = loadHistory();
   if (h[index]) {
     h[index].note = text.trim();
-    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+    try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) { }
   }
 };
 
 window.deleteHistEntry = (index) => {
   const h = loadHistory();
   h.splice(index, 1);
-  try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) {}
+  try { localStorage.setItem('tv_history', JSON.stringify(h)); } catch (e) { }
   _patchHist();
   toast('Entry deleted', 'info');
 };
@@ -2588,7 +2604,7 @@ window.deleteHistEntry = (index) => {
 function _bindJournalFilters() {
   document.querySelectorAll('.j-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.j-filter-btn').forEach(b => b.classList.remove('active','won','lost'));
+      document.querySelectorAll('.j-filter-btn').forEach(b => b.classList.remove('active', 'won', 'lost'));
       btn.classList.add('active');
       _journalFilter = btn.dataset.filter;
       if (_journalFilter === 'won') btn.classList.add('won');
@@ -2598,15 +2614,15 @@ function _bindJournalFilters() {
   });
 }
 
-const _renderH = window.renderHistory || function(){};
+const _renderH = window.renderHistory || function () { };
 window.renderHistory = _patchHist;
 
 document.addEventListener('DOMContentLoaded', () => {
   _bindJournalFilters();
 
   // ── Toggle Indicators — with proper mobile resize ──────────────────
-  const indBtn      = document.getElementById('toggle-indicators');
-  const chartPanel  = document.querySelector('.chart-panel');
+  const indBtn = document.getElementById('toggle-indicators');
+  const chartPanel = document.querySelector('.chart-panel');
   const chartLegend = document.getElementById('chart-legend');
 
   if (indBtn) {
@@ -2654,30 +2670,30 @@ function renderPerformanceGraph(h) {
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
-  
+
   const width = rect.width;
   const height = 120;
   canvas.width = width * dpr;
   canvas.height = height * dpr;
   ctx.scale(dpr, dpr);
-  
+
   const closed = h.filter(e => e.status === 'won' || e.status === 'lost');
   if (closed.length < 1) {
-    ctx.clearRect(0,0,width,height);
+    ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = 'rgba(255,255,255,0.1)';
     ctx.font = '10px Inter';
     ctx.textAlign = 'center';
-    ctx.fillText('Institutional Analysis Grid Initializing...', width/2, height/2);
+    ctx.fillText('Institutional Analysis Grid Initializing...', width / 2, height / 2);
     return;
   }
-  
+
   let points = [0];
   let cur = 0;
   [...closed].reverse().forEach(e => {
     cur += (e.status === 'won' ? 2.2 : -1.0);
     points.push(cur);
   });
-  
+
   const min = Math.min(...points, -1);
   const max = Math.max(...points, 1);
   const range = max - min;
@@ -2685,13 +2701,13 @@ function renderPerformanceGraph(h) {
   const getY = v => height - pad - ((v - min) / range) * (height - pad * 2);
   const getX = i => pad + (i / (points.length - 1)) * (width - pad * 2);
 
-  ctx.clearRect(0,0,width,height);
-  
+  ctx.clearRect(0, 0, width, height);
+
   // Background Grid
   ctx.strokeStyle = 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
-    const y = pad + (i/4)*(height - pad*2);
+    const y = pad + (i / 4) * (height - pad * 2);
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
   }
 
@@ -2707,17 +2723,17 @@ function renderPerformanceGraph(h) {
   if (points.length > 1) {
     ctx.beginPath();
     ctx.moveTo(getX(0), getY(points[0]));
-    
+
     for (let i = 0; i < points.length - 1; i++) {
       const x1 = getX(i), y1 = getY(points[i]);
-      const x2 = getX(i+1), y2 = getY(points[i+1]);
+      const x2 = getX(i + 1), y2 = getY(points[i + 1]);
       const xc = (x1 + x2) / 2;
       ctx.quadraticCurveTo(x1, y1, xc, (y1 + y2) / 2);
     }
-    
+
     const lastIdx = points.length - 1;
     ctx.lineTo(getX(lastIdx), getY(points[lastIdx]));
-    
+
     // Stroke
     ctx.shadowBlur = 10;
     ctx.shadowColor = 'rgba(79, 172, 254, 0.4)';
@@ -2739,8 +2755,8 @@ function renderPerformanceGraph(h) {
   // Data points
   points.forEach((p, i) => {
     ctx.beginPath();
-    ctx.arc(getX(i), getY(p), 3.5, 0, Math.PI*2);
-    ctx.fillStyle = i === 0 ? '#fff' : (points[i] >= points[i-1] ? '#00E676' : '#FF5252');
+    ctx.arc(getX(i), getY(p), 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = i === 0 ? '#fff' : (points[i] >= points[i - 1] ? '#00E676' : '#FF5252');
     ctx.fill();
     ctx.strokeStyle = '#080814';
     ctx.lineWidth = 1.5;
@@ -2748,7 +2764,7 @@ function renderPerformanceGraph(h) {
   });
 
   // End label
-  const lastP = points[points.length-1];
+  const lastP = points[points.length - 1];
   ctx.fillStyle = lastP >= 0 ? '#00E676' : '#FF5252';
   ctx.font = 'bold 10px JetBrains Mono';
   ctx.textAlign = 'right';
