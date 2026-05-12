@@ -4,8 +4,17 @@
    Redirects to login if the user has not authenticated with a valid key.
    ─────────────────────────────────────────────────────────────────────────── */
 (function () {
+  // Force .html in the URL for the root page
+  if (window.location.pathname === '/' || window.location.pathname === '') {
+    window.location.replace('/index.html');
+    return;
+  }
+  
   if (sessionStorage.getItem('mv_auth') !== 'granted') {
-    window.location.replace('login.html');
+    // Only redirect if we aren't already on the login page
+    if (!window.location.pathname.includes('login.html')) {
+      window.location.replace('/login.html');
+    }
   }
 })();
 
@@ -14,7 +23,7 @@ if (_logoutBtn) {
   _logoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem('mv_auth');
     sessionStorage.removeItem('mv_tier');
-    window.location.replace('login.html');
+    window.location.replace('/login.html');
   });
 }
 
