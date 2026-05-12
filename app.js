@@ -5,7 +5,7 @@
    ─────────────────────────────────────────────────────────────────────────── */
 (function () {
   if (sessionStorage.getItem('mv_auth') !== 'granted') {
-    window.location.replace('login');
+    window.location.replace('login.html');
   }
 })();
 
@@ -14,7 +14,7 @@ if (_logoutBtn) {
   _logoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem('mv_auth');
     sessionStorage.removeItem('mv_tier');
-    window.location.replace('login');
+    window.location.replace('login.html');
   });
 }
 
