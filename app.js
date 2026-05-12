@@ -152,7 +152,7 @@ if (_logoutBtn) {
           e.stopImmediatePropagation();
           // Show a toast/alert
           const planNeeded = ['crypto', 'stock'].includes(key) ? 'Stocks & Crypto' : 'FX, Commodities & Indices';
-          showTierBlockToast(`🔒 "${pairVal}" requires the <strong>${planNeeded}</strong> plan. <a href="login" style="color:#4FACFE;font-weight:600;">Upgrade →</a>`);
+          showTierBlockToast(`🔒 "${pairVal}" requires the <strong>${planNeeded}</strong> plan. <a href="login.html" style="color:#4FACFE;font-weight:600;">Upgrade →</a>`);
         }
       }, true); // capture phase so it fires before other listeners
     }
