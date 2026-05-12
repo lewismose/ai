@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>TradeVision AI – Live Chart Analyzer</title>
+  <title>Marketversse – Live Chart Analyzer</title>
   <meta name="description"
     content="Advanced real-time trading analysis with AI narrative, multi-timeframe confluence, market structure, S/R zones, Fibonacci, divergence detection, and more." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -45,7 +45,7 @@
           </svg>
         </div>
         <div>
-          <h1 class="logo-name">TradeVision <span class="grad">AI</span></h1>
+          <h1 class="logo-name">Market<span class="grad">versse</span></h1>
           <p class="logo-sub">Advanced Market Intelligence Portal</p>
         </div>
       </div>
@@ -124,24 +124,70 @@
               <div class="sw-icon">₿</div>
               <select class="c-select" data-type="crypto">
                 <option value="" disabled selected>Crypto Pairs</option>
+                <optgroup label="── Large Cap ──">
                 <option value="BTCUSDT">BTC/USDT</option>
                 <option value="ETHUSDT">ETH/USDT</option>
-                <option value="SOLUSDT">SOL/USDT</option>
-                <option value="XRPUSDT">XRP/USDT</option>
                 <option value="BNBUSDT">BNB/USDT</option>
-                <option value="DOGEUSDT">DOGE/USDT</option>
+                <option value="XRPUSDT">XRP/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
                 <option value="ADAUSDT">ADA/USDT</option>
-                <option value="DOTUSDT">DOT/USDT</option>
-                <option value="MATICUSDT">MATIC/USDT</option>
-                <option value="SHIBUSDT">SHIB/USDT</option>
                 <option value="AVAXUSDT">AVAX/USDT</option>
+                <option value="DOTUSDT">DOT/USDT</option>
+                <option value="LTCUSDT">LTC/USDT</option>
+                <option value="BCHUSDT">BCH/USDT</option>
+                </optgroup>
+                <optgroup label="── Mid Cap ──">
                 <option value="LINKUSDT">LINK/USDT</option>
                 <option value="ATOMUSDT">ATOM/USDT</option>
                 <option value="NEARUSDT">NEAR/USDT</option>
-                <option value="LTCUSDT">LTC/USDT</option>
+                <option value="MATICUSDT">MATIC/USDT</option>
+                <option value="UNIUSDT">UNI/USDT</option>
+                <option value="AAVEUSDT">AAVE/USDT</option>
+                <option value="INJUSDT">INJ/USDT</option>
+                <option value="SUIUSDT">SUI/USDT</option>
+                <option value="APTUSDT">APT/USDT</option>
+                <option value="ARBUSDT">ARB/USDT</option>
+                <option value="OPUSDT">OP/USDT</option>
                 <option value="FTMUSDT">FTM/USDT</option>
-                <option value="BCHUSDT">BCH/USDT</option>
                 <option value="ALGOUSDT">ALGO/USDT</option>
+                <option value="VETUSDT">VET/USDT</option>
+                <option value="HBARUSDT">HBAR/USDT</option>
+                <option value="XLMUSDT">XLM/USDT</option>
+                <option value="TRXUSDT">TRX/USDT</option>
+                <option value="EOSUSDT">EOS/USDT</option>
+                <option value="XMRUSDT">XMR/USDT</option>
+                <option value="FILUSDT">FIL/USDT</option>
+                </optgroup>
+                <optgroup label="── Meme / High Volatility ──">
+                <option value="DOGEUSDT">DOGE/USDT</option>
+                <option value="SHIBUSDT">SHIB/USDT</option>
+                <option value="PEPEUSDT">PEPE/USDT</option>
+                <option value="WIFUSDT">WIF/USDT</option>
+                <option value="BONKUSDT">BONK/USDT</option>
+                <option value="FLOKIUSDT">FLOKI/USDT</option>
+                <option value="NOTUSDT">NOT/USDT</option>
+                </optgroup>
+                <optgroup label="── DeFi / AI ──">
+                <option value="FETUSDT">FET/USDT</option>
+                <option value="RENDERUSDT">RENDER/USDT</option>
+                <option value="GRTUSDT">GRT/USDT</option>
+                <option value="SNXUSDT">SNX/USDT</option>
+                <option value="MKRUSDT">MKR/USDT</option>
+                <option value="COMPUSDT">COMP/USDT</option>
+                <option value="SANDUSDT">SAND/USDT</option>
+                <option value="MANAUSDT">MANA/USDT</option>
+                </optgroup>
+                <optgroup label="── New / Trending ──">
+                <option value="TONUSDT">TON/USDT</option>
+                <option value="SEIUSDT">SEI/USDT</option>
+                <option value="STRKUSDT">STRK/USDT</option>
+                <option value="PENDLEUSDT">PENDLE/USDT</option>
+                <option value="WLDUSDT">WLD/USDT</option>
+                <option value="JUPUSDT">JUP/USDT</option>
+                <option value="EIGENUSDT">EIGEN/USDT</option>
+                <option value="ENAUSDT">ENA/USDT</option>
+                <option value="ETHFIUSDT">ETHFI/USDT</option>
+                </optgroup>
               </select>
               <div class="sw-arrow">▼</div>
             </div>
@@ -150,24 +196,57 @@
               <div class="sw-icon">FX</div>
               <select class="c-select" data-type="forex">
                 <option value="" disabled selected>Forex Pairs</option>
+                <optgroup label="── Majors ──">
                 <option value="EURUSD">EUR/USD</option>
                 <option value="GBPUSD">GBP/USD</option>
                 <option value="USDJPY">USD/JPY</option>
+                <option value="USDCHF">USD/CHF</option>
                 <option value="AUDUSD">AUD/USD</option>
                 <option value="USDCAD">USD/CAD</option>
-                <option value="USDCHF">USD/CHF</option>
                 <option value="NZDUSD">NZD/USD</option>
+                </optgroup>
+                <optgroup label="── EUR Crosses ──">
                 <option value="EURJPY">EUR/JPY</option>
+                <option value="EURGBP">EUR/GBP</option>
+                <option value="EURAUD">EUR/AUD</option>
+                <option value="EURCAD">EUR/CAD</option>
+                <option value="EURCHF">EUR/CHF</option>
+                <option value="EURNZD">EUR/NZD</option>
+                <option value="EURNOK">EUR/NOK</option>
+                <option value="EURSEK">EUR/SEK</option>
+                </optgroup>
+                <optgroup label="── GBP Crosses ──">
                 <option value="GBPJPY">GBP/JPY</option>
+                <option value="GBPAUD">GBP/AUD</option>
+                <option value="GBPCAD">GBP/CAD</option>
+                <option value="GBPCHF">GBP/CHF</option>
+                <option value="GBPNZD">GBP/NZD</option>
+                </optgroup>
+                <optgroup label="── JPY Crosses ──">
                 <option value="AUDJPY">AUD/JPY</option>
                 <option value="CADJPY">CAD/JPY</option>
                 <option value="CHFJPY">CHF/JPY</option>
-                <option value="EURAUD">EUR/AUD</option>
-                <option value="EURGBP">EUR/GBP</option>
-                <option value="EURCAD">EUR/CAD</option>
-                <option value="EURCHF">EUR/CHF</option>
-                <option value="GBPAUD">GBP/AUD</option>
-                <option value="GBPCAD">GBP/CAD</option>
+                <option value="NZDJPY">NZD/JPY</option>
+                </optgroup>
+                <optgroup label="── Commodity FX ──">
+                <option value="AUDCAD">AUD/CAD</option>
+                <option value="AUDCHF">AUD/CHF</option>
+                <option value="AUDNZD">AUD/NZD</option>
+                <option value="CADCHF">CAD/CHF</option>
+                <option value="NZDCAD">NZD/CAD</option>
+                <option value="NZDCHF">NZD/CHF</option>
+                </optgroup>
+                <optgroup label="── Exotics ──">
+                <option value="USDZAR">USD/ZAR</option>
+                <option value="USDMXN">USD/MXN</option>
+                <option value="USDTRY">USD/TRY</option>
+                <option value="USDSEK">USD/SEK</option>
+                <option value="USDNOK">USD/NOK</option>
+                <option value="USDDKK">USD/DKK</option>
+                <option value="USDSGD">USD/SGD</option>
+                <option value="USDHKD">USD/HKD</option>
+                <option value="USDPLN">USD/PLN</option>
+                </optgroup>
               </select>
               <div class="sw-arrow">▼</div>
             </div>
@@ -176,22 +255,56 @@
               <div class="sw-icon">$</div>
               <select class="c-select" data-type="stock">
                 <option value="" disabled selected>Stocks</option>
+                <optgroup label="── Big Tech ──">
                 <option value="AAPL">Apple (AAPL)</option>
-                <option value="NVDA">Nvidia (NVDA)</option>
-                <option value="TSLA">Tesla (TSLA)</option>
                 <option value="MSFT">Microsoft (MSFT)</option>
+                <option value="NVDA">Nvidia (NVDA)</option>
                 <option value="GOOGL">Alphabet (GOOGL)</option>
                 <option value="AMZN">Amazon (AMZN)</option>
                 <option value="META">Meta (META)</option>
-                <option value="NFLX">Netflix (NFLX)</option>
+                <option value="TSLA">Tesla (TSLA)</option>
                 <option value="AMD">AMD (AMD)</option>
                 <option value="INTC">Intel (INTC)</option>
-                <option value="BA">Boeing (BA)</option>
-                <option value="DIS">Disney (DIS)</option>
+                <option value="QCOM">Qualcomm (QCOM)</option>
+                <option value="AVGO">Broadcom (AVGO)</option>
+                <option value="ORCL">Oracle (ORCL)</option>
+                <option value="CRM">Salesforce (CRM)</option>
+                <option value="ADBE">Adobe (ADBE)</option>
+                </optgroup>
+                <optgroup label="── Finance ──">
                 <option value="JPM">JPMorgan (JPM)</option>
+                <option value="GS">Goldman Sachs (GS)</option>
+                <option value="BAC">Bank of America (BAC)</option>
+                <option value="MS">Morgan Stanley (MS)</option>
                 <option value="V">Visa (V)</option>
+                <option value="MA">Mastercard (MA)</option>
+                <option value="BRK-B">Berkshire (BRK-B)</option>
+                <option value="C">Citigroup (C)</option>
+                </optgroup>
+                <optgroup label="── Consumer ──">
+                <option value="NFLX">Netflix (NFLX)</option>
+                <option value="DIS">Disney (DIS)</option>
                 <option value="WMT">Walmart (WMT)</option>
                 <option value="KO">Coca-Cola (KO)</option>
+                <option value="PEP">PepsiCo (PEP)</option>
+                <option value="MCD">McDonald's (MCD)</option>
+                <option value="SBUX">Starbucks (SBUX)</option>
+                <option value="NKE">Nike (NKE)</option>
+                </optgroup>
+                <optgroup label="── Energy / Industrial ──">
+                <option value="XOM">ExxonMobil (XOM)</option>
+                <option value="CVX">Chevron (CVX)</option>
+                <option value="BA">Boeing (BA)</option>
+                <option value="CAT">Caterpillar (CAT)</option>
+                <option value="GE">GE (GE)</option>
+                </optgroup>
+                <optgroup label="── Healthcare ──">
+                <option value="JNJ">Johnson &amp; Johnson (JNJ)</option>
+                <option value="PFE">Pfizer (PFE)</option>
+                <option value="MRNA">Moderna (MRNA)</option>
+                <option value="UNH">UnitedHealth (UNH)</option>
+                <option value="LLY">Eli Lilly (LLY)</option>
+                </optgroup>
               </select>
               <div class="sw-arrow">▼</div>
             </div>
@@ -200,10 +313,25 @@
               <div class="sw-icon">◱</div>
               <select class="c-select" data-type="index">
                 <option value="" disabled selected>Indices</option>
-                <option value="US30">Dow Jones (US30)</option>
-                <option value="NASDAQ">NASDAQ 100</option>
-                <option value="SP500">S&amp;P 500</option>
+                <optgroup label="── US Indices ──">
+                <option value="NAS100">NASDAQ 100 (NQ=F)</option>
+                <option value="SP500">S&amp;P 500 (ES=F)</option>
+                <option value="US30">Dow Jones (YM=F)</option>
+                <option value="RUSSELL">Russell 2000 (RTY=F)</option>
+                <option value="VIX">VIX Volatility</option>
+                </optgroup>
+                <optgroup label="── European ──">
                 <option value="DAX40">DAX 40 (Germany)</option>
+                <option value="FTSE">FTSE 100 (UK)</option>
+                <option value="CAC">CAC 40 (France)</option>
+                <option value="EURO50">Euro Stoxx 50</option>
+                </optgroup>
+                <optgroup label="── Asian / Pacific ──">
+                <option value="NIKKEI">Nikkei 225 (Japan)</option>
+                <option value="HSI">Hang Seng (HK)</option>
+                <option value="ASX">ASX 200 (Australia)</option>
+                <option value="SENSEX">SENSEX (India)</option>
+                </optgroup>
               </select>
               <div class="sw-arrow">▼</div>
             </div>
@@ -212,9 +340,26 @@
               <div class="sw-icon">☼</div>
               <select class="c-select" data-type="commodity">
                 <option value="" disabled selected>Commodities</option>
-                <option value="GOLD">Gold</option>
-                <option value="SILVER">Silver</option>
-                <option value="OIL">Crude Oil</option>
+                <optgroup label="── Precious Metals ──">
+                <option value="GOLD">Gold (XAU/USD)</option>
+                <option value="SILVER">Silver (XAG/USD)</option>
+                <option value="PLATINUM">Platinum</option>
+                <option value="PALLADIUM">Palladium</option>
+                <option value="COPPER">Copper</option>
+                </optgroup>
+                <optgroup label="── Energy ──">
+                <option value="OIL">WTI Crude Oil</option>
+                <option value="BRENT">Brent Crude</option>
+                <option value="NATGAS">Natural Gas</option>
+                </optgroup>
+                <optgroup label="── Grains / Softs ──">
+                <option value="WHEAT">Wheat</option>
+                <option value="CORN">Corn</option>
+                <option value="SOYBEAN">Soybean</option>
+                <option value="COFFEE">Coffee</option>
+                <option value="COCOA">Cocoa</option>
+                <option value="SUGAR">Sugar</option>
+                </optgroup>
               </select>
               <div class="sw-arrow">▼</div>
             </div>
