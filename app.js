@@ -33,23 +33,26 @@ if (_logoutBtn) {
    sc   → Stocks + Crypto              (Forex, Commodities, Indices locked)
    both → Full access to everything
    ─────────────────────────────────────────────────────────────────────────── */
+const TIER_ACCESS = {
+  fx:   ['forex', 'commodity', 'index'],
+  sc:   ['crypto', 'stock'],
+  both: ['forex', 'commodity', 'index', 'crypto', 'stock'],
+};
+
+const TIER_META = {
+  fx:   { label: 'FX · Commodities · Indices', color: '#4FACFE', icon: '📊' },
+  sc:   { label: 'Stocks · Crypto',             color: '#22d3a0', icon: '💹' },
+  both: { label: 'Full Access',                  color: '#F9A825', icon: '🌐' },
+};
+
+function isTierAllowed(assetType) {
+  const tier = sessionStorage.getItem('mv_tier') || 'both';
+  const allowed = TIER_ACCESS[tier] || TIER_ACCESS['both'];
+  return allowed.includes(assetType);
+}
+
 (function applyTierRestrictions() {
   const tier = sessionStorage.getItem('mv_tier') || 'both';
-
-  // Map: wrapper class → asset types accessible per tier
-  const TIER_ACCESS = {
-    fx:   ['forex', 'commodity', 'index'],
-    sc:   ['crypto', 'stock'],
-    both: ['forex', 'commodity', 'index', 'crypto', 'stock'],
-  };
-  const allowed = TIER_ACCESS[tier] || TIER_ACCESS['both'];
-
-  // Tier display metadata
-  const TIER_META = {
-    fx:   { label: 'FX · Commodities · Indices', color: '#4FACFE', icon: '📊' },
-    sc:   { label: 'Stocks · Crypto',             color: '#22d3a0', icon: '💹' },
-    both: { label: 'Full Access',                  color: '#F9A825', icon: '🌐' },
-  };
   const meta = TIER_META[tier] || TIER_META['both'];
 
   // ── Inject Tier Badge into header ──────────────────────────────────────────
@@ -90,7 +93,7 @@ if (_logoutBtn) {
     };
 
     Object.entries(wrapMap).forEach(([type, selector]) => {
-      if (allowed.includes(type)) return; // user has access — skip
+      if (isTierAllowed(type)) return; // user has access — skip
 
       const wrap = document.querySelector(selector);
       if (!wrap) return;
@@ -157,7 +160,7 @@ if (_logoutBtn) {
         const typeMap = { forex: 'forex', crypto: 'crypto', stock: 'stock', commodity: 'commodity', index: 'index' };
         const key = typeMap[assetType] || assetType;
 
-        if (!allowed.includes(key)) {
+        if (!isTierAllowed(key)) {
           e.stopImmediatePropagation();
           // Show a toast/alert
           const planNeeded = ['crypto', 'stock'].includes(key) ? 'Stocks & Crypto' : 'FX, Commodities & Indices';
@@ -2562,7 +2565,10 @@ async function scanSmartWatchlist() {
   const wlEl = document.getElementById('wl-list');
   if (!wlEl) return;
 
-  const results = await Promise.allSettled(WATCHLIST_PAIRS.map(async p => {
+  const results = await Promise.allSettled(WATCHLIST_PAIRS.filter(p => {
+    const info = detectSymbol(p);
+    return info && isTierAllowed(info.type);
+  }).map(async p => {
     const info = detectSymbol(p);
     const candles = info.useBinance ? await fetchBinance(info.binSym, '1h') : await fetchData(info, '1h');
     const last = candles[candles.length - 1];
@@ -2599,6 +2605,13 @@ async function scanSmartWatchlist() {
 
 // Global jump for watchlist
 window.quickAnalyze = (symbol) => {
+  const info = detectSymbol(symbol);
+  if (info && !isTierAllowed(info.type)) {
+    const planNeeded = ['crypto', 'stock'].includes(info.type) ? 'Stocks & Crypto' : 'FX, Commodities & Indices';
+    showTierBlockToast(`🔒 "${symbol}" requires the <strong>${planNeeded}</strong> plan. <a href="login.html" style="color:#4FACFE;font-weight:600;">Upgrade →</a>`);
+    return;
+  }
+
   // Set visible search field
   const searchEl = document.getElementById('local-search');
   if (searchEl) searchEl.value = symbol;
