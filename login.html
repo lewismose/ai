@@ -2022,45 +2022,9 @@
   </a>
 
   <script>
-    // ── Tiered Activation Keys ───────────────────────────────────────────
-    // FX, Commodities & Indices keys
-    const KEYS_FX = [
-      'EMILY002',
-      'ZACK003',
-      'DONA005',
-      'MV-FX04-D9P4-KU3V',
-      'MV-FX05-E2N7-WB8Q',
-    ];
-    // Stocks & Crypto keys
-    const KEYS_SC = [
-      'BTC',
-      'MV-SC02-G8L5-ZN4R',
-      'MV-SC03-H1K9-VF7B',
-      'MV-SC04-I4Q2-YM6D',
-      'MV-SC05-J7W8-TH9G',
-    ];
-    // Full Access (Both) keys
-    const KEYS_BOTH = [
-      'MV-ALL01-K3X6-RL2S',
-      'MV-ALL02-L5B1-QP4N',
-      'MV-ALL03-M2W9-ZK7R',
-      'LITTLEMISS12',
-      'FAITH004',
-      'MUSAUC',
-      'FRIDAH001',
-      'VMP',
-      'ALL',
-    ];
-    // Combined for quick lookup
-    const ACTIVATION_KEYS = [...KEYS_FX, ...KEYS_SC, ...KEYS_BOTH];
-
-    function getKeyTier(key) {
-      if (KEYS_FX.includes(key)) return 'fx';
-      if (KEYS_SC.includes(key)) return 'sc';
-      if (KEYS_BOTH.includes(key)) return 'both';
-      return null;
-    }
-
+    // ── Activation keys are loaded from keys.json (not visible in HTML source)
+    // ── Edit keys.json on GitHub to add/remove keys
+    let allKeys = null;
     let attemptsLeft = 5;
     let locked = false;
 
@@ -2143,7 +2107,25 @@
       }
     }
 
-    function handleLogin() {
+    async function loadKeys() {
+      if (allKeys) return allKeys;
+      try {
+        const resp = await fetch('/keys.json?_=' + Date.now());
+        allKeys = await resp.json();
+        return allKeys;
+      } catch {
+        return null;
+      }
+    }
+
+    function findKeyTier(inputKey, keys) {
+      for (const [tier, keyList] of Object.entries(keys)) {
+        if (keyList.includes(inputKey)) return tier;
+      }
+      return null;
+    }
+
+    async function handleLogin() {
       if (locked) return;
       const inputKey = keyInput.value.trim().toUpperCase();
       if (!inputKey) { showError('Please enter your activation key.'); shakeInput(); return; }
@@ -2151,29 +2133,41 @@
       const btn = document.getElementById('login-btn');
       btn.classList.add('loading'); btn.disabled = true;
 
-      setTimeout(() => {
+      try {
+        const keys = await loadKeys();
+        if (!keys) {
+          btn.classList.remove('loading'); btn.disabled = false;
+          showError('Could not load activation keys. Try again or contact admin.');
+          return;
+        }
+
+        const tier = findKeyTier(inputKey, keys);
         btn.classList.remove('loading'); btn.disabled = false;
 
-        const tier = getKeyTier(inputKey);
         if (tier) {
           showSuccess(tier);
         } else {
           attemptsLeft--;
-          document.getElementById('attempts-left').textContent = attemptsLeft;
+          document.getElementById('attempts-left').textContent = Math.max(0, attemptsLeft);
           shakeInput();
 
           if (attemptsLeft <= 0) {
             locked = true;
             showError('Too many failed attempts. Contact admin on WhatsApp.');
-            keyInput.disabled = true; btn.disabled = true;
+            keyInput.disabled = true;
+            btn.disabled = true;
             document.getElementById('attempt-info').innerHTML =
               '⛔ Access locked. <a href="https://wa.me/254100574438" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
           } else {
-            showError(`Invalid key. Please contact admin. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
+            showError(`Invalid key. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
           }
-          keyInput.value = ''; keyInput.focus();
+          keyInput.value = '';
+          keyInput.focus();
         }
-      }, 900);
+      } catch (err) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        showError('Could not verify key. Try again or contact admin.');
+      }
     }
 
     function showError(msg) {
