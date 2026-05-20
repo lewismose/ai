@@ -1,0 +1,27 @@
+{
+  "fx": [
+    "EMILY002",
+    "ZACK003",
+    "DONA005",
+    "MV-FX04-D9P4-KU3V",
+    "MV-FX05-E2N7-WB8Q"
+  ],
+  "sc": [
+    "BTC",
+    "MV-SC02-G8L5-ZN4R",
+    "MV-SC03-H1K9-VF7B",
+    "MV-SC04-I4Q2-YM6D",
+    "MV-SC05-J7W8-TH9G"
+  ],
+  "both": [
+    "MV-ALL01-K3X6-RL2S",
+    "MV-ALL02-L5B1-QP4N",
+    "MV-ALL03-M2W9-ZK7R",
+    "LITTLEMISS12",
+    "FAITH004",
+    "MUSAUC",
+    "FRIDAH001",
+    "VMP",
+    "ALL"
+  ]
+}
