@@ -358,6 +358,60 @@ body.light-theme .logout-btn:hover{background:#d32f2f;color:#fff;}
 /* ══════════════════════════════════════════════════════
    NEW FEATURE STYLES
    ══════════════════════════════════════════════════════ */
+n/* ── Scalping Badge ── */
+.scalp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255,213,79,0.15), rgba(79,172,254,0.15));
+  border: 1px solid rgba(249,168,37,0.35);
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: kz-glow 2s infinite alternate;
+  margin-bottom: 8px;
+}
+
+/* ── Advanced SMC Badge Strip ── */
+.smc-strip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.smc-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  animation: tagin .35s var(--r) both;
+  border: 1px solid transparent;
+}
+
+.smc-badge.bull { background: rgba(0,230,118,0.1); color: var(--green); border-color: rgba(0,230,118,0.2); }
+.smc-badge.bear { background: rgba(255,82,82,0.1); color: var(--red); border-color: rgba(255,82,82,0.2); }
+.smc-badge.breaker.bull { background: rgba(79,172,254,0.12); color: var(--blue); border-color: rgba(79,172,254,0.25); }
+.smc-badge.breaker.bear { background: rgba(255,82,82,0.1); color: var(--red); border-color: rgba(255,82,82,0.2); }
+.smc-badge.ifvg.bull { background: rgba(206,147,216,0.12); color: #CE93D8; border-color: rgba(206,147,216,0.25); }
+.smc-badge.ifvg.bear { background: rgba(206,147,216,0.08); color: #CE93D8; border-color: rgba(206,147,216,0.2); }
+.smc-badge.absorption.bull { background: rgba(0,230,118,0.12); color: var(--green); border-color: rgba(0,230,118,0.22); }
+.smc-badge.absorption.bear { background: rgba(255,82,82,0.12); color: var(--red); border-color: rgba(255,82,82,0.22); }
+.smc-badge.wyckoff.bull { background: rgba(249,168,37,0.12); color: var(--gold); border-color: rgba(249,168,37,0.25); }
+.smc-badge.wyckoff.bear { background: rgba(249,168,37,0.1); color: var(--gold); border-color: rgba(249,168,37,0.2); }
+.smc-badge.poc { background: rgba(0,242,254,0.1); color: var(--cyan); border-color: rgba(0,242,254,0.25); }
+.smc-badge.none { background: transparent; color: var(--text3); font-style: italic; border-color: transparent; }
+
+
 
 /* ── MULTI-TIMEFRAME CONFLUENCE ── */
 .mtf-card{position:relative;z-index:1}
