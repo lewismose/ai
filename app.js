@@ -23,6 +23,7 @@ if (_logoutBtn) {
   _logoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem('mv_auth');
     sessionStorage.removeItem('mv_tier');
+    sessionStorage.removeItem('mv_user_name');
     window.location.replace('/login.html');
   });
 }
@@ -71,7 +72,10 @@ function isTierAllowed(assetType) {
         color:${meta.color}; white-space:nowrap;
         cursor:default; user-select:none;
       `;
-      badge.innerHTML = `${meta.icon} <span>${meta.label}</span>`;
+      const userName = sessionStorage.getItem('mv_user_name');
+      badge.innerHTML = userName
+        ? `${meta.icon} <span>${meta.label}</span> <span style="opacity:0.5;font-weight:400;">·</span> <span style="font-weight:400;">${userName}</span>`
+        : `${meta.icon} <span>${meta.label}</span>`;
       headerRight.insertBefore(badge, headerRight.firstChild);
     }
 
@@ -385,7 +389,51 @@ const S = {
   lastSig: null,
   dxyTrend: 'NEUTRAL',
   newsData: [],
-  config: { showIndicators: true }
+  config: { showIndicators: true },
+  isScalping: false,
+  tradingMode: 'daytrade',
+  journalBalance: parseFloat(localStorage.getItem('tv_journal_balance')) || 10000
+};
+
+// ─── Scalping vs Day Trading Config ───────────────────────────────────────────
+// Lower timeframes (1m, 3m, 5m) = scalping mode
+// Higher timeframes (15m, 1h, 4h, 1d) = normal day trading
+const SCALP_TFS = new Set(['1m', '3m', '5m']);
+
+function isScalpingTF(tf) {
+  return SCALP_TFS.has(tf);
+}
+
+function getTradingMode(tf) {
+  return isScalpingTF(tf) ? 'scalping' : 'daytrade';
+}
+
+// ─── Scalping-specific indicator params ───────────────────────────────────────
+const MODE_PARAMS = {
+  scalping: {
+    emaFast: 9, emaMid: 21, emaSlow: 50,
+    rsiPeriod: 7, rsiOB: 75, rsiOS: 25,
+    bbPeriod: 20, bbStd: 1.5,
+    macdFast: 6, macdSlow: 13, macdSig: 5,
+    adxPeriod: 10, adxThreshold: 20,
+    stochPeriod: 7, stochK: 3, stochD: 3,
+    swingLookback: 3,
+    atrMult: 1.2,
+    confidenceBoost: 15,
+    minConfidence: 55,
+  },
+  daytrade: {
+    emaFast: 20, emaMid: 50, emaSlow: 200,
+    rsiPeriod: 14, rsiOB: 70, rsiOS: 30,
+    bbPeriod: 20, bbStd: 2,
+    macdFast: 12, macdSlow: 26, macdSig: 9,
+    adxPeriod: 14, adxThreshold: 25,
+    stochPeriod: 14, stochK: 3, stochD: 3,
+    swingLookback: 5,
+    atrMult: 2.2,
+    confidenceBoost: 0,
+    minConfidence: 45,
+  }
 };
 
 async function fetchDXYTrend() {
@@ -1097,6 +1145,348 @@ function detectLiquiditySweeps(candles, swings) {
   return sweeps;
 }
 
+// ─── SMC: Breaker Blocks ──────────────────────────────────────────────────────
+// When an Order Block gets violated and flips polarity:
+// Bullish Breaker = bearish OB that was broken upward → new support
+// Bearish Breaker = bullish OB that was broken downward → new resistance
+function detectBreakerBlocks(candles, swings) {
+  const breakers = { bullish: [], bearish: [] };
+  const { highs, lows } = swings;
+  
+  // Detect bullish breakers: bearish OB that was swept upward
+  for (let i = 1; i < lows.length; i++) {
+    const l = lows[i];
+    for (let k = l.i + 1; k < Math.min(candles.length, l.i + 30); k++) {
+      if (candles[k].low < l.price) {
+        // Liquidity sweep occurred - now check if price reclaimed
+        for (let j = k + 1; j < Math.min(candles.length, k + 15); j++) {
+          if (candles[j].close > l.price) {
+            breakers.bullish.push({ i: j, level: l.price, sweptAt: k, type: 'bullish_breaker' });
+            break;
+          }
+        }
+        break;
+      }
+    }
+  }
+  
+  // Detect bearish breakers: bullish OB that was swept downward
+  for (let i = 1; i < highs.length; i++) {
+    const h = highs[i];
+    for (let k = h.i + 1; k < Math.min(candles.length, h.i + 30); k++) {
+      if (candles[k].high > h.price) {
+        // Liquidity sweep occurred - now check if price rejected
+        for (let j = k + 1; j < Math.min(candles.length, k + 15); j++) {
+          if (candles[j].close < h.price) {
+            breakers.bearish.push({ i: j, level: h.price, sweptAt: k, type: 'bearish_breaker' });
+            break;
+          }
+        }
+        break;
+      }
+    }
+  }
+  
+  return {
+    bullish: breakers.bullish.slice(-3),
+    bearish: breakers.bearish.slice(-3)
+  };
+}
+
+// ─── SMC: Implied Fair Value Gaps (IFVG) ──────────────────────────────────────
+// A 3-candle formation where both gaps between 1-2 and 2-3 align in the same direction
+function detectIFVG(candles) {
+  const ifvgs = { bullish: [], bearish: [] };
+  for (let i = 3; i < candles.length; i++) {
+    const c1 = candles[i - 3], c2 = candles[i - 2], c3 = candles[i - 1], c4 = candles[i];
+    
+    // Bullish IFVG: both gaps up (c1→c2, c2→c3) creating nested FVG
+    if (c1.high < c2.low * 0.9999 && c2.high < c3.low * 0.9999 && c4.close > c4.open) {
+      ifvgs.bullish.push({ i: i - 1, top: Math.min(c2.low, c3.low), bottom: Math.max(c1.high, c2.high) });
+    }
+    
+    // Bearish IFVG: both gaps down (c1→c2, c2→c3)
+    if (c1.low > c2.high * 1.0001 && c2.low > c3.high * 1.0001 && c4.close < c4.open) {
+      ifvgs.bearish.push({ i: i - 1, top: Math.min(c1.low, c2.low), bottom: Math.max(c2.high, c3.high) });
+    }
+  }
+  return {
+    bullish: ifvgs.bullish.slice(-2),
+    bearish: ifvgs.bearish.slice(-2)
+  };
+}
+
+// ─── Volume Profile / High Volume Nodes ────────────────────────────────────────
+// Identifies price levels with concentrated volume (institutional interest)
+async function volumeProfile(candles) {
+  if (candles.length < 20) return { hvn: [], lvn: [], poc: null };
+  
+  const n = candles.length;
+  const lookback = Math.min(50, n);
+  const recent = candles.slice(-lookback);
+  
+  const priceRange = Math.max(...recent.map(c => c.high)) - Math.min(...recent.map(c => c.low));
+  const bucketCount = 20;
+  const bucketSize = priceRange / bucketCount || 1;
+  const minPrice = Math.min(...recent.map(c => c.low));
+  
+  // Bucket volume into price levels
+  const buckets = new Array(bucketCount).fill(0);
+  const bucketCounts = new Array(bucketCount).fill(0);
+  
+  recent.forEach(c => {
+    const vol = c.volume || 0;
+    // Distribute volume across the candle's range
+    const ratio = vol / (c.high - c.low || 1);
+    for (let b = 0; b < bucketCount; b++) {
+      const bLow = minPrice + b * bucketSize;
+      const bHigh = bLow + bucketSize;
+      if (c.high > bLow && c.low < bHigh) {
+        const overlap = Math.min(c.high, bHigh) - Math.max(c.low, bLow);
+        if (overlap > 0) {
+          buckets[b] += ratio * overlap;
+          bucketCounts[b]++;
+        }
+      }
+    }
+  });
+  
+  const avgVol = buckets.reduce((s, v) => s + v, 0) / bucketCount;
+  const maxVol = Math.max(...buckets);
+  const pocIdx = buckets.indexOf(maxVol);
+  const poc = minPrice + (pocIdx + 0.5) * bucketSize;
+  
+  // HVN: buckets with volume > 1.5x average
+  const hvn = [];
+  const lvn = [];
+  buckets.forEach((v, i) => {
+    const mid = minPrice + (i + 0.5) * bucketSize;
+    if (v > avgVol * 1.5) hvn.push({ price: mid, volume: v, strength: Math.min(1, v / maxVol) });
+    if (bucketCounts[i] > 0 && v < avgVol * 0.4) lvn.push({ price: mid });
+  });
+  
+  return { hvn: hvn.slice(-5), lvn: lvn.slice(-5), poc };
+}
+
+// ─── Order Flow: CVD Approximation ─────────────────────────────────────────────
+// Uses OHLCV data to estimate buying vs selling pressure
+function calculateCVD(candles) {
+  // CVD approximates cumulative volume delta:
+  // On up candles: most volume is buying pressure
+  // On doji/neutral: split evenly
+  // On down candles: most volume is selling pressure
+  
+  const cvd = [0]; // cumulative
+  const rawDeltas = [0];
+  
+  for (let i = 1; i < candles.length; i++) {
+    const c = candles[i];
+    const vol = c.volume || 0;
+    const range = c.high - c.low || 0.001;
+    const body = Math.abs(c.close - c.open);
+    
+    // Delta calculation using candle body and wicks
+    let buyVol, sellVol;
+    
+    if (c.close > c.open) {
+      // Bullish candle — buying pressure dominant
+      const bodyRatio = body / range;
+      buyVol = vol * (0.5 + bodyRatio * 0.35);
+      sellVol = vol - buyVol;
+    } else if (c.close < c.open) {
+      // Bearish candle — selling pressure dominant
+      const bodyRatio = body / range;
+      sellVol = vol * (0.5 + bodyRatio * 0.35);
+      buyVol = vol - sellVol;
+    } else {
+      // Doji — split evenly
+      buyVol = vol * 0.5;
+      sellVol = vol * 0.5;
+    }
+    
+    const delta = buyVol - sellVol;
+    rawDeltas.push(delta);
+    cvd.push(cvd[i - 1] + delta);
+  }
+  
+  return { cvd, rawDeltas };
+}
+
+// ─── Order Flow: Absorption Detection ─────────────────────────────────────────
+// Absorption: high volume but small price movement → institutional accumulation/distribution
+function detectAbsorption(candles, volSmaArr) {
+  const abs = { bullish: [], bearish: [] };
+  for (let i = 5; i < candles.length; i++) {
+    const c = candles[i];
+    const vol = c.volume || 0;
+    const range = c.high - c.low || 0.001;
+    const body = Math.abs(c.close - c.open);
+    const avgVol = volSmaArr?.[i] || 1;
+    const avgRange = candles.slice(Math.max(0, i - 10), i).reduce((s, x) => s + (x.high - x.low), 0) / Math.min(10, i);
+    
+    // High volume + small range + small body = absorption
+    if (vol > avgVol * 1.8 && range < avgRange * 0.6 && body < range * 0.4) {
+      if (c.close > c.open) {
+        abs.bullish.push({ i, price: c.close, strength: vol / avgVol });
+      } else {
+        abs.bearish.push({ i, price: c.close, strength: vol / avgVol });
+      }
+    }
+  }
+  return {
+    bullish: abs.bullish.slice(-2),
+    bearish: abs.bearish.slice(-2)
+  };
+}
+
+// ─── Order Flow: Volume Imbalance ─────────────────────────────────────────────
+// Measures buy/sell imbalance in recent candles
+function detectImbalance(candles, lookback = 5) {
+  if (candles.length < lookback + 1) return { imbalance: 0, side: 'neutral' };
+  const recent = candles.slice(-lookback);
+  let buyVol = 0, sellVol = 0;
+  
+  recent.forEach((c, idx) => {
+    const vol = c.volume || 0;
+    const range = c.high - c.low || 0.001;
+    const body = Math.abs(c.close - c.open);
+    
+    if (c.close > c.open) {
+      const ratio = 0.5 + (body / range) * 0.35;
+      buyVol += vol * ratio;
+      sellVol += vol * (1 - ratio);
+    } else if (c.close < c.open) {
+      const ratio = 0.5 + (body / range) * 0.35;
+      sellVol += vol * ratio;
+      buyVol += vol * (1 - ratio);
+    } else {
+      buyVol += vol * 0.5;
+      sellVol += vol * 0.5;
+    }
+  });
+  
+  const total = buyVol + sellVol || 1;
+  const imbalance = ((buyVol - sellVol) / total) * 100;
+  
+  let side = 'neutral';
+  if (imbalance > 10) side = 'bullish';
+  else if (imbalance < -10) side = 'bearish';
+  
+  return { imbalance, buyRatio: buyVol / total, sellRatio: sellVol / total, side };
+}
+
+// ─── Wyckoff: Spring / Upthrust Detection ─────────────────────────────────────
+// Spring = price breaks below support, quickly reverses (bullish reversal signal)
+// Upthrust = price breaks above resistance, quickly reverses (bearish reversal)
+function detectWyckoff(candles, swings, srZones) {
+  const wyckoff = { springs: [], upthrusts: [] };
+  
+  if (candles.length < 15 || !srZones?.length) return wyckoff;
+  
+  const n = candles.length;
+  const recent = candles.slice(-15);
+  
+  // Check each support zone for a spring
+  srZones.filter(z => z.type === 'support').forEach(sup => {
+    for (let i = 3; i < recent.length; i++) {
+      const c = recent[i];
+      const cNext = i + 1 < recent.length ? recent[i + 1] : null;
+      // Break below support
+      if (c.low < sup.bottom && cNext && cNext.close > sup.mid) {
+        wyckoff.springs.push({ i: n - 15 + i, level: sup.mid, type: 'spring' });
+        break;
+      }
+    }
+  });
+  
+  // Check each resistance zone for an upthrust
+  srZones.filter(z => z.type === 'resistance').forEach(res => {
+    for (let i = 3; i < recent.length; i++) {
+      const c = recent[i];
+      const cNext = i + 1 < recent.length ? recent[i + 1] : null;
+      // Break above resistance
+      if (c.high > res.top && cNext && cNext.close < res.mid) {
+        wyckoff.upthrusts.push({ i: n - 15 + i, level: res.mid, type: 'upthrust' });
+        break;
+      }
+    }
+  });
+  
+  return wyckoff;
+}
+
+// ─── Institutional Order Flow Score ───────────────────────────────────────────
+// Combines all order flow metrics into a single score for signal generation
+function calculateFlowScore(candles, ta) {
+  const n = candles.length - 1;
+  const close = candles[n].close;
+  let flowScore = 0;
+  
+  // CVD trend
+  if (ta.cvdData) {
+    const cvdArr = ta.cvdData.cvd;
+    const cvdVal = cvdArr[n] - (cvdArr[Math.max(0, n - 5)] || 0);
+    flowScore += Math.sign(cvdVal) * Math.min(15, Math.abs(cvdVal) * 0.001);
+  }
+  
+  // Imbalance
+  if (ta.imbalance) {
+    const imb = ta.imbalance;
+    if (imb.side === 'bullish') flowScore += 12;
+    else if (imb.side === 'bearish') flowScore -= 12;
+  }
+  
+  // Absorption (recent)
+  if (ta.absorption) {
+    if (ta.absorption.bullish.some(a => n - a.i < 5)) flowScore += 20;
+    if (ta.absorption.bearish.some(a => n - a.i < 5)) flowScore -= 20;
+  }
+  
+  // Volume Profile POC proximity
+  if (ta.volumeProfile?.poc) {
+    const pocDist = Math.abs(close - ta.volumeProfile.poc) / close;
+    if (pocDist < 0.003) flowScore += 10; // Price near POC = equilibrium
+  }
+  
+  return flowScore;
+}
+
+// ─── SMC Confluence Score ─────────────────────────────────────────────────────
+// Aggregates all SMC confirmations into a single score
+function calculateSMCScore(candles, ta) {
+  const n = candles.length - 1;
+  const close = candles[n].close;
+  let smcScore = 0;
+  
+  // Breaker blocks
+  if (ta.breakerData) {
+    if (ta.breakerData.bullish.some(b => n - b.i < 10)) smcScore += 25;
+    if (ta.breakerData.bearish.some(b => n - b.i < 10)) smcScore -= 25;
+  }
+  
+  // IFVG
+  if (ta.ifvgData) {
+    if (ta.ifvgData.bullish.some(f => close >= f.bottom && close <= f.top * 1.003)) smcScore += 25;
+    if (ta.ifvgData.bearish.some(f => close <= f.top && close >= f.bottom * 0.997)) smcScore -= 25;
+  }
+  
+  // Wyckoff
+  if (ta.wyckoff) {
+    if (ta.wyckoff.springs.some(s => n - s.i < 8)) smcScore += 30;
+    if (ta.wyckoff.upthrusts.some(u => n - u.i < 8)) smcScore -= 30;
+  }
+  
+  // HVN proximity
+  if (ta.volumeProfile?.hvn) {
+    ta.volumeProfile.hvn.forEach(hvn => {
+      const dist = Math.abs(close - hvn.price) / close;
+      if (dist < 0.005) smcScore += 15 * hvn.strength;
+    });
+  }
+  
+  return smcScore;
+}
+
 // ─── AI Narrative ─────────────────────────────────────────────────────────────
 function generateNarrative(sig, ta, info) {
   const n = ta.ri.length - 1;
@@ -1123,10 +1513,36 @@ function generateNarrative(sig, ta, info) {
   if (ta.obData?.bullish?.length > 0 && sig.signal === 'BUY') smcStr += ' Price is tapping into a <em>Bullish Order Block</em>.';
   else if (ta.obData?.bearish?.length > 0 && sig.signal === 'SELL') smcStr += ' Price is rejecting from a <em>Bearish Order Block</em>.';
 
+  // ── Scalping Mode Indicator ──
+  const modePrefix = S.isScalping || isScalpingTF(S.tf) ? ' ⚡ <em>Scalping Mode</em> — fast execution required.' : '';
+
+  // ── Advanced Order Flow Narrative ──
+  let flowStr = '';
+  if (ta.cvdData) {
+    const cvdArr = ta.cvdData.cvd;
+    const n2 = cvdArr.length - 1;
+    const cvdSlope = cvdArr[n2] - (cvdArr[Math.max(0, n2 - 5)] || 0);
+    if (Math.abs(cvdSlope) > 0) flowStr += ` CVD <em>${cvdSlope > 0 ? 'rising' : 'falling'}</em> confirms order flow.`;
+  }
+  if (ta.imbalance && ta.imbalance.side !== 'neutral') {
+    flowStr += ` Volume imbalance shows <em>${ta.imbalance.side === 'bullish' ? 'buying' : 'selling'}</em> pressure.`;
+  }
+  if (ta.absorption?.bullish?.length > 0) flowStr += ' <em>Bullish absorption</em> detected — institutional accumulation.';
+  else if (ta.absorption?.bearish?.length > 0) flowStr += ' <em>Bearish absorption</em> detected — institutional distribution.';
+
+  // ── Advanced SMC Narrative ──
+  let smcAdvStr = '';
+  if (ta.breakerData?.bullish?.length > 0 && sig.signal === 'BUY') smcAdvStr += ' <em>Breaker block</em> validates buy structure.';
+  else if (ta.breakerData?.bearish?.length > 0 && sig.signal === 'SELL') smcAdvStr += ' <em>Breaker block</em> validates sell structure.';
+  if (ta.ifvgData?.bullish?.length > 0 && sig.signal === 'BUY') smcAdvStr += ' <em>IFVG</em> adds high-conviction long confluence.';
+  else if (ta.ifvgData?.bearish?.length > 0 && sig.signal === 'SELL') smcAdvStr += ' <em>IFVG</em> adds high-conviction short confluence.';
+  if (ta.wyckoff?.springs?.length > 0) smcAdvStr += ' <em>Wyckoff Spring</em> signals accumulation.';
+  else if (ta.wyckoff?.upthrusts?.length > 0) smcAdvStr += ' <em>Wyckoff Upthrust</em> signals distribution.';
+
   let volStr = sig.hasVolAnomaly ? ' <em>Volume anomaly</em> detected, signaling strong institutional participation.' : '';
   const stStr = sig.stDir ? ` (SuperTrend: ${sig.stDir === 'bull' ? 'Bullish' : 'Bearish'})` : '';
 
-  return `<em>${info.display}</em> is in a <em>${tStr}</em>${stStr} with ${adxStr}${vwapStr}. ${rsiStr}.${patStr}${divStr}${smcStr}${volStr} ${tradeStr}`;
+  return `<em>${info.display}</em> is in a <em>${tStr}</em>${stStr} with ${adxStr}${vwapStr}. ${rsiStr}.${patStr}${divStr}${smcStr}${flowStr}${smcAdvStr}${volStr}${modePrefix} ${tradeStr}`;
 }
 
 // ─── Multi-Timeframe ──────────────────────────────────────────────────────────
@@ -1149,6 +1565,13 @@ async function runMultiTF(info) {
     ta.ms = detectMarketStructure(candles, swings);
     ta.obData = detectOrderBlocks(candles, swings);
     ta.sweeps = detectLiquiditySweeps(candles, swings);
+    ta.srZones = detectSRZones(candles, swings);
+    ta.breakerData = detectBreakerBlocks(candles, swings);
+    ta.ifvgData = detectIFVG(candles);
+    ta.cvdData = calculateCVD(candles);
+    ta.imbalance = detectImbalance(candles);
+    ta.absorption = detectAbsorption(candles, ta.volSma);
+    ta.wyckoff = detectWyckoff(candles, swings, ta.srZones);
     return { tf, sig: generateSignal(candles, ta, info) };
   }));
   return results.map((r, i) => r.status === 'fulfilled' ? { tf: tfs[i], ...r.value.sig } : { tf: tfs[i], signal: 'ERR', confidence: 0 });
@@ -1198,6 +1621,17 @@ document.getElementById('hist-clear-btn')?.addEventListener('click', () => {
   toast('History cleared', 'ok');
 });
 renderHistory();
+
+// ─── Journal Balance Input ─────────────────────────────────────────────────────
+document.getElementById('journal-balance-set')?.addEventListener('click', () => {
+  const input = document.getElementById('journal-balance-input');
+  const val = parseFloat(input?.value);
+  if (!val || val < 1) { toast('Enter a valid account balance', 'warn'); return; }
+  S.journalBalance = val;
+  localStorage.setItem('tv_journal_balance', val);
+  _patchHist();
+  toast(`Account balance set to $${val.toLocaleString()}`, 'ok');
+});
 
 // ─── Price Alerts ─────────────────────────────────────────────────────────────
 const ALERT = { price: null, above: null, id: null };
@@ -1431,6 +1865,15 @@ function generateSignal(candles, ta, pInfo) {
     if (ta.sweeps.bearish.some(s => n - s.i < 5)) bear += 20;
   }
 
+  // ── Institutional Order Flow & SMC Confluence ──
+  const modeParams = MODE_PARAMS[getTradingMode(S.tf)];
+  const flowScore = calculateFlowScore(candles, ta);
+  const smcScore = calculateSMCScore(candles, ta);
+  if (flowScore > 0) bull += Math.min(25, flowScore);
+  else bear += Math.min(25, Math.abs(flowScore));
+  if (smcScore > 0) bull += Math.min(30, smcScore);
+  else bear += Math.min(30, Math.abs(smcScore));
+
   const net = bull - bear;
   let signal = net >= 0 ? 'BUY' : 'SELL';
   
@@ -1442,7 +1885,7 @@ function generateSignal(candles, ta, pInfo) {
   signal = reNet >= 0 ? 'BUY' : 'SELL';
 
   // If net score is low, confidence is penalised
-  let confidence = Math.max(45, Math.min(96, 30 + Math.abs(reNet) * 0.45));
+  let confidence = Math.max(modeParams.minConfidence, Math.min(96, 30 + Math.abs(reNet) * 0.45 + modeParams.confidenceBoost));
   if (hasVolAnomaly) confidence = Math.min(99, confidence + 4);
 
   // Levels
@@ -1480,7 +1923,7 @@ function generateSignal(candles, ta, pInfo) {
     slV = Math.min(swH + atrV * swingCush, close + atrV * atrMult);
     const r = slV - entry; tp = entry - r * rrRatio;
   }
-  return { signal, confidence: Math.round(confidence), entry: f(entry), tp: f(tp), sl: f(slV), rr: `1:${rrRatio}`, rv, hv, bbPos, atrV, adxV: adxV?.toFixed(1), vwap: vw?.toFixed(5), hasVolAnomaly, stDir };
+  return { signal, confidence: Math.round(confidence), entry: f(entry), tp: f(tp), sl: f(slV), rr: `1:${rrRatio}`, rv, hv, bbPos, atrV, adxV: adxV?.toFixed(1), vwap: vw?.toFixed(5), hasVolAnomaly, stDir, flowScore: Math.round(flowScore || 0), smcScore: Math.round(smcScore || 0) };
 }
 
 // ─── Canvas Chart ─────────────────────────────────────────────────────────────
@@ -2013,13 +2456,39 @@ document.addEventListener('mousedown', e => {
   }
 });
 
-// Timeframe
+// Timeframe — also sets scalping mode
+const SCALP_TFS_LIST = ['1m', '3m', '5m'];
 document.querySelectorAll('.tf-btn:not(.rr-btn)').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tf-btn:not(.rr-btn)').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     S.tf = btn.dataset.tf;
+    
+    // Set scalping mode based on timeframe
+    S.isScalping = isScalpingTF(S.tf);
+    S.tradingMode = getTradingMode(S.tf);
+    
+    // Show/hide scalping badge on UI
+    const badge = document.getElementById('scalping-badge');
+    if (badge) {
+      badge.style.display = S.isScalping ? 'flex' : 'none';
+    }
+    
+    // If we already have data, re-run with new mode
+    if (S.lastCandles && S.active) {
+      doAnalyze();
+    }
   });
+});
+
+// Init scalping badge on page load
+document.addEventListener('DOMContentLoaded', () => {
+  S.isScalping = isScalpingTF(S.tf);
+  S.tradingMode = getTradingMode(S.tf);
+  const badge = document.getElementById('scalping-badge');
+  if (badge) {
+    badge.style.display = S.isScalping ? 'flex' : 'none';
+  }
 });
 
 // Risk Reward
@@ -2119,6 +2588,14 @@ async function doAnalyze() {
     ta.divergence = detectDivergence(candles, ta.ri, swings);
     ta.fib = fibonacci(candles);
     let sig = generateSignal(candles, ta, info);
+    // ── Advanced SMC / Order Flow Layering ──
+    ta.cvdData = calculateCVD(candles);
+    ta.imbalance = detectImbalance(candles);
+    ta.breakerData = detectBreakerBlocks(candles, swings);
+    ta.ifvgData = detectIFVG(candles);
+    ta.absorption = detectAbsorption(candles, ta.volSma);
+    ta.wyckoff = detectWyckoff(candles, swings, ta.srZones);
+    ta.volumeProfile = await volumeProfile(candles);
 
     S.lastCandles = candles; S.lastTA = ta; S.lastSig = sig;
     const isUSD = raw.includes('USD');
@@ -2169,13 +2646,22 @@ async function doAnalyze() {
     await new Promise(r => setTimeout(r, 40));
     drawChart(document.getElementById('main-canvas'), candles, ta, sig);
     renderSignal(sig, info, ta);
+    // Calculate RR ratio from entry, TP, and SL
+    const entryPr = parseFloat(sig.entry.replace(/,/g, ''));
+    const tpPr = parseFloat(sig.tp.replace(/,/g, ''));
+    const slPr = parseFloat(sig.sl.replace(/,/g, ''));
+    const priceRisk = Math.abs(entryPr - slPr);
+    const priceReward = Math.abs(tpPr - entryPr);
+    const rr = priceRisk > 0 ? priceReward / priceRisk : 2.2;
+
     saveHistory({
       pair: pairInput.value.toUpperCase(), tf: S.tf,
       signal: sig.signal, confidence: sig.confidence,
       date: new Date().toLocaleString(),
-      entryPrice: parseFloat(sig.entry.replace(/,/g, '')),
-      tp: parseFloat(sig.tp.replace(/,/g, '')),
-      sl: parseFloat(sig.sl.replace(/,/g, '')),
+      entryPrice: entryPr,
+      tp: tpPr,
+      sl: slPr,
+      rr: Math.round(rr * 10) / 10,
       symInfo: { useBinance: info.useBinance, binSym: info.binSym, yahooSym: info.yahooSym, type: info.type }
     });
     renderHistory();
@@ -2210,6 +2696,12 @@ function renderSignal(sig, info, ta) {
   document.getElementById('sig-text').textContent = sig.signal;
   document.getElementById('sig-pair').textContent = pairInput.value.toUpperCase();
   document.getElementById('sig-tf').textContent = S.tf.toUpperCase() + ' Timeframe';
+  // ── Scalping Mode Badge ──
+  const scalpBadge = document.getElementById("scalp-badge");
+  if (scalpBadge) {
+    const isScalp = S.isScalping || isScalpingTF(S.tf);
+    scalpBadge.style.display = isScalp ? "inline-flex" : "none";
+  }
 
   document.getElementById('conf-pct').textContent = sig.confidence + '%';
   setTimeout(() => { document.getElementById('conf-fill').style.width = sig.confidence + '%'; }, 80);
@@ -2225,20 +2717,27 @@ function renderSignal(sig, info, ta) {
   document.getElementById('lv-sl').textContent = sig.sl;
   document.getElementById('lv-rr').textContent = sig.rr;
 
-  // ── Orderflow Data
-  const ob = document.getElementById('orderflow-block');
+  // ── Orderflow Data (real from TA) ──
+  const ob = document.getElementById("orderflow-block");
   if (ob) {
-    ob.style.display = 'flex';
-    const buyPct = (isBuy ? 55 + Math.random() * 28 : 15 + Math.random() * 28).toFixed(1);
-    const sellPct = (100 - buyPct).toFixed(1);
-    const delta = ((buyPct - 50) * (Math.random() * 2 + 0.5)).toFixed(1);
-    document.getElementById('of-buy').textContent = `Buy: ${buyPct}%`;
-    document.getElementById('of-sell').textContent = `Sell: ${sellPct}%`;
-    document.getElementById('of-delta').textContent = `Δ ${delta > 0 ? '+' : ''}${delta}K CVD`;
-    document.getElementById('of-delta').style.color = delta > 0 ? 'var(--green)' : 'var(--red)';
-    document.getElementById('of-fill').style.width = `${buyPct}%`;
-    document.getElementById('of-fill').style.background = delta > 0 ? 'rgba(0,230,118,.8)' : 'rgba(255,82,82,.8)';
-    document.querySelector('.of-bar').style.background = delta > 0 ? 'rgba(255,82,82,.2)' : 'rgba(0,230,118,.2)';
+    ob.style.display = "flex";
+    let buyPct, sellPct, delta;
+    if (ta?.imbalance && ta.imbalance.buyRatio) {
+      buyPct = (ta.imbalance.buyRatio * 100).toFixed(1);
+      sellPct = (ta.imbalance.sellRatio * 100).toFixed(1);
+      delta = ((ta.imbalance.buyRatio - 0.5) * 100).toFixed(1);
+    } else {
+      buyPct = (isBuy ? 55 + Math.random() * 28 : 15 + Math.random() * 28).toFixed(1);
+      sellPct = (100 - buyPct).toFixed(1);
+      delta = ((buyPct - 50) * (Math.random() * 2 + 0.5)).toFixed(1);
+    }
+    document.getElementById("of-buy").textContent = `Buy: ${buyPct}%`;
+    document.getElementById("of-sell").textContent = `Sell: ${sellPct}%`;
+    document.getElementById("of-delta").textContent = `Δ ${delta > 0 ? "+" : ""}${delta}% CVD`;
+    document.getElementById("of-delta").style.color = delta > 0 ? "var(--green)" : "var(--red)";
+    document.getElementById("of-fill").style.width = `${buyPct}%`;
+    document.getElementById("of-fill").style.background = delta > 0 ? "rgba(0,230,118,.8)" : "rgba(255,82,82,.8)";
+    document.querySelector(".of-bar").style.background = delta > 0 ? "rgba(255,82,82,.2)" : "rgba(0,230,118,.2)";
   }
 
   // ── Market Structure Badges
@@ -2253,6 +2752,27 @@ function renderSignal(sig, info, ta) {
     const pats = ta.patterns?.filter(p => p.type !== 'neutral').slice(-2) || [];
     pats.forEach(p => { badges.push(`<span class="ms-badge ${p.type === 'bull' ? 'uptrend' : 'downtrend'}">${p.name}</span>`); });
     strip.innerHTML = badges.join('');
+  // ── Advanced SMC Badges ──
+  const smcStrip = document.getElementById("smc-strip");
+  if (smcStrip) {
+    const smcBadges = [];
+    // Breaker Blocks
+    if (ta?.breakerData?.bullish?.length > 0) smcBadges.push("<span class=\"smc-badge breaker bull\">Breaker ↑</span>");
+    if (ta?.breakerData?.bearish?.length > 0) smcBadges.push("<span class=\"smc-badge breaker bear\">Breaker ↓</span>");
+    // IFVG
+    if (ta?.ifvgData?.bullish?.length > 0) smcBadges.push("<span class=\"smc-badge ifvg bull\">IFVG ↑</span>");
+    if (ta?.ifvgData?.bearish?.length > 0) smcBadges.push("<span class=\"smc-badge ifvg bear\">IFVG ↓</span>");
+    // Absorption
+    if (ta?.absorption?.bullish?.length > 0) smcBadges.push("<span class=\"smc-badge absorption bull\">Absorp ↑</span>");
+    if (ta?.absorption?.bearish?.length > 0) smcBadges.push("<span class=\"smc-badge absorption bear\">Absorp ↓</span>");
+    // Wyckoff
+    if (ta?.wyckoff?.springs?.length > 0) smcBadges.push("<span class=\"smc-badge wyckoff bull\">Spring ↑</span>");
+    if (ta?.wyckoff?.upthrusts?.length > 0) smcBadges.push("<span class=\"smc-badge wyckoff bear\">Upthrust ↓</span>");
+    // Volume Profile POC
+    if (ta?.volumeProfile?.poc) smcBadges.push("<span class=\"smc-badge poc\">POC</span>");
+    smcStrip.innerHTML = smcBadges.length ? smcBadges.join("") : "<span class=\"smc-badge none\">—</span>";
+  }
+
   }
 
   // ── AI Narrative
@@ -2383,20 +2903,26 @@ function calculatePositionSize() {
   } else {
     document.getElementById('calc-info').textContent = `Using: ${pair} @ ${S.lastSig.signal}`;
   }
-
+  // Calculate reward
   const rewardDist = Math.abs(tp - entry);
   let rewardUsd = 0;
-  if (type === 'forex') {
-    const isJpy = pair.includes('JPY');
+  if (type === "forex") {
+    const isJpy = pair.includes("JPY");
     rewardUsd = (rewardDist * (isJpy ? 100 : 10000)) * pipVal * lotSize;
-  } else if (type === 'commodity' && (pair.includes('GOLD') || pair.includes('XAU'))) {
+  } else if (type === "commodity" && (pair.includes("GOLD") || pair.includes("XAU"))) {
     rewardUsd = rewardDist * 100 * lotSize;
   } else {
     rewardUsd = rewardDist * lotSize;
   }
 
+  // Enforce minimum lot size of 0.01
+  const MIN_LOT = 0.01;
+  if (lotSize < MIN_LOT) lotSize = MIN_LOT;
+  lotSize = Math.round(lotSize / MIN_LOT) * MIN_LOT;
+
+
   // Update UI Elements
-  document.getElementById('calc-lots').textContent = lotSize < 0.01 ? lotSize.toFixed(4) : lotSize.toFixed(2);
+  document.getElementById('calc-lots').textContent = lotSize.toFixed(2);
   document.getElementById('calc-loss').textContent = '$' + (type === 'forex' ? (priceDist * (pair.includes('JPY') ? 100 : 10000) * pipVal * lotSize) : type === 'commodity' ? (priceDist * 100 * lotSize) : (priceDist * lotSize)).toFixed(2);
   document.getElementById('calc-gain').textContent = '$' + rewardUsd.toFixed(2);
   document.getElementById('calc-results').style.opacity = '1';
@@ -2730,37 +3256,41 @@ function _patchHist() {
   const statsEl = document.getElementById('journal-stats');
   if (!list) return;
 
-  // Compute advanced metrics
+  // USD-based P&L calculation
+  const initialBalance = S.journalBalance || 10000;
   const closed = h.filter(e => e.status === 'won' || e.status === 'lost');
-  let w = 0, l = 0, totalWinR = 0, totalLossR = 0;
-  let equityCurve = [0];
-  let curR = 0;
-  let peak = 0;
+  let w = 0, l = 0, totalPnl = 0;
+  let balance = initialBalance;
+  let equityCurve = [initialBalance];
+  let peak = initialBalance;
   let maxDD = 0;
 
   [...closed].reverse().forEach(e => {
-    const r = (e.status === 'won' ? 2.2 : -1.0);
-    if (r > 0) { w++; totalWinR += r; } else { l++; totalLossR += Math.abs(r); }
-    curR += r;
-    equityCurve.push(curR);
-    if (curR > peak) peak = curR;
-    const dd = peak - curR;
+    const riskAmount = initialBalance * 0.01; // 1% risk per trade
+    const tradeRR = e.rr || 2.2;
+    const pnl = e.status === 'won' ? riskAmount * tradeRR : -riskAmount;
+    if (pnl > 0) w++; else l++;
+    totalPnl += pnl;
+    balance += pnl;
+    equityCurve.push(balance);
+    if (balance > peak) peak = balance;
+    const dd = peak - balance;
     if (dd > maxDD) maxDD = dd;
   });
 
   const total = w + l;
   const wr = total > 0 ? Math.round((w / total) * 100) : 0;
-  const pf = totalLossR > 0 ? (totalWinR / totalLossR).toFixed(2) : totalWinR > 0 ? '∞' : '0.00';
-  const expectancy = total > 0 ? ((totalWinR - totalLossR) / total).toFixed(2) : '0.00';
+  const currentBalance = initialBalance + totalPnl;
+  const maxDDPct = peak > 0 ? (maxDD / peak * 100) : 0;
 
   // Stats grid
   if (statsEl) {
     statsEl.style.display = 'grid';
     statsEl.innerHTML = `
-      <div class="j-stat"><span>Win Rate</span><span class="val">${wr}%</span></div>
-      <div class="j-stat"><span>Profit Factor</span><span class="val">${pf}</span></div>
-      <div class="j-stat"><span>Expectancy</span><span class="val">${expectancy}R</span></div>
-      <div class="j-stat"><span>Max Drawdown</span><span class="val neg">-${maxDD.toFixed(1)}R</span></div>
+      <div class="j-stat wr"><span>Win Rate</span><span class="val">${wr}%</span></div>
+      <div class="j-stat pnl"><span>Total P&amp;L</span><span class="val ${totalPnl >= 0 ? 'pos' : 'neg'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}</span></div>
+      <div class="j-stat wins"><span>Wins</span><span class="val">${w}</span></div>
+      <div class="j-stat losses"><span>Losses</span><span class="val">${l}</span></div>
     `;
   }
 
@@ -2771,14 +3301,14 @@ function _patchHist() {
   const eqFill = document.getElementById('journal-equity-fill');
   const eqPct  = document.getElementById('journal-equity-pct');
   if (eqFill && eqPct) {
-    const fillPct = total > 0 ? wr : 0;
+    const pctGain = initialBalance > 0 ? ((currentBalance - initialBalance) / initialBalance) * 100 : 0;
+    const fillPct = Math.min(100, Math.max(0, 50 + pctGain * 2)); // center at 50% gain
     setTimeout(() => { eqFill.style.width = fillPct + '%'; }, 120);
-    eqPct.textContent = total > 0 ? wr + '% win rate' : 'No trades closed yet';
-    eqFill.style.background = wr >= 55
+    const balStr = '$' + currentBalance.toFixed(2);
+    eqPct.textContent = total > 0 ? balStr + ' (' + (pctGain >= 0 ? '+' : '') + pctGain.toFixed(1) + '%)' : 'Starting: $' + initialBalance.toFixed(2);
+    eqFill.style.background = pctGain >= 0
       ? 'linear-gradient(90deg,var(--purple),var(--green))'
-      : wr >= 40
-        ? 'linear-gradient(90deg,var(--purple),var(--gold))'
-        : 'linear-gradient(90deg,var(--purple),var(--red))';
+      : 'linear-gradient(90deg,var(--purple),var(--red))';
   }
 
   if (!h.length) {
@@ -2804,8 +3334,15 @@ function _patchHist() {
     const rowCls  = status === 'won' ? 'won' : status === 'lost' ? 'lost' : '';
     const note    = e.note || '';
     const dateStr = e.date ? `<span class="hist-date">${e.date}</span>` : '';
-    const rVal    = status === 'won' ? '+2.2R' : status === 'lost' ? '-1.0R' : '--';
-    const profCls = status === 'won' ? 'pos' : status === 'lost' ? 'neg' : '';
+
+    // Calculate USD P&L for this trade
+    const riskAmount = initialBalance * 0.01;
+    const tradeRR = e.rr || 2.2;
+    let pnlVal = 0;
+    if (status === 'won') pnlVal = riskAmount * tradeRR;
+    else if (status === 'lost') pnlVal = -riskAmount;
+    const pnlStr = status === 'won' ? '+' + pnlVal.toFixed(2) : status === 'lost' ? pnlVal.toFixed(2) : '--';
+    const pnlCls = status === 'won' ? 'pos' : status === 'lost' ? 'neg' : '';
 
     // Auto-track info
     const hasLevels = e.tp && e.sl;
@@ -2825,7 +3362,7 @@ function _patchHist() {
           <span class="hist-sig ${cls}">${e.signal}</span>
           <span class="hist-tf">${e.tf}</span>
           <span class="hist-outcome ${status}">${status === 'won' ? '✓ TP' : status === 'lost' ? '✗ SL' : '⏳ Open'}</span>
-          <span class="hist-profit ${profCls}">${rVal}</span>
+          <span class="hist-profit ${pnlCls}">${pnlStr}</span>
         </div>
         <textarea class="hist-notes" placeholder="Trade proof or notes…" onchange="saveNote(${realIdx},this.value)">${note}</textarea>
         <div class="hist-footer">
@@ -2840,7 +3377,6 @@ function _patchHist() {
       </div>`;
   }).join('');
 }
-
 window.setHistStatus = (index, status) => {
   const h = loadHistory();
   if (h[index]) {
@@ -2944,25 +3480,30 @@ function renderPerformanceGraph(h) {
   ctx.scale(dpr, dpr);
   
   const closed = h.filter(e => e.status === 'won' || e.status === 'lost');
+  const initialBalance = S.journalBalance || 10000;
+  
   if (closed.length < 1) {
     ctx.clearRect(0,0,width,height);
     ctx.fillStyle = 'rgba(255,255,255,0.1)';
     ctx.font = '10px Inter';
     ctx.textAlign = 'center';
-    ctx.fillText('Institutional Analysis Grid Initializing...', width/2, height/2);
+    ctx.fillText('Equity curve will appear after trades are logged', width/2, height/2);
     return;
   }
   
-  let points = [0];
-  let cur = 0;
+  // Build USD equity curve
+  let points = [initialBalance];
+  let bal = initialBalance;
   [...closed].reverse().forEach(e => {
-    cur += (e.status === 'won' ? 2.2 : -1.0);
-    points.push(cur);
+    const riskAmt = initialBalance * 0.01;
+    const tradeRR = e.rr || 2.2;
+    bal += (e.status === 'won' ? riskAmt * tradeRR : -riskAmt);
+    points.push(bal);
   });
   
-  const min = Math.min(...points, -1);
-  const max = Math.max(...points, 1);
-  const range = max - min;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = (max - min) || 1;
   const pad = 20;
   const getY = v => height - pad - ((v - min) / range) * (height - pad * 2);
   const getX = i => pad + (i / (points.length - 1)) * (width - pad * 2);
@@ -2977,13 +3518,17 @@ function renderPerformanceGraph(h) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
   }
 
-  // Zero line
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  // Starting balance line
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
   ctx.setLineDash([4, 4]);
   ctx.beginPath();
-  ctx.moveTo(0, getY(0)); ctx.lineTo(width, getY(0));
+  ctx.moveTo(0, getY(initialBalance)); ctx.lineTo(width, getY(initialBalance));
   ctx.stroke();
   ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.font = '8px Inter';
+  ctx.textAlign = 'left';
+  ctx.fillText('Start: $' + initialBalance.toFixed(0), 4, getY(initialBalance) - 3);
 
   // Bezier Path
   if (points.length > 1) {
@@ -2992,47 +3537,56 @@ function renderPerformanceGraph(h) {
     
     for (let i = 0; i < points.length - 1; i++) {
       const x1 = getX(i), y1 = getY(points[i]);
-      const x2 = getX(i+1), y2 = getY(points[i+1]);
-      const xc = (x1 + x2) / 2;
-      ctx.quadraticCurveTo(x1, y1, xc, (y1 + y2) / 2);
+      const x2 = getX(i + 1), y2 = getY(points[i + 1]);
+      const cp1x = x1 + (x2 - x1) * 0.5;
+      ctx.bezierCurveTo(cp1x, y1, cp1x, y2, x2, y2);
     }
     
-    const lastIdx = points.length - 1;
-    ctx.lineTo(getX(lastIdx), getY(points[lastIdx]));
+    // Gradient fill under curve
+    const lastX = getX(points.length - 1);
+    const firstY = getY(points[0]);
+    ctx.lineTo(lastX, height - pad);
+    ctx.lineTo(getX(0), height - pad);
+    ctx.closePath();
     
-    // Stroke
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(79, 172, 254, 0.4)';
-    ctx.strokeStyle = '#4FACFE';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Gradient Fill
-    ctx.lineTo(getX(lastIdx), height);
-    ctx.lineTo(getX(0), height);
-    const grad = ctx.createLinearGradient(0, getY(max), 0, height);
-    grad.addColorStop(0, 'rgba(79, 172, 254, 0.15)');
-    grad.addColorStop(1, 'transparent');
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    const isUp = points[points.length - 1] >= points[0];
+    grad.addColorStop(0, isUp ? 'rgba(0,230,118,0.18)' : 'rgba(255,82,82,0.18)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad;
     ctx.fill();
-  }
-
-  // Data points
-  points.forEach((p, i) => {
+    
+    // Line
     ctx.beginPath();
-    ctx.arc(getX(i), getY(p), 3.5, 0, Math.PI*2);
-    ctx.fillStyle = i === 0 ? '#fff' : (points[i] >= points[i-1] ? '#00E676' : '#FF5252');
+    ctx.moveTo(getX(0), getY(points[0]));
+    for (let i = 0; i < points.length - 1; i++) {
+      const x1 = getX(i), y1 = getY(points[i]);
+      const x2 = getX(i + 1), y2 = getY(points[i + 1]);
+      const cp1x = x1 + (x2 - x1) * 0.5;
+      ctx.bezierCurveTo(cp1x, y1, cp1x, y2, x2, y2);
+    }
+    ctx.strokeStyle = isUp ? 'rgba(0,230,118,0.7)' : 'rgba(255,82,82,0.7)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Endpoint dot
+    const endX = getX(points.length - 1);
+    const endY = getY(points[points.length - 1]);
+    ctx.beginPath();
+    ctx.arc(endX, endY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = isUp ? '#00E676' : '#FF5252';
     ctx.fill();
-    ctx.strokeStyle = '#080814';
+    ctx.strokeStyle = '#000';
     ctx.lineWidth = 1.5;
     ctx.stroke();
-  });
-
-  // End label
-  const lastP = points[points.length-1];
-  ctx.fillStyle = lastP >= 0 ? '#00E676' : '#FF5252';
-  ctx.font = 'bold 10px JetBrains Mono';
-  ctx.textAlign = 'right';
-  ctx.fillText(`${lastP >= 0 ? '+' : ''}${lastP.toFixed(1)}R`, width - 5, getY(lastP) - 10);
+    
+    // End label
+    ctx.fillStyle = isUp ? 'rgba(0,230,118,0.8)' : 'rgba(255,82,82,0.8)';
+    ctx.font = 'bold 10px Inter';
+    ctx.textAlign = 'right';
+    const finalVal = points[points.length - 1];
+    const change = finalVal - initialBalance;
+    ctx.fillText('$' + finalVal.toFixed(0) + ' (' + (change >= 0 ? '+' : '') + change.toFixed(0) + ')', width - 4, endY - 8);
+  }
 }
+
