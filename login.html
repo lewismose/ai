@@ -2120,7 +2120,14 @@
 
     function findKeyTier(inputKey, keys) {
       for (const [tier, keyList] of Object.entries(keys)) {
-        if (keyList.includes(inputKey)) return tier;
+        for (const item of keyList) {
+          if (typeof item === 'string' && item === inputKey) {
+            return { tier, name: null };
+          }
+          if (typeof item === 'object' && item.key === inputKey) {
+            return { tier, name: item.name || null };
+          }
+        }
       }
       return null;
     }
@@ -2141,11 +2148,11 @@
           return;
         }
 
-        const tier = findKeyTier(inputKey, keys);
+        const result = findKeyTier(inputKey, keys);
         btn.classList.remove('loading'); btn.disabled = false;
 
-        if (tier) {
-          showSuccess(tier);
+        if (result) {
+          showSuccess(result.tier, result.name);
         } else {
           attemptsLeft--;
           document.getElementById('attempts-left').textContent = Math.max(0, attemptsLeft);
@@ -2186,9 +2193,11 @@
       wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
       setTimeout(() => wrap.classList.remove('shake'), 500);
     }
-    function showSuccess(tier) {
+    function showSuccess(tier, userName) {
       sessionStorage.setItem('mv_auth', 'granted');
       sessionStorage.setItem('mv_tier', tier);
+      if (userName) sessionStorage.setItem('mv_user_name', userName);
+      else sessionStorage.removeItem('mv_user_name');
       const overlay = document.getElementById('success-overlay');
       overlay.classList.add('show');
       setTimeout(() => { document.getElementById('success-bar').style.width = '100%'; }, 100);
