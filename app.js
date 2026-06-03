@@ -343,26 +343,138 @@ const SYM_ALIASES = {
 // ─────────────────────────────────────────────────────────────────────────────
 const YOUR_WORKER_URL = 'https://tradevisionai.lewis-hfm.workers.dev'; // ← See instructions below — needs a SEPARATE proxy worker
 
+// ── Optional: Financial Modeling Prep API key (free tier: 250 calls/day)
+// Get a free key at https://financialmodelingprep.com/developer/docs/
+// Leave empty to skip FMP and rely on Yahoo + stooq only
+const YOUR_FMP_API_KEY = ''; // ← Paste your free FMP API key here if desired
+
 // CORS proxies — raced IN PARALLEL; fastest wins
 // Worker goes first (most reliable), public proxies are automatic fallbacks
+// Dead/unreliable proxies removed for speed (cors-anywhere, thingproxy)
 const PROXIES = [
   // Primary: your own Cloudflare Worker (deploy cloudflare-worker.js — free, 100k/day)
+  // Your worker caches responses for 60s at the edge!
   ...(YOUR_WORKER_URL ? [u => `${YOUR_WORKER_URL}?url=${encodeURIComponent(u)}`] : []),
-  // Public fallbacks (rate-limited but usually work):
-  u => `https://cors-anywhere.herokuapp.com/${u}`, // Note: Needs temporary access activation
+  // Reliable public fallbacks with reasonable rate limits:
   u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
   u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  u => `https://thingproxy.freeboard.io/fetch/${u}`,
 ];
 
+// ── Worker Data API ───────────────────────────────────────────────────────────
+// The Cloudflare Worker handles ALL data sourcing server-side:
+//   • Crypto:  races Binance/Bybit/OKX/Kraken/CoinGecko (worker, not client)
+//   • Stocks:   Yahoo finance direct (worker has no CORS issues)
+//   • Forex:    Frankfurter ECB rates (worker->ECB direct)
+//   • Indices/Commodities: Yahoo -> stooq (worker races them)
+// This is MUCH faster because the client makes ONE request instead of racing
+// multiple CORS proxies. Edge caching means repeated requests are instant.
+//
+// If the worker is unavailable, the client falls back to the existing
+// multi-proxy / multi-exchange logic automatically.
 
-// Timeout-safe fetch
-function fetchT(url, ms = 11000) {
-  return Promise.race([
-    fetch(url),
-    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
-  ]);
+async function fetchViaWorker(info, tf) {
+  if (!YOUR_WORKER_URL) return null;
+  const sym = info.binSym || info.yahooSym || info.display;
+  // Use a short timeout (5s) so the fallback kicks in quickly if the worker is slow
+  const url = `${YOUR_WORKER_URL}/candles?type=${info.type}&symbol=${encodeURIComponent(sym)}&tf=${tf}`;
+  try {
+    const res = await fetchT(url, 5000);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json.status !== 'ok' || !json.candles || json.candles.length < 10) return null;
+    // Cache the result client-side as well
+    return cacheAndReturn(sym, tf, info.type, json.candles);
+  } catch (e) {
+    // Worker unavailable — fallback will handle it
+    return null;
+  }
+}
+
+async function fetchLiveViaWorker(info) {
+  if (!YOUR_WORKER_URL) return null;
+  const sym = info.binSym || info.yahooSym || info.display;
+  if (!sym) return null;
+  const url = `${YOUR_WORKER_URL}/live?type=${info.type}&symbol=${encodeURIComponent(sym)}`;
+  try {
+    const res = await fetchT(url, 4000);
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json.status === 'ok' && json.price != null && json.price > 0) {
+      return json.price;
+    }
+  } catch {}
+  return null;
+}
+
+// ── Smart cache for candle data ──────────────────────────────────────────────
+//   ↳ In-memory: instant lookup within a session
+//   ↳ localStorage: persists across page refreshes (60-120s TTL)
+const CACHE_TTL = { crypto: 30, stock: 120, forex: 120, commodity: 120, index: 120 };
+const _candleCache = new Map(); // in-memory for ultra-fast replay
+
+function getCacheKey(symbol, tf, type) {
+  return `tv_cache_${type}_${symbol}_${tf}`;
+}
+
+function getCachedCandles(symbol, tf, type) {
+  const key = getCacheKey(symbol, tf, type);
+  // Check in-memory first (fastest)
+  if (_candleCache.has(key)) {
+    const entry = _candleCache.get(key);
+    if (Date.now() < entry.expires) return entry.candles;
+    _candleCache.delete(key);
+  }
+  // Fall back to localStorage
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      const entry = JSON.parse(raw);
+      if (Date.now() < entry.expires) {
+        _candleCache.set(key, entry); // restore to memory
+        return entry.candles;
+      }
+      localStorage.removeItem(key);
+    }
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+function setCachedCandles(symbol, tf, type, candles) {
+  const key = getCacheKey(symbol, tf, type);
+  const ttl = (CACHE_TTL[type] || 60) * 1000;
+  const entry = { candles, expires: Date.now() + ttl };
+  _candleCache.set(key, entry);
+  // Persist to localStorage (throttle: only if not already stored recently)
+  try {
+    localStorage.setItem(key, JSON.stringify(entry));
+  } catch (e) {
+    // localStorage full — prune oldest entries
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('tv_cache_')) keys.push(k);
+      }
+      keys.sort((a, b) => {
+        try { return JSON.parse(localStorage.getItem(a)).expires - JSON.parse(localStorage.getItem(b)).expires; }
+        catch { return 0; }
+      });
+      // Remove oldest 5 cache entries
+      keys.slice(0, 5).forEach(k => localStorage.removeItem(k));
+      try { localStorage.setItem(key, JSON.stringify(entry)); } catch (e2) {}
+    } catch (e2) {}
+  }
+}
+
+
+// Timeout-safe fetch — reduced timeout from 11s to 6s for public proxies
+// Cloudflare Worker has cacheEverything:true with 60s edge cache, so it's fast
+// Worker timeout: 8s | Public proxy timeout: 6s (down from 11s)
+function fetchT(url, ms = 6000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(id));
 }
 
 // Parse Yahoo Finance JSON regardless of which proxy wrapped it
@@ -392,7 +504,9 @@ const S = {
   config: { showIndicators: true },
   isScalping: false,
   tradingMode: 'daytrade',
-  journalBalance: parseFloat(localStorage.getItem('tv_journal_balance')) || 10000
+  journalBalance: parseFloat(localStorage.getItem('tv_journal_balance')) || 10000,
+  _livePrice: null,
+  _liveTickerId: null
 };
 
 // ─── Scalping vs Day Trading Config ───────────────────────────────────────────
@@ -541,6 +655,27 @@ async function fetchStooq(symbol, tf) {
   }
 }
 
+// ─── Data: Financial Modeling Prep (stocks — native CORS, no proxy needed) ───
+// Free tier: 250 requests/day, end-of-day data only (best for 1D timeframe)
+// Get a free API key: https://financialmodelingprep.com/developer/docs/
+// Set YOUR_FMP_API_KEY at the top of this file to enable.
+async function fetchFMP(symbol, tf) {
+  if (!YOUR_FMP_API_KEY) throw new Error('FMP API key not configured');
+  // FMP free tier only supports daily data
+  if (tf !== '1d') throw new Error('FMP free tier: daily data only');
+  const url = `https://financialmodelingprep.com/api/v3/historical-price-full/${encodeURIComponent(symbol)}?apikey=${YOUR_FMP_API_KEY}`;
+  const res = await fetchT(url, 8000);
+  if (!res.ok) throw new Error(`FMP HTTP ${res.status}`);
+  const json = await res.json();
+  const list = json.historical;
+  if (!Array.isArray(list) || list.length < 10) throw new Error('Insufficient FMP data');
+  return list.slice(0, 400).reverse().map(c => ({
+    time: new Date(c.date).getTime(),
+    open: c.open, high: c.high, low: c.low, close: c.close,
+    volume: c.volume || 0,
+  })).filter(c => c.open && c.high && c.low && c.close);
+}
+
 // ─── Data: Frankfurter API (ECB forex — native CORS, zero proxies needed) ────
 // Works on GitHub Pages, localhost, anywhere. Covers 30+ major currencies.
 async function fetchFrankfurter(base, quote, tf) {
@@ -583,21 +718,44 @@ async function fetchFrankfurter(base, quote, tf) {
 // Priority order:
 //   FOREX : Frankfurter first (native CORS, no proxy, works on GitHub Pages)
 //           → Yahoo fallback (proxied, parallel)
-//   OTHER : Yahoo first (proxied, parallel)
+//   STOCK : Cache → FMP (if key set, native CORS) → Yahoo → stooq
+//   OTHER : Cache → Yahoo first (proxied, parallel)
 //           → stooq fallback (proxied, parallel)
+//   ALL   : Result is cached client-side (60-120s TTL) for instant re-analysis
 async function fetchData(info, tf) {
   const errs = [];
+  const sym = info.yahooSym || info.binSym || info.display;
+
+  // ── Check client-side cache first ───────────────────────────────────────────
+  const cached = getCachedCandles(sym, tf, info.type);
+  if (cached) return cached;
+
+  // ── Try Cloudflare Worker first (server-side data sourcing, much faster) ──
+  // The worker races Yahoo/stooq/Frankfurter directly — no CORS proxies needed.
+  if (YOUR_WORKER_URL && info.type !== 'forex') {
+    const wCandles = await fetchViaWorker(info, tf);
+    if (wCandles) return wCandles;
+  }
+  if (cached) return cached;
+
+  let candles;
 
   // ── FOREX: Frankfurter FIRST — works everywhere with no proxy at all ────────
   if (info.type === 'forex') {
     const raw = info.yahooSym.replace(/=X$/i, '');
     const base = raw.slice(0, 3), quote = raw.slice(3);
-    try { return await fetchFrankfurter(base, quote, tf); }
+    try { candles = await fetchFrankfurter(base, quote, tf); return cacheAndReturn(sym, tf, info.type, candles); }
     catch (e) { errs.push(`Frankfurter: ${e.message}`); }
   }
 
+  // ── STOCKS: try FMP first (native CORS, no proxy) if API key is set ─────────
+  if (info.type === 'stock' && YOUR_FMP_API_KEY) {
+    try { candles = await fetchFMP(sym, tf); return cacheAndReturn(sym, tf, info.type, candles); }
+    catch (e) { errs.push(`FMP: ${e.message}`); }
+  }
+
   // ── Yahoo Finance: all proxies raced in parallel ────────────────────────────
-  try { return await fetchYahoo(info.yahooSym, tf); }
+  try { candles = await fetchYahoo(info.yahooSym, tf); return cacheAndReturn(sym, tf, info.type, candles); }
   catch (e) { errs.push(`Yahoo: ${e.message}`); }
 
   // ── Non-forex fallback: stooq CSV ──────────────────────────────────────────
@@ -605,11 +763,17 @@ async function fetchData(info, tf) {
     try {
       const stooqSym = info.yahooSym
         .replace(/\^/g, '').replace(/=F$/i, '.f').replace(/=X$/i, '');
-      if (stooqSym) return await fetchStooq(stooqSym, tf);
+      if (stooqSym) { candles = await fetchStooq(stooqSym, tf); return cacheAndReturn(sym, tf, info.type, candles); }
     } catch (e) { errs.push(`Stooq: ${e.message}`); }
   }
 
   throw new Error(`No data available for ${info.display}. Try a different pair or timeframe.`);
+}
+
+// Helper: cache candles then return
+function cacheAndReturn(sym, tf, type, candles) {
+  setCachedCandles(sym, tf, type, candles);
+  return candles;
 }
 
 function groupCandles(h, sz) {
@@ -680,18 +844,218 @@ async function fetchCoinGecko(base, tf) {
 }
 
 // Orchestrator: race all 5 exchanges — returns whichever responds first
+// Uses client-side cache (30s TTL for crypto) for instant re-analysis
 async function fetchCrypto(info, tf) {
+  const sym = info.binSym || info.display;
+  // Check cache first
+  const cached = getCachedCandles(sym, tf, 'crypto');
+  if (cached) return cached;
+
+  // Try worker first (races all 5 exchanges server-side, edge cached)
+  if (YOUR_WORKER_URL) {
+    const wCandles = await fetchViaWorker(info, tf);
+    if (wCandles) return wCandles;
+  }
+
   const base = (info.binSym || '').replace(/USDT$/, '');
   try {
-    return await Promise.any([
+    const candles = await Promise.any([
       fetchBinance(info.binSym, tf),
       fetchBybit(info.binSym, tf),
       fetchOKX(base, tf),
       fetchKraken(base, tf),
       fetchCoinGecko(base, tf),
     ]);
+    setCachedCandles(sym, tf, 'crypto', candles);
+    return candles;
   } catch {
     throw new Error(`All crypto exchanges failed for ${info.display}. Check your connection.`);
+  }
+}
+
+// ─── Live Price Fetch ──────────────────────────────────────────────────────────
+// Fetches the current real-time price for any asset type.
+//   - Crypto: Binance ticker API (fast, direct)
+//   - Stocks/Indices/Commodities: Yahoo Quote via proxy
+//   - Forex: Frankfurter current rate (direct)
+// Returns the live price or null if unavailable.
+async function fetchLivePrice(info) {
+  // Try worker first (server-side, edge cached)
+  if (YOUR_WORKER_URL) {
+    const wPrice = await fetchLiveViaWorker(info);
+    if (wPrice != null && wPrice > 0) return wPrice;
+  }
+
+  try {
+    // Crypto: Binance ticker (direct, no proxy, milliseconds fresh)
+    if (info.useBinance && info.binSym) {
+      const res = await fetchT(`https://api.binance.com/api/v3/ticker/price?symbol=${info.binSym}`, 5000);
+      if (res.ok) {
+        const j = await res.json();
+        return parseFloat(j.price);
+      }
+    }
+
+    // Stocks/Indices/Commodities: Yahoo chart via proxy
+    // Use 5m interval (more reliable than 1m) and fall back to 1d if intraday fails
+    if (info.yahooSym && info.type !== 'forex') {
+      const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(info.yahooSym)}?interval=5m&range=2d&includePrePost=true`;
+      try {
+        const candles = await Promise.any(PROXIES.map(async mkProxy => {
+          const res = await fetchT(mkProxy(yUrl), 8000);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const text = await res.text();
+          const result = parseYahooJson(text);
+          // Use regularMarketPrice from meta if available (more current than last candle close)
+          const metaPrice = result.meta?.regularMarketPrice;
+          if (metaPrice && metaPrice > 0) return metaPrice;
+          const q = result.indicators.quote[0];
+          const closes = q.close.filter(c => c !== null);
+          if (closes.length === 0) throw new Error('No close');
+          return closes[closes.length - 1];
+        }));
+        return candles;
+      } catch (e) {
+        // Fallback: try 1d (always works for stocks/indices)
+        const yUrl2 = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(info.yahooSym)}?interval=1d&range=5d`;
+        const candles2 = await Promise.any(PROXIES.map(async mkProxy => {
+          const res = await fetchT(mkProxy(yUrl2), 8000);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const text = await res.text();
+          const result = parseYahooJson(text);
+          // Use regularMarketPrice from meta if available
+          const metaPrice = result.meta?.regularMarketPrice;
+          if (metaPrice && metaPrice > 0) return metaPrice;
+          const q = result.indicators.quote[0];
+          const closes = q.close.filter(c => c !== null);
+          if (closes.length === 0) throw new Error('No close');
+          return closes[closes.length - 1];
+        }));
+        return candles2;
+      }
+    }
+
+    // Forex: Frankfurter current rate (native CORS, no proxy, fresh)
+    if (info.type === 'forex' && info.yahooSym) {
+      const raw = info.yahooSym.replace(/=X$/i, '');
+      const base = raw.slice(0, 3), quote = raw.slice(3);
+      const end = new Date(); const start = new Date(+end - 5 * 86400000);
+      const fmt = d => d.toISOString().slice(0, 10);
+      const url = `https://api.frankfurter.app/${fmt(start)}..${fmt(end)}?from=EUR&to=${base},${quote}`;
+      const res = await fetchT(url, 6000);
+      if (res.ok) {
+        const json = await res.json();
+        const entries = Object.entries(json.rates).sort(([a], [b]) => a < b ? -1 : 1);
+        if (entries.length > 0) {
+          const [_, r] = entries[entries.length - 1];
+          let close;
+          if (base === 'EUR') close = r[quote];
+          else if (quote === 'EUR') close = r[base] ? 1 / r[base] : null;
+          else close = (r[base] && r[quote]) ? r[quote] / r[base] : null;
+          if (close) return close;
+        }
+      }
+      // Fallback: Yahoo chart via proxy (uses regularMarketPrice from meta — more current than last candle close)
+      const yUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(info.yahooSym)}?interval=5m&range=2d&includePrePost=true`;
+      try {
+        const candles = await Promise.any(PROXIES.map(async mkProxy => {
+          const res = await fetchT(mkProxy(yUrl), 8000);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const text = await res.text();
+          const result = parseYahooJson(text);
+          const metaPrice = result.meta?.regularMarketPrice;
+          if (metaPrice && metaPrice > 0) return metaPrice;
+          const q = result.indicators.quote[0];
+          const closes = q.close.filter(c => c !== null);
+          if (closes.length === 0) throw new Error('No close');
+          return closes[closes.length - 1];
+        }));
+        return candles;
+      } catch {}
+    }
+  } catch (e) {
+    // Live price is best-effort; analysis still works with candle close
+    console.warn('Live price unavailable:', e.message);
+  }
+  return null;
+}
+
+// ─── Live Price Ticker ────────────────────────────────────────────────────────────
+// Updates the chart topbar with a live price every 30 seconds.
+// Re-uses fetchLivePrice() which already handles crypto/Yahoo/forex.
+async function updateLivePrice(info) {
+  const live = await fetchLivePrice(info);
+  // Show ticker badge to indicate live updates are active
+  const badge = document.getElementById('live-ticker-badge');
+  const tickerLabel = document.getElementById('ticker-label');
+  if (badge) badge.style.display = 'inline-flex';
+  if (tickerLabel) tickerLabel.textContent = live != null && live > 0 ? 'Live' : 'Offline';
+
+  if (live != null && live > 0) {
+    S._livePrice = live;
+    const priceEl = document.getElementById('chart-price');
+    const chEl = document.getElementById('chart-change');
+    if (priceEl) priceEl.textContent = fmtP(live);
+    if (chEl && S.lastCandles) {
+      const lastClose = S.lastCandles[S.lastCandles.length - 1].close;
+      const chg = ((live - lastClose) / lastClose * 100).toFixed(2);
+      const up = parseFloat(chg) >= 0;
+      chEl.textContent = `${up ? '+' : ''}${chg}%`;
+      chEl.className = `chart-change ${up ? 'up' : 'down'}`;
+    }
+  }
+}
+
+function startLiveTicker(info) {
+  stopLiveTicker();
+  // Immediate first update
+  updateLivePrice(info);
+  // Then every 30 seconds
+  S._liveTickerId = setInterval(() => updateLivePrice(info), 30000);
+}
+
+function stopLiveTicker() {
+  if (S._liveTickerId) {
+    clearInterval(S._liveTickerId);
+    S._liveTickerId = null;
+  }
+  // Hide ticker badge when stopped
+  const badge2 = document.getElementById('live-ticker-badge');
+  if (badge2) badge2.style.display = 'none';
+}
+
+// --- Live Price Ticker ---
+// Updates the chart topbar with a live price every 30 seconds.
+// Re-uses fetchLivePrice() which already handles crypto/Yahoo/forex.
+async function updateLivePrice(info) {
+  const live = await fetchLivePrice(info);
+  if (live != null && live > 0) {
+    S._livePrice = live;
+    const priceEl = document.getElementById('chart-price');
+    const chEl = document.getElementById('chart-change');
+    if (priceEl) priceEl.textContent = fmtP(live);
+    if (chEl && S.lastCandles) {
+      const lastClose = S.lastCandles[S.lastCandles.length - 1].close;
+      const chg = ((live - lastClose) / lastClose * 100).toFixed(2);
+      const up = parseFloat(chg) >= 0;
+      chEl.textContent = `${up ? '+' : ''}${chg}%`;
+      chEl.className = `chart-change ${up ? 'up' : 'down'}`;
+    }
+  }
+}
+
+function startLiveTicker(info) {
+  stopLiveTicker();
+  // Immediate first update
+  updateLivePrice(info);
+  // Then every 30 seconds
+  S._liveTickerId = setInterval(() => updateLivePrice(info), 30000);
+}
+
+function stopLiveTicker() {
+  if (S._liveTickerId) {
+    clearInterval(S._liveTickerId);
+    S._liveTickerId = null;
   }
 }
 
@@ -1549,7 +1913,7 @@ function generateNarrative(sig, ta, info) {
 async function runMultiTF(info) {
   const tfs = ['15m', '1h', '4h', '1d'];
   const results = await Promise.allSettled(tfs.map(async tf => {
-    const candles = info.useBinance ? await fetchBinance(info.binSym, tf) : await fetchData(info, tf);
+    const candles = info.useBinance ? await fetchCrypto(info, tf) : await fetchData(info, tf);
     const closes = candles.map(c => c.close);
     const ta = {
       e20: ema(closes, 20), e50: ema(closes, 50), e200: ema(closes, 200), ri: rsi(closes, 14),
@@ -2548,14 +2912,19 @@ async function doAnalyze() {
   document.getElementById('signal-card').style.display = 'none';
   document.getElementById('load-title').textContent = `Fetching ${info.display}…`;
   startSteps();
+  // Kill any previous ticker before starting new analysis
+  stopLiveTicker();
 
   try {
     let candles;
     if (info.useBinance) {
-      candles = await fetchBinance(info.binSym, S.tf);
+      // Wrapped fetchCrypto uses client-side cache (30s TTL) for instant re-analyze
+      candles = await fetchCrypto(info, S.tf);
+      document.getElementById('load-title').textContent = `Analyzing ${info.display}…`;
     } else {
-      // Multi-source cascade: Yahoo → stooq → Frankfurter (forex only)
+      // Multi-source cascade with client-side caching (60-120s TTL) for instant re-analyze
       candles = await fetchData(info, S.tf);
+      document.getElementById('load-title').textContent = `Analyzing ${info.display}…`;
     }
 
     // Run TA
@@ -2603,6 +2972,38 @@ async function doAnalyze() {
     info.dxyTrend = S.dxyTrend;
     info.isUSDBase = raw.startsWith('USD');
     info.isUSDQuote = raw.endsWith('USD');
+
+    // ── Live Price Adjustment ────────────────────────────────────────────────
+    // After TA is done, fetch the current live price so the entry/TP/SL
+    // reflect where the market is RIGHT NOW, not when the last candle closed.
+    try {
+      const livePrice = await fetchLivePrice(info);
+      if (livePrice && livePrice > 0) {
+        const closePr = candles[candles.length - 1].close;
+        const diffPct = Math.abs(livePrice - closePr) / closePr;
+        // Only adjust if price moved significantly (>0.01%) — avoids noise
+        if (diffPct > 0.0001) {
+          const ee = parseFloat(sig.entry.replace(/,/g, ''));
+          const et = parseFloat(sig.tp.replace(/,/g, ''));
+          const es = parseFloat(sig.sl.replace(/,/g, ''));
+          // Shift all levels by the same absolute move (preserves risk distances)
+          const shift = livePrice - ee;
+          const adjEntry = livePrice;
+          const adjTp = et + shift;
+          const adjSl = es + shift;
+          // Re-format with same decimal precision
+          const dec = sig.entry.includes('.') ? (sig.entry.split('.')[1]?.length || 2) : 2;
+          const f = v => parseFloat(v.toFixed(dec)).toLocaleString('en', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+          sig.entry = f(adjEntry);
+          sig.tp = f(adjTp);
+          sig.sl = f(adjSl);
+          sig.liveAdjusted = true;
+        }
+      }
+    } catch (e) {
+      // Best-effort — signal still valid with candle-close prices
+      console.warn('Live adjust failed:', e.message);
+    }
     
     S.newsData = await fetchNewsSentiment(raw);
     renderNews(S.newsData);
@@ -2622,6 +3023,9 @@ async function doAnalyze() {
     const up = parseFloat(chg) >= 0;
     document.getElementById('chart-pair-name').textContent = pairInput.value.toUpperCase();
     document.getElementById('chart-price').textContent = fmtP(last.close);
+    S._livePrice = last.close;
+    // Update ticker price display
+    S._livePrice = last.close;
     const chEl = document.getElementById('chart-change');
     chEl.textContent = `${up ? '+' : ''}${chg}%`; chEl.className = `chart-change ${up ? 'up' : 'down'}`;
     document.getElementById('chart-meta').textContent = `${candles.length} bars · ${S.tf.toUpperCase()}`;
@@ -2681,6 +3085,8 @@ async function doAnalyze() {
   } finally {
     analyzeBtn.disabled = false;
   }
+  // Start 30-second live price ticker
+  startLiveTicker(info);
 }
 
 // ─── Render Signal ────────────────────────────────────────────────────────────
@@ -2696,6 +3102,11 @@ function renderSignal(sig, info, ta) {
   document.getElementById('sig-text').textContent = sig.signal;
   document.getElementById('sig-pair').textContent = pairInput.value.toUpperCase();
   document.getElementById('sig-tf').textContent = S.tf.toUpperCase() + ' Timeframe';
+  // ── Live Entry Badge ──
+  const liveBadge = document.getElementById("live-badge");
+  if (liveBadge) {
+    liveBadge.style.display = sig.liveAdjusted ? "inline-flex" : "none";
+  }
   // ── Scalping Mode Badge ──
   const scalpBadge = document.getElementById("scalp-badge");
   if (scalpBadge) {
