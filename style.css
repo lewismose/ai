@@ -293,6 +293,10 @@ body.light-theme .logout-btn:hover{background:#d32f2f;color:#fff;}
 .chart-pair-name{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:800;letter-spacing:-.01em}
 .chart-price{font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:500}
 .chart-change{font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px}
+.live-ticker-badge{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.25);color:var(--green);letter-spacing:.03em;transition:all .3s var(--r);animation:ticker-pulse 3s infinite alternate}
+.live-ticker-badge .ticker-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1.5s infinite}
+.live-ticker-badge .ticker-label{white-space:nowrap}
+@keyframes ticker-pulse{from{opacity:.85}to{opacity:1}}
 .chart-change.up{background:rgba(0,230,118,.12);color:var(--green)}
 .chart-change.down{background:rgba(255,82,82,.1);color:var(--red)}
 .chart-meta{font-size:.72rem;color:var(--text3);margin-left:auto}
