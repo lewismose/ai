@@ -2025,7 +2025,51 @@
     // ── 
     // ── 
     let allKeys = null;
-    let attemptsLeft = 5;
+
+    // Rate limiting configuration
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+    function getAttemptsLeft() {
+      const data = JSON.parse(localStorage.getItem('mv_login_attempts') || '{}');
+
+      // Check if still locked out
+      if (data.lockedUntil && Date.now() < data.lockedUntil) {
+        return 0;
+      }
+
+      // Lock expired, clear it
+      if (data.lockedUntil && Date.now() >= data.lockedUntil) {
+        localStorage.removeItem('mv_login_attempts');
+        return MAX_ATTEMPTS;
+      }
+
+      return data.remaining ?? MAX_ATTEMPTS;
+    }
+
+    function recordFailedAttempt() {
+      const data = JSON.parse(localStorage.getItem('mv_login_attempts') || '{}');
+      const remaining = (data.remaining ?? MAX_ATTEMPTS) - 1;
+
+      if (remaining <= 0) {
+        localStorage.setItem('mv_login_attempts', JSON.stringify({
+          remaining: 0,
+          lockedUntil: Date.now() + LOCKOUT_DURATION
+        }));
+      } else {
+        localStorage.setItem('mv_login_attempts', JSON.stringify({
+          remaining: remaining,
+          lockedUntil: null
+        }));
+      }
+      return remaining;
+    }
+
+    function clearAttempts() {
+      localStorage.removeItem('mv_login_attempts');
+    }
+
+    // Keep locked variable for UI state
     let locked = false;
 
     const keyInput = document.getElementById('key-input');
@@ -2110,15 +2154,27 @@
     async function loadKeys() {
       if (allKeys) return allKeys;
       try {
-        const resp = await fetch('/keys.json?_=' + Date.now());
+        const resp = await fetch('/keys-v2-a7x9k2.json?_=' + Date.now());
+        if (!resp.ok) throw new Error('Failed to load keys: ' + resp.status);
         allKeys = await resp.json();
         return allKeys;
-      } catch {
+      } catch (err) {
+        console.error('Key load error:', err);
         return null;
       }
     }
 
     function findKeyTier(inputKey, keys) {
+      // NEW: Support flat structure with explicit tier field
+      if (keys.keys && Array.isArray(keys.keys)) {
+        const found = keys.keys.find(k => k.key === inputKey);
+        if (found) {
+          return { tier: found.tier, name: found.name || null };
+        }
+        return null;
+      }
+
+      // LEGACY: Fallback for old nested structure (remove after migration)
       for (const [tier, keyList] of Object.entries(keys)) {
         for (const item of keyList) {
           if (typeof item === 'string' && item === inputKey) {
@@ -2134,6 +2190,23 @@
 
     async function handleLogin() {
       if (locked) return;
+
+      const attemptsLeft = getAttemptsLeft();
+
+      // Check lockout status
+      if (attemptsLeft <= 0) {
+        const data = JSON.parse(localStorage.getItem('mv_login_attempts') || '{}');
+        const minsLeft = Math.ceil((data.lockedUntil - Date.now()) / 60000);
+        showError(`⛔ Too many failed attempts. Access locked for ${minsLeft} more minute${minsLeft !== 1 ? 's' : ''}. Contact admin.`);
+        shakeInput();
+        keyInput.disabled = true;
+        document.getElementById('login-btn').disabled = true;
+        document.getElementById('attempt-info').innerHTML = 
+          '⛔ Access locked. <a href="https://wa.me/254100574438" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
+        locked = true;
+        return;
+      }
+
       const inputKey = keyInput.value.trim().toUpperCase();
       if (!inputKey) { showError('Please enter your activation key.'); shakeInput(); return; }
 
@@ -2152,13 +2225,14 @@
         btn.classList.remove('loading'); btn.disabled = false;
 
         if (result) {
+          clearAttempts(); // Clear failed attempts on success
           showSuccess(result.tier, result.name);
         } else {
-          attemptsLeft--;
-          document.getElementById('attempts-left').textContent = Math.max(0, attemptsLeft);
+          const newAttempts = recordFailedAttempt();
+          document.getElementById('attempts-left').textContent = Math.max(0, newAttempts);
           shakeInput();
 
-          if (attemptsLeft <= 0) {
+          if (newAttempts <= 0) {
             locked = true;
             showError('Too many failed attempts. Contact admin on WhatsApp.');
             keyInput.disabled = true;
@@ -2166,7 +2240,7 @@
             document.getElementById('attempt-info').innerHTML =
               '⛔ Access locked. <a href="https://wa.me/254100574438" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
           } else {
-            showError(`Invalid key. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
+            showError(`Invalid key. (${newAttempts} attempt${newAttempts !== 1 ? 's' : ''} left)`);
           }
           keyInput.value = '';
           keyInput.focus();
@@ -2196,6 +2270,7 @@
     function showSuccess(tier, userName) {
       sessionStorage.setItem('mv_auth', 'granted');
       sessionStorage.setItem('mv_tier', tier);
+      sessionStorage.setItem('mv_auth_key', document.getElementById('key-input').value.trim().toUpperCase());
       if (userName) sessionStorage.setItem('mv_user_name', userName);
       else sessionStorage.removeItem('mv_user_name');
       const overlay = document.getElementById('success-overlay');
