@@ -4,7 +4,8 @@
     {"key": "ZACK003", "name": "ZACK"},
     {"key": "DONA005", "name": "DONA"},
     {"key": "NISH006", "name": "NISH"},
-    {"key": "VICTOR009", "name": "VICTOR"}
+    {"key": "VICTOR009", "name": "VICTOR"},
+    {"key": "AIR010", "name": "AIR"}
   ],
   "💹Stocks & Crypto": [
     {"key": "BTC", "name": "TEST"},
