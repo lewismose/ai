@@ -1,7 +1,9 @@
 'use strict';
 
-/* ── Auth Guard ──────────────────────────────────────────────────────────────
-   Redirects to login if the user has not authenticated with a valid key.
+/* ── Auth Guard + Tier Re-Validation ─────────────────────────────────────────
+   Prevents users from manually editing sessionStorage to upgrade tiers.
+   Re-fetches keys.json and verifies the stored key's actual tier on every load.
+   If tampering is detected, immediately logs out and redirects to login.
    ─────────────────────────────────────────────────────────────────────────── */
 (function () {
   // Force .html in the URL for the root page
@@ -9,13 +11,91 @@
     window.location.replace('/index.html');
     return;
   }
-  
+
+  // Basic auth check
   if (sessionStorage.getItem('mv_auth') !== 'granted') {
-    // Only redirect if we aren't already on the login page
     if (!window.location.pathname.includes('login.html')) {
       window.location.replace('/login.html');
     }
+    return;
   }
+
+  // TIER RE-VALIDATION: Verify the stored key actually has the claimed tier
+  // This prevents the attack: sessionStorage.setItem('mv_tier', 'both')
+  (async function validateTier() {
+    const storedKey = sessionStorage.getItem('mv_auth_key');
+    const storedTier = sessionStorage.getItem('mv_tier');
+
+    if (!storedKey || !storedTier) {
+      // Missing data = force re-login
+      sessionStorage.clear();
+      if (!window.location.pathname.includes('login.html')) {
+        window.location.replace('/login.html');
+      }
+      return;
+    }
+
+    try {
+      const resp = await fetch('/keys-v2-a7x9k2.json?_=' + Date.now());
+      if (!resp.ok) throw new Error('Failed to fetch keys');
+      const keys = await resp.json();
+
+      let actualTier = null;
+      let actualName = null;
+
+      // NEW flat structure
+      if (keys.keys && Array.isArray(keys.keys)) {
+        const found = keys.keys.find(k => k.key === storedKey);
+        if (found) {
+          actualTier = found.tier;
+          actualName = found.name || null;
+        }
+      } else {
+        // LEGACY fallback (remove after migration)
+        for (const [tierName, keyList] of Object.entries(keys)) {
+          for (const item of keyList) {
+            if ((typeof item === 'string' && item === storedKey) ||
+                (typeof item === 'object' && item.key === storedKey)) {
+              actualTier = tierName === '\u{1F4CA}FX, Commodities & Indices' ? 'fx' : 
+                          tierName === '\u{1F4B9}Stocks & Crypto' ? 'sc' : 'both';
+              actualName = typeof item === 'object' ? item.name || null : null;
+              break;
+            }
+          }
+          if (actualTier) break;
+        }
+      }
+
+      // KEY NOT FOUND = key was deleted or never existed
+      if (!actualTier) {
+        console.warn('SECURITY: Key not found in database. Possible tampering or revoked key.');
+        sessionStorage.clear();
+        window.location.replace('/login.html');
+        return;
+      }
+
+      // TIER MISMATCH = user tampered with sessionStorage
+      if (actualTier !== storedTier) {
+        console.warn('SECURITY: Tier mismatch detected! Stored: ' + storedTier + ', Actual: ' + actualTier);
+        sessionStorage.clear();
+        window.location.replace('/login.html');
+        return;
+      }
+
+      // Sync name if it changed in keys.json
+      if (actualName !== sessionStorage.getItem('mv_user_name')) {
+        if (actualName) sessionStorage.setItem('mv_user_name', actualName);
+        else sessionStorage.removeItem('mv_user_name');
+      }
+
+    } catch (err) {
+      console.error('Tier validation error:', err);
+      // On network failure, be lenient but log it
+      // STRICT MODE: Uncomment below to force logout on any validation failure
+      // sessionStorage.clear();
+      // window.location.replace('/login.html');
+    }
+  })();
 })();
 
 const _logoutBtn = document.getElementById('logout-btn');
@@ -23,6 +103,7 @@ if (_logoutBtn) {
   _logoutBtn.addEventListener('click', () => {
     sessionStorage.removeItem('mv_auth');
     sessionStorage.removeItem('mv_tier');
+    sessionStorage.removeItem('mv_auth_key');
     sessionStorage.removeItem('mv_user_name');
     window.location.replace('/login.html');
   });
