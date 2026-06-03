@@ -1,0 +1,24 @@
+{
+  "keys": [
+    {"key": "EMILY002", "name": "EMILY", "tier": "fx"},
+    {"key": "ZACK003", "name": "ZACK", "tier": "fx"},
+    {"key": "DONA005", "name": "DONA", "tier": "fx"},
+    {"key": "NISH006", "name": "NISH", "tier": "fx"},
+    {"key": "VICTOR009", "name": "VICTOR", "tier": "fx"},
+    {"key": "AIR010", "name": "AIR", "tier": "fx"},
+    {"key": "MV-SC02-G8L5-ZN4R", "name": "", "tier": "sc"},
+    {"key": "MV-SC03-H1K9-VF7B", "name": "", "tier": "sc"},
+    {"key": "MV-SC04-I4Q2-YM6D", "name": "", "tier": "sc"},
+    {"key": "MV-SC05-J7W8-TH9G", "name": "", "tier": "sc"},
+    {"key": "LILY007", "name": "LILY", "tier": "both"},
+    {"key": "BERU01", "name": "GITHAE", "tier": "both"},
+    {"key": "NJENGZZZ26", "name": "NJENGA", "tier": "both"},
+    {"key": "LITTLEMISS12", "name": "TASHA", "tier": "both"},
+    {"key": "FAITH004", "name": "FAITH", "tier": "both"},
+    {"key": "MUSAUC", "name": "CURIE", "tier": "both"},
+    {"key": "FRIDAH001", "name": "FRIDAH", "tier": "both"},
+    {"key": "VMP", "name": "UCHENA", "tier": "both"},
+    {"key": "LEWISMOSE006", "name": "ADMIN", "tier": "both"},
+    {"key": "JANE008", "name": "JANE", "tier": "both"}
+  ]
+}
