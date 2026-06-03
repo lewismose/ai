@@ -4,1600 +4,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Marketversse – Advanced Market Intelligence</title>
+  <title>Marketversse – Live Chart Analyzer</title>
   <meta name="description"
-    content="Marketversse – Professional market analysis powered by AI. Real-time signals for Forex, Crypto, Stocks & Commodities." />
+    content="Advanced real-time trading analysis with AI narrative, multi-timeframe confluence, market structure, S/R zones, Fibonacci, divergence detection, and more." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
     rel="stylesheet" />
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    :root {
-      --bg: #080b18;
-      --bg2: #0c1022;
-      --surface: rgba(255, 255, 255, 0.04);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-h: rgba(123, 94, 167, 0.45);
-      --purple: #7B5EA7;
-      --blue: #4FACFE;
-      --teal: #00f2fe;
-      --green: #22d3a0;
-      --gold: #F9A825;
-      --red: #ff4d6d;
-      --text: #e8eaf6;
-      --text2: #8892b0;
-      --text3: #4a5580;
-      --grad: linear-gradient(135deg, #7B5EA7, #4FACFE);
-      --grad2: linear-gradient(135deg, #4FACFE, #00f2fe);
-      --grad3: linear-gradient(135deg, #F9A825, #ff6b35);
-      --shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
-    }
-
-    html {
-      height: 100%;
-    }
-
-    body {
-      min-height: 100%;
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    /* ── Animated background orbs ── */
-    .bg-orbs {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.14;
-      animation: orbFloat 22s ease-in-out infinite;
-    }
-
-    .orb-1 {
-      width: 700px;
-      height: 700px;
-      background: radial-gradient(circle, #7B5EA7, transparent);
-      top: -250px;
-      left: -200px;
-      animation-delay: 0s;
-    }
-
-    .orb-2 {
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, #4FACFE, transparent);
-      bottom: -200px;
-      right: -150px;
-      animation-delay: -8s;
-    }
-
-    .orb-3 {
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, #22d3a0, transparent);
-      top: 40%;
-      left: 45%;
-      animation-delay: -14s;
-    }
-
-    .orb-4 {
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, #F9A825, transparent);
-      bottom: 20%;
-      left: 15%;
-      animation-delay: -5s;
-    }
-
-    @keyframes orbFloat {
-
-      0%,
-      100% {
-        transform: translate(0, 0) scale(1);
-      }
-
-      33% {
-        transform: translate(50px, -50px) scale(1.08);
-      }
-
-      66% {
-        transform: translate(-35px, 35px) scale(0.93);
-      }
-    }
-
-    #particles-canvas {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .grid-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(123, 94, 167, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123, 94, 167, 0.035) 1px, transparent 1px);
-      background-size: 60px 60px;
-    }
-
-    /* ── Page Layout ── */
-    .page {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 480px;
-      grid-template-rows: auto auto 1fr auto;
-    }
-
-    /* ── Top nav bar ── */
-    .topbar {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 40px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(8, 11, 24, 0.6);
-      backdrop-filter: blur(20px);
-    }
-
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .nav-logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: var(--grad);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 20px rgba(123, 94, 167, 0.4);
-      animation: logoPulse 3s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes logoPulse {
-
-      0%,
-      100% {
-        box-shadow: 0 0 20px rgba(123, 94, 167, 0.4);
-      }
-
-      50% {
-        box-shadow: 0 0 30px rgba(79, 172, 254, 0.5);
-      }
-    }
-
-    .nav-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-    }
-
-    .nav-title .grad {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      border-radius: 50px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      font-size: 0.78rem;
-      color: var(--text2);
-      text-decoration: none;
-      transition: border-color 0.2s, color 0.2s, background 0.2s;
-      cursor: pointer;
-    }
-
-    .nav-pill:hover {
-      border-color: var(--border-h);
-      color: var(--text);
-      background: rgba(123, 94, 167, 0.1);
-    }
-
-    .nav-pill.cta {
-      background: var(--grad);
-      border-color: transparent;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .nav-pill.cta:hover {
-      opacity: 0.88;
-      transform: translateY(-1px);
-    }
-
-    /* ── Left hero column ── */
-    .hero-col {
-      padding: 60px 50px 60px 60px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 48px;
-    }
-
-    .hero-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 50px;
-      border: 1px solid rgba(34, 211, 160, 0.25);
-      background: rgba(34, 211, 160, 0.06);
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--green);
-      margin-bottom: 16px;
-      width: fit-content;
-    }
-
-    .live-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 10px var(--green);
-      animation: blink 1.5s ease-in-out infinite;
-    }
-
-    @keyframes blink {
-
-      0%,
-      100% {
-        opacity: 1
-      }
-
-      50% {
-        opacity: 0.3
-      }
-    }
-
-    .hero-headline {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(2.4rem, 4vw, 3.4rem);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -1.5px;
-    }
-
-    .hero-headline .grad {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-headline .gold {
-      background: var(--grad3);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-sub {
-      font-size: 1.05rem;
-      color: var(--text2);
-      line-height: 1.7;
-      max-width: 500px;
-      margin-top: 20px;
-    }
-
-    /* ── Stats row ── */
-    .stats-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .stat-card {
-      flex: 1;
-      min-width: 110px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px 20px;
-      transition: border-color 0.3s, transform 0.3s;
-    }
-
-    .stat-card:hover {
-      border-color: var(--border-h);
-      transform: translateY(-3px);
-    }
-
-    .stat-num {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .stat-label {
-      font-size: 0.72rem;
-      color: var(--text3);
-      margin-top: 4px;
-      letter-spacing: 0.3px;
-    }
-
-    /* ── Features grid ── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .feat-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      transition: border-color 0.25s, background 0.25s;
-    }
-
-    .feat-item:hover {
-      border-color: rgba(79, 172, 254, 0.25);
-      background: rgba(79, 172, 254, 0.04);
-    }
-
-    .feat-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-    }
-
-    .feat-icon.purple {
-      background: rgba(123, 94, 167, 0.2);
-    }
-
-    .feat-icon.blue {
-      background: rgba(79, 172, 254, 0.15);
-    }
-
-    .feat-icon.green {
-      background: rgba(34, 211, 160, 0.15);
-    }
-
-    .feat-icon.gold {
-      background: rgba(249, 168, 37, 0.15);
-    }
-
-    .feat-title {
-      font-size: 0.82rem;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }
-
-    .feat-desc {
-      font-size: 0.72rem;
-      color: var(--text3);
-      line-height: 1.4;
-    }
-
-    /* ── Contact / Broker strips ── */
-    .contact-strip {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .contact-card {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 18px;
-      text-decoration: none;
-      color: var(--text);
-      transition: border-color 0.25s, background 0.25s, transform 0.2s;
-    }
-
-    .contact-card:hover {
-      border-color: var(--border-h);
-      background: rgba(123, 94, 167, 0.08);
-      transform: translateX(4px);
-    }
-
-    .contact-card.broker:hover {
-      border-color: rgba(249, 168, 37, 0.4);
-      background: rgba(249, 168, 37, 0.06);
-    }
-
-    .contact-card.whatsapp:hover {
-      border-color: rgba(34, 211, 160, 0.4);
-      background: rgba(34, 211, 160, 0.06);
-    }
-
-    .c-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2rem;
-    }
-
-    .c-icon.wa {
-      background: rgba(34, 211, 160, 0.15);
-    }
-
-    .c-icon.br {
-      background: rgba(249, 168, 37, 0.15);
-    }
-
-    .c-main {
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .c-sub {
-      font-size: 0.72rem;
-      color: var(--text3);
-      margin-top: 1px;
-    }
-
-    .c-arrow {
-      margin-left: auto;
-      color: var(--text3);
-      font-size: 0.9rem;
-      transition: transform 0.2s;
-    }
-
-    .contact-card:hover .c-arrow {
-      transform: translateX(4px);
-      color: var(--text2);
-    }
-
-    /* ── Right login column ── */
-    .login-col {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 40px;
-      border-left: 1px solid var(--border);
-      background: rgba(8, 11, 24, 0.5);
-      backdrop-filter: blur(10px);
-    }
-
-    .login-card {
-      width: 100%;
-      background: rgba(12, 16, 34, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      border-radius: 24px;
-      box-shadow: var(--shadow), 0 0 0 1px rgba(123, 94, 167, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-      padding: 40px 36px 36px;
-      animation: cardIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both,
-        borderGlow 5s ease-in-out 0.7s infinite;
-    }
-
-    @keyframes cardIn {
-      from {
-        opacity: 0;
-        transform: translateY(28px) scale(0.97);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    @keyframes borderGlow {
-
-      0%,
-      100% {
-        border-color: rgba(255, 255, 255, 0.09);
-      }
-
-      50% {
-        border-color: rgba(123, 94, 167, 0.28);
-      }
-    }
-
-    .card-logo {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 30px;
-      gap: 12px;
-    }
-
-    .card-logo-icon {
-      width: 60px;
-      height: 60px;
-      border-radius: 18px;
-      background: var(--grad);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 0 1px rgba(123, 94, 167, 0.4), 0 8px 28px rgba(123, 94, 167, 0.35);
-      animation: logoPulse 3s ease-in-out infinite;
-    }
-
-    .card-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    .card-title .grad {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .card-sub {
-      font-size: 0.78rem;
-      color: var(--text2);
-      text-align: center;
-      line-height: 1.5;
-    }
-
-    /* ── Input group ── */
-    .form-section {
-      margin-bottom: 16px;
-    }
-
-    .input-label {
-      display: block;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.9px;
-      text-transform: uppercase;
-      color: var(--text2);
-      margin-bottom: 8px;
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .key-input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1rem;
-      letter-spacing: 2px;
-      padding: 14px 50px 14px 18px;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-      text-transform: uppercase;
-    }
-
-    .key-input::placeholder {
-      color: var(--text3);
-      letter-spacing: 1px;
-      font-size: 0.8rem;
-      text-transform: none;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .key-input:focus {
-      border-color: var(--purple);
-      background: rgba(123, 94, 167, 0.06);
-      box-shadow: 0 0 0 3px rgba(123, 94, 167, 0.18);
-    }
-
-    .input-icon {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text3);
-      pointer-events: none;
-      transition: color 0.2s;
-    }
-
-    .key-input:focus+.input-icon {
-      color: var(--purple);
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 48px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--text3);
-      cursor: pointer;
-      padding: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: color 0.2s;
-      z-index: 10;
-    }
-
-    .toggle-password:hover {
-      color: var(--text2);
-    }
-
-    /* ── Error ── */
-    .error-msg {
-      margin-top: 10px;
-      background: rgba(255, 77, 109, 0.1);
-      border: 1px solid rgba(255, 77, 109, 0.3);
-      border-radius: 10px;
-      padding: 11px 14px;
-      font-size: 0.79rem;
-      color: #ff7090;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity 0.25s, transform 0.25s;
-      pointer-events: none;
-    }
-
-    .error-msg.show {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
-
-    /* ── Button ── */
-    .btn-login {
-      width: 100%;
-      margin-top: 6px;
-      background: var(--grad);
-      border: none;
-      border-radius: 12px;
-      color: #fff;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-      padding: 15px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
-      box-shadow: 0 4px 20px rgba(123, 94, 167, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .btn-login::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(123, 94, 167, 0.55);
-    }
-
-    .btn-login:hover::before {
-      opacity: 1;
-    }
-
-    .btn-login:active {
-      transform: translateY(0);
-    }
-
-    .btn-login:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-spinner {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
-      animation: spin 0.7s linear infinite;
-      display: none;
-    }
-
-    .btn-login.loading .btn-spinner {
-      display: block;
-    }
-
-    .btn-login.loading .btn-text,
-    .btn-login.loading .btn-icon {
-      display: none;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .attempt-info {
-      text-align: center;
-      font-size: 0.71rem;
-      color: var(--text3);
-      margin-top: 14px;
-    }
-
-    .attempt-info span {
-      color: var(--text2);
-    }
-
-    /* ── Divider ── */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 22px 0;
-    }
-
-    /* ── Security badges ── */
-    .badges {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.67rem;
-      color: var(--text3);
-    }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green);
-    }
-
-    /* ── "Get a key" link ── */
-    .get-key-row {
-      text-align: center;
-      margin-top: 18px;
-      font-size: 0.75rem;
-      color: var(--text3);
-    }
-
-    .get-key-link {
-      color: var(--blue);
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s;
-    }
-
-    .get-key-link:hover {
-      color: var(--teal);
-    }
-
-    /* ── Tabs ── */
-    .login-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 6px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      background: transparent;
-      border: none;
-      border-radius: 10px;
-      color: var(--text2);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s ease;
-    }
-
-    .tab-btn:hover {
-      color: var(--text);
-    }
-
-    .tab-btn.active {
-      background: rgba(123, 94, 167, 0.2);
-      color: var(--text);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      border: 1px solid rgba(123, 94, 167, 0.3);
-    }
-
-    /* ── Pricing ── */
-    .pricing-plans {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .pricing-plan {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-      position: relative;
-      transition: all 0.3s ease;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .pricing-plan:hover {
-      border-color: rgba(79, 172, 254, 0.4);
-      background: rgba(79, 172, 254, 0.05);
-      transform: translateY(-2px);
-    }
-
-    .pricing-plan.popular {
-      border-color: rgba(123, 94, 167, 0.5);
-      background: rgba(123, 94, 167, 0.08);
-      box-shadow: 0 8px 24px rgba(123, 94, 167, 0.15);
-    }
-
-    .popular-badge {
-      position: absolute;
-      top: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--grad);
-      color: #fff;
-      font-size: 0.6rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      box-shadow: 0 4px 12px rgba(123, 94, 167, 0.4);
-      white-space: nowrap;
-    }
-
-    .plan-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text2);
-      margin-bottom: 4px;
-    }
-
-    .plan-price {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 6px;
-    }
-
-    .plan-period {
-      font-size: 1rem;
-      color: var(--text3);
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .plan-btn {
-      width: 100%;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      color: var(--text);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      display: inline-block;
-    }
-
-    .plan-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .pricing-plan.popular .plan-btn {
-      background: var(--grad);
-      border: none;
-      box-shadow: 0 4px 15px rgba(123, 94, 167, 0.3);
-    }
-
-    .pricing-plan.popular .plan-btn:hover {
-      box-shadow: 0 6px 20px rgba(123, 94, 167, 0.5);
-      transform: translateY(-1px);
-    }
-
-    body.light-theme .login-tabs {
-      background: rgba(0, 0, 0, 0.03);
-    }
-
-    body.light-theme .tab-btn.active {
-      background: #fff;
-      border-color: rgba(0, 0, 0, 0.1);
-    }
-
-    body.light-theme .pricing-plan {
-      background: rgba(255, 255, 255, 0.7);
-    }
-
-    body.light-theme .pricing-plan.popular {
-      background: rgba(123, 94, 167, 0.05);
-    }
-
-    body.light-theme .plan-btn {
-      background: rgba(0, 0, 0, 0.05);
-      color: #000;
-      border-color: rgba(0, 0, 0, 0.1);
-    }
-
-    body.light-theme .plan-btn:hover {
-      background: rgba(0, 0, 0, 0.1);
-    }
-
-    body.light-theme .pricing-plan.popular .plan-btn {
-      color: #fff;
-    }
-
-    .plan-discount {
-      display: inline-block;
-      margin: 0 auto 10px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--green);
-      background: rgba(34, 211, 160, 0.1);
-      padding: 3px 8px;
-      border-radius: 12px;
-      border: 1px solid rgba(34, 211, 160, 0.2);
-    }
-
-    .negotiate-wrap {
-      text-align: center;
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-
-    .negotiate-btn {
-      background: transparent;
-      border: 1px dashed rgba(79, 172, 254, 0.4);
-      color: var(--text2);
-      padding: 10px 20px;
-      border-radius: 10px;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .negotiate-btn:hover {
-      border-style: solid;
-      border-color: var(--blue);
-      color: var(--text);
-      background: rgba(79, 172, 254, 0.06);
-    }
-
-    body.light-theme .plan-discount {
-      background: rgba(34, 211, 160, 0.15);
-      border-color: rgba(34, 211, 160, 0.3);
-      color: #0d8a63;
-    }
-
-    /* ── Payment Methods ── */
-    .payment-methods-wrap {
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-
-    .payment-methods-title {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-    }
-
-    .payment-icons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      opacity: 0.7;
-      transition: opacity 0.3s;
-    }
-
-    .payment-icons:hover {
-      opacity: 1;
-    }
-
-    .pay-icon {
-      height: 20px;
-      filter: grayscale(1) brightness(1.5);
-      transition: filter 0.3s, transform 0.2s;
-      cursor: help;
-    }
-
-    .pay-icon:hover {
-      filter: none;
-      transform: translateY(-2px);
-    }
-
-    body.light-theme .pay-icon {
-      filter: grayscale(1) brightness(0.5);
-    }
-
-    body.light-theme .pay-icon:hover {
-      filter: none;
-    }
-
-    body.light-theme .negotiate-wrap {
-      border-color: rgba(0, 0, 0, 0.1);
-    }
-
-    body.light-theme .negotiate-btn {
-      border-color: rgba(0, 0, 0, 0.2);
-      color: #000;
-    }
-
-    body.light-theme .negotiate-btn:hover {
-      background: rgba(0, 0, 0, 0.05);
-      border-color: var(--blue);
-    }
-
-    /* ── Footer ── */
-    .footer {
-      grid-column: 1 / -1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 40px;
-      border-top: 1px solid var(--border);
-      font-size: 0.7rem;
-      color: var(--text3);
-    }
-
-    .footer-links {
-      display: flex;
-      gap: 18px;
-    }
-
-    .footer-links a {
-      color: var(--text3);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .footer-links a:hover {
-      color: var(--text2);
-    }
-
-    /* ── Shake ── */
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      15% {
-        transform: translateX(-8px);
-      }
-
-      30% {
-        transform: translateX(8px);
-      }
-
-      45% {
-        transform: translateX(-5px);
-      }
-
-      60% {
-        transform: translateX(5px);
-      }
-
-      75% {
-        transform: translateX(-3px);
-      }
-    }
-
-    .shake {
-      animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-    }
-
-    /* ── Success overlay ── */
-    .success-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: rgba(8, 11, 24, 0.96);
-      backdrop-filter: blur(16px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s;
-    }
-
-    .success-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .success-icon {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, rgba(34, 211, 160, 0.15), rgba(34, 211, 160, 0.05));
-      border: 2px solid var(--green);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-      animation: successPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
-      box-shadow: 0 0 50px rgba(34, 211, 160, 0.3);
-    }
-
-    @keyframes successPop {
-      from {
-        transform: scale(0.5);
-        opacity: 0;
-      }
-
-      to {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .success-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      animation: fadeUp 0.4s ease 0.4s both;
-    }
-
-    .success-sub {
-      color: var(--text2);
-      font-size: 0.9rem;
-      animation: fadeUp 0.4s ease 0.55s both;
-    }
-
-    .success-bar-wrap {
-      width: 260px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.07);
-      border-radius: 2px;
-      margin-top: 28px;
-      overflow: hidden;
-      animation: fadeUp 0.4s ease 0.65s both;
-    }
-
-    .success-bar {
-      height: 100%;
-      background: var(--green);
-      border-radius: 2px;
-      width: 0%;
-      transition: width 1.8s ease;
-    }
-
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(12px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ── Responsive: mobile single column ── */
-    @media (max-width: 900px) {
-      body {
-        overflow-y: auto;
-      }
-
-      .page {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto auto;
-      }
-
-      .topbar {
-        padding: 16px 20px;
-      }
-
-      .nav-links .nav-pill:not(.cta):not(#theme-btn) {
-        display: none;
-      }
-
-      .hero-col {
-        padding: 36px 24px;
-        gap: 32px;
-      }
-
-      .hero-headline {
-        font-size: 2.1rem;
-      }
-
-      .stats-row {
-        gap: 12px;
-      }
-
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .login-col {
-        padding: 28px 20px;
-        border-left: none;
-        border-top: 1px solid var(--border);
-      }
-
-      .footer {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-        padding: 16px 20px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .login-card {
-        padding: 28px 20px;
-      }
-
-      .stats-row {
-        flex-direction: column;
-      }
-    }
-
-    /* ── Floating Buttons ── */
-    .floating-wa,
-    .floating-ig {
-      position: fixed;
-      right: 24px;
-      width: 56px;
-      height: 56px;
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      text-decoration: none;
-    }
-
-    .floating-wa {
-      bottom: 24px;
-      background: linear-gradient(135deg, #25D366, #128C7E);
-      box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
-    }
-
-    .floating-ig {
-      bottom: 94px;
-      background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-      box-shadow: 0 8px 24px rgba(220, 39, 67, 0.4);
-    }
-
-    .floating-wa::before,
-    .floating-ig::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 50%;
-      animation: wa-pulse 2s infinite;
-      pointer-events: none;
-    }
-
-    .floating-wa::before {
-      border: 1px solid rgba(37, 211, 102, 0.3);
-    }
-
-    .floating-ig::before {
-      border: 1px solid rgba(220, 39, 67, 0.3);
-      animation-delay: 1s;
-    }
-
-    @keyframes wa-pulse {
-      0% {
-        transform: scale(1);
-        opacity: 0.8;
-      }
-
-      100% {
-        transform: scale(1.4);
-        opacity: 0;
-      }
-    }
-
-    .floating-wa svg,
-    .floating-ig svg {
-      width: 30px;
-      height: 30px;
-      transition: transform 0.3s;
-    }
-
-    .floating-wa:hover,
-    .floating-ig:hover {
-      transform: translateY(-4px) scale(1.05);
-      color: #fff;
-    }
-
-    .floating-wa:hover {
-      box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
-    }
-
-    .floating-ig:hover {
-      box-shadow: 0 12px 32px rgba(220, 39, 67, 0.5);
-    }
-
-    .floating-wa:hover svg,
-    .floating-ig:hover svg {
-      transform: scale(1.1);
-    }
-
-    /* ── Light Mode Support ── */
-    body.light-theme {
-      --bg: #eaf0f6;
-      --bg2: #ffffff;
-      --surface: rgba(255, 255, 255, 0.45);
-      --border: rgba(0, 0, 0, 0.08);
-      --border-h: rgba(123, 94, 167, 0.25);
-      --text: #05051a;
-      --text2: rgba(5, 5, 26, 0.65);
-      --text3: rgba(5, 5, 26, 0.45);
-    }
-
-    body.light-theme .login-card {
-      background: rgba(255, 255, 255, 0.85);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      border-color: rgba(0, 0, 0, 0.1);
-    }
-
-    body.light-theme .topbar {
-      background: rgba(255, 255, 255, 0.5);
-    }
-
-    body.light-theme .ticker-wrap {
-      background: rgba(255, 255, 255, 0.6);
-    }
-
-    body.light-theme .key-input {
-      color: #000;
-      border-color: rgba(0, 0, 0, 0.15);
-      background: rgba(0, 0, 0, 0.03);
-    }
-
-    body.light-theme .key-input:focus {
-      background: #fff;
-      border-color: var(--blue);
-    }
-
-    body.light-theme .contact-card {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: rgba(0, 0, 0, 0.1);
-    }
-
-    body.light-theme .feat-item {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: rgba(0, 0, 0, 0.08);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    }
-
-    body.light-theme .stat-card {
-      background: rgba(255, 255, 255, 0.7);
-      border-color: rgba(0, 0, 0, 0.08);
-    }
-
-    body.light-theme .nav-pill {
-      background: rgba(255, 255, 255, 0.7);
-    }
-
-    body.light-theme .grid-overlay {
-      background-image:
-        linear-gradient(rgba(123, 94, 167, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(123, 94, 167, 0.05) 1px, transparent 1px);
-    }
-
-    body.light-theme .testimonial-carousel {
-      background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), transparent);
-    }
-
-    /* ── Live Ticker ── */
-    .ticker-wrap {
-      grid-column: 1 / -1;
-      width: 100%;
-      background: rgba(8, 11, 24, 0.8);
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      padding: 6px 0;
-      white-space: nowrap;
-      z-index: 10;
-    }
-
-    .ticker-content {
-      display: inline-block;
-      white-space: nowrap;
-      animation: ticker 35s linear infinite;
-    }
-
-    .ticker-content:hover {
-      animation-play-state: paused;
-    }
-
-    @keyframes ticker {
-      0% {
-        transform: translateX(0);
-      }
-
-      100% {
-        transform: translateX(-50%);
-      }
-    }
-
-    .ticker-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin: 0 16px;
-      font-size: 0.72rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .ticker-sym {
-      color: var(--text2);
-      font-weight: 600;
-    }
-
-    .ticker-price {
-      color: var(--text);
-    }
-
-    .ticker-pct.up {
-      color: var(--green);
-    }
-
-    .ticker-pct.down {
-      color: var(--red);
-    }
-
-    /* ── Testimonials ── */
-    .testimonial-carousel {
-      margin-top: -10px;
-      padding: 16px 24px;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      position: relative;
-    }
-
-    .test-card {
-      transition: opacity 0.5s ease;
-    }
-
-    .test-stars {
-      color: var(--gold);
-      font-size: 0.9rem;
-      margin-bottom: 6px;
-      letter-spacing: 2px;
-    }
-
-    .test-quote {
-      font-size: 0.9rem;
-      color: var(--text2);
-      font-style: italic;
-      line-height: 1.5;
-      margin-bottom: 8px;
-    }
-
-    .test-author {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    @media (max-width: 850px) {
-
-      .floating-wa,
-      .floating-ig {
-        right: 20px;
-        width: 50px;
-        height: 50px;
-      }
-
-      .floating-wa {
-        bottom: 20px;
-      }
-
-      .floating-ig {
-        bottom: 82px;
-      }
-
-      .floating-wa svg,
-      .floating-ig svg {
-        width: 26px;
-        height: 26px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-  <!-- Background -->
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -1605,405 +24,803 @@
     <div class="orb orb-4"></div>
   </div>
   <canvas id="particles-canvas"></canvas>
-  <div class="grid-overlay"></div>
 
-  <!-- Success overlay -->
-  <div class="success-overlay" id="success-overlay">
-    <div class="success-icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22d3a0" stroke-width="2.2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
+  <div class="app">
+
+    <!-- ── HEADER ── -->
+    <header class="header glass">
+      <div class="header-left">
+        <div class="logo-mark">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="18" fill="url(#hg)" />
+            <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="29" cy="17" r="2" fill="white" />
+            <defs>
+              <linearGradient id="hg" x1="0" y1="0" x2="36" y2="36">
+                <stop stop-color="#7B5EA7" />
+                <stop offset="1" stop-color="#4FACFE" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h1 class="logo-name">Market<span class="grad">versse</span></h1>
+          <p class="logo-sub">Advanced Market Intelligence Portal</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="perf-toggle" class="theme-btn" title="Extreme Performance Mode">🚀</button>
+        <button id="theme-btn" class="theme-btn" aria-label="Toggle Theme">🌙</button>
+        <button id="logout-btn" class="logout-btn" aria-label="Log out">Exit AI</button>
+        <div class="live-badge"><span class="live-dot"></span>Live Data</div>
+      </div>
+    </header>
+
+    <!-- ── MARKET SESSIONS BAR ── -->
+    <div class="sessions-bar glass" id="sessions-bar">
+      <div class="session-tz-note">All times in UTC</div>
+      <div class="session-pill" id="sess-sydney">
+        <span class="sess-dot"></span>
+        <span class="sess-name">Sydney</span>
+        <span class="sess-times">22:00 - 07:00</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-pill" id="sess-tokyo">
+        <span class="sess-dot"></span>
+        <span class="sess-name">Tokyo</span>
+        <span class="sess-times">00:00 - 09:00</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-pill" id="sess-london">
+        <span class="sess-dot"></span>
+        <span class="sess-name">London</span>
+        <span class="sess-times">07:00 - 16:00</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-pill" id="sess-newyork">
+        <span class="sess-dot"></span>
+        <span class="sess-name">New York</span>
+        <span class="sess-times">12:00 - 21:00</span>
+        <span class="sess-status">--</span>
+        <span class="sess-timer">--:--</span>
+      </div>
+      <div class="session-killzone" id="sess-killzone" style="display:none">
+        <span class="kz-icon">⚡</span>
+        <span class="kz-text">Killzone Active</span>
+      </div>
     </div>
-    <div class="success-title">Access Granted ✦</div>
-    <div class="success-sub">Redirecting to Marketversse…</div>
-    <div class="success-bar-wrap">
-      <div class="success-bar" id="success-bar"></div>
+
+    <!-- ── MAIN LAYOUT ── -->
+    <div class="layout">
+
+      <!-- ══ LEFT SIDEBAR ══ -->
+      <aside class="sidebar">
+
+        <!-- 01 · Select Pair -->
+        <div class="card glass pair-card">
+          <div class="card-label">01 · Select Pair</div>
+          <div class="local-search-wrap">
+            <div class="ls-input-row glass">
+              <div class="ls-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </div>
+              <input type="text" id="local-search" class="pair-input ls-input" placeholder="Search available pairs..."
+                autocomplete="off" spellcheck="false" />
+            </div>
+            <div class="local-suggestions" id="local-suggestions" style="display:none"></div>
+          </div>
+
+          <div class="custom-selects">
+            <input type="hidden" id="pair-input" value="" />
+
+            <div class="select-wrapper crypto-wrap">
+              <div class="sw-icon">₿</div>
+              <select class="c-select" data-type="crypto">
+                <option value="" disabled selected>Crypto Pairs</option>
+                <optgroup label="── Large Cap ──">
+                <option value="BTCUSDT">BTC/USDT</option>
+                <option value="ETHUSDT">ETH/USDT</option>
+                <option value="BNBUSDT">BNB/USDT</option>
+                <option value="XRPUSDT">XRP/USDT</option>
+                <option value="SOLUSDT">SOL/USDT</option>
+                <option value="ADAUSDT">ADA/USDT</option>
+                <option value="AVAXUSDT">AVAX/USDT</option>
+                <option value="DOTUSDT">DOT/USDT</option>
+                <option value="LTCUSDT">LTC/USDT</option>
+                <option value="BCHUSDT">BCH/USDT</option>
+                </optgroup>
+                <optgroup label="── Mid Cap ──">
+                <option value="LINKUSDT">LINK/USDT</option>
+                <option value="ATOMUSDT">ATOM/USDT</option>
+                <option value="NEARUSDT">NEAR/USDT</option>
+                <option value="MATICUSDT">MATIC/USDT</option>
+                <option value="UNIUSDT">UNI/USDT</option>
+                <option value="AAVEUSDT">AAVE/USDT</option>
+                <option value="INJUSDT">INJ/USDT</option>
+                <option value="SUIUSDT">SUI/USDT</option>
+                <option value="APTUSDT">APT/USDT</option>
+                <option value="ARBUSDT">ARB/USDT</option>
+                <option value="OPUSDT">OP/USDT</option>
+                <option value="FTMUSDT">FTM/USDT</option>
+                <option value="ALGOUSDT">ALGO/USDT</option>
+                <option value="VETUSDT">VET/USDT</option>
+                <option value="HBARUSDT">HBAR/USDT</option>
+                <option value="XLMUSDT">XLM/USDT</option>
+                <option value="TRXUSDT">TRX/USDT</option>
+                <option value="EOSUSDT">EOS/USDT</option>
+                <option value="XMRUSDT">XMR/USDT</option>
+                <option value="FILUSDT">FIL/USDT</option>
+                </optgroup>
+                <optgroup label="── Meme / High Volatility ──">
+                <option value="DOGEUSDT">DOGE/USDT</option>
+                <option value="SHIBUSDT">SHIB/USDT</option>
+                <option value="PEPEUSDT">PEPE/USDT</option>
+                <option value="WIFUSDT">WIF/USDT</option>
+                <option value="BONKUSDT">BONK/USDT</option>
+                <option value="FLOKIUSDT">FLOKI/USDT</option>
+                <option value="NOTUSDT">NOT/USDT</option>
+                </optgroup>
+                <optgroup label="── DeFi / AI ──">
+                <option value="FETUSDT">FET/USDT</option>
+                <option value="RENDERUSDT">RENDER/USDT</option>
+                <option value="GRTUSDT">GRT/USDT</option>
+                <option value="SNXUSDT">SNX/USDT</option>
+                <option value="MKRUSDT">MKR/USDT</option>
+                <option value="COMPUSDT">COMP/USDT</option>
+                <option value="SANDUSDT">SAND/USDT</option>
+                <option value="MANAUSDT">MANA/USDT</option>
+                </optgroup>
+                <optgroup label="── New / Trending ──">
+                <option value="TONUSDT">TON/USDT</option>
+                <option value="SEIUSDT">SEI/USDT</option>
+                <option value="STRKUSDT">STRK/USDT</option>
+                <option value="PENDLEUSDT">PENDLE/USDT</option>
+                <option value="WLDUSDT">WLD/USDT</option>
+                <option value="JUPUSDT">JUP/USDT</option>
+                <option value="EIGENUSDT">EIGEN/USDT</option>
+                <option value="ENAUSDT">ENA/USDT</option>
+                <option value="ETHFIUSDT">ETHFI/USDT</option>
+                </optgroup>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper forex-wrap">
+              <div class="sw-icon">FX</div>
+              <select class="c-select" data-type="forex">
+                <option value="" disabled selected>Forex Pairs</option>
+                <optgroup label="── Majors ──">
+                <option value="EURUSD">EUR/USD</option>
+                <option value="GBPUSD">GBP/USD</option>
+                <option value="USDJPY">USD/JPY</option>
+                <option value="USDCHF">USD/CHF</option>
+                <option value="AUDUSD">AUD/USD</option>
+                <option value="USDCAD">USD/CAD</option>
+                <option value="NZDUSD">NZD/USD</option>
+                </optgroup>
+                <optgroup label="── EUR Crosses ──">
+                <option value="EURJPY">EUR/JPY</option>
+                <option value="EURGBP">EUR/GBP</option>
+                <option value="EURAUD">EUR/AUD</option>
+                <option value="EURCAD">EUR/CAD</option>
+                <option value="EURCHF">EUR/CHF</option>
+                <option value="EURNZD">EUR/NZD</option>
+                <option value="EURNOK">EUR/NOK</option>
+                <option value="EURSEK">EUR/SEK</option>
+                </optgroup>
+                <optgroup label="── GBP Crosses ──">
+                <option value="GBPJPY">GBP/JPY</option>
+                <option value="GBPAUD">GBP/AUD</option>
+                <option value="GBPCAD">GBP/CAD</option>
+                <option value="GBPCHF">GBP/CHF</option>
+                <option value="GBPNZD">GBP/NZD</option>
+                </optgroup>
+                <optgroup label="── JPY Crosses ──">
+                <option value="AUDJPY">AUD/JPY</option>
+                <option value="CADJPY">CAD/JPY</option>
+                <option value="CHFJPY">CHF/JPY</option>
+                <option value="NZDJPY">NZD/JPY</option>
+                </optgroup>
+                <optgroup label="── Commodity FX ──">
+                <option value="AUDCAD">AUD/CAD</option>
+                <option value="AUDCHF">AUD/CHF</option>
+                <option value="AUDNZD">AUD/NZD</option>
+                <option value="CADCHF">CAD/CHF</option>
+                <option value="NZDCAD">NZD/CAD</option>
+                <option value="NZDCHF">NZD/CHF</option>
+                </optgroup>
+                <optgroup label="── Exotics ──">
+                <option value="USDZAR">USD/ZAR</option>
+                <option value="USDMXN">USD/MXN</option>
+                <option value="USDTRY">USD/TRY</option>
+                <option value="USDSEK">USD/SEK</option>
+                <option value="USDNOK">USD/NOK</option>
+                <option value="USDDKK">USD/DKK</option>
+                <option value="USDSGD">USD/SGD</option>
+                <option value="USDHKD">USD/HKD</option>
+                <option value="USDPLN">USD/PLN</option>
+                </optgroup>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper stock-wrap">
+              <div class="sw-icon">$</div>
+              <select class="c-select" data-type="stock">
+                <option value="" disabled selected>Stocks</option>
+                <optgroup label="── Big Tech ──">
+                <option value="AAPL">Apple (AAPL)</option>
+                <option value="MSFT">Microsoft (MSFT)</option>
+                <option value="NVDA">Nvidia (NVDA)</option>
+                <option value="GOOGL">Alphabet (GOOGL)</option>
+                <option value="AMZN">Amazon (AMZN)</option>
+                <option value="META">Meta (META)</option>
+                <option value="TSLA">Tesla (TSLA)</option>
+                <option value="AMD">AMD (AMD)</option>
+                <option value="INTC">Intel (INTC)</option>
+                <option value="QCOM">Qualcomm (QCOM)</option>
+                <option value="AVGO">Broadcom (AVGO)</option>
+                <option value="ORCL">Oracle (ORCL)</option>
+                <option value="CRM">Salesforce (CRM)</option>
+                <option value="ADBE">Adobe (ADBE)</option>
+                </optgroup>
+                <optgroup label="── Finance ──">
+                <option value="JPM">JPMorgan (JPM)</option>
+                <option value="GS">Goldman Sachs (GS)</option>
+                <option value="BAC">Bank of America (BAC)</option>
+                <option value="MS">Morgan Stanley (MS)</option>
+                <option value="V">Visa (V)</option>
+                <option value="MA">Mastercard (MA)</option>
+                <option value="BRK-B">Berkshire (BRK-B)</option>
+                <option value="C">Citigroup (C)</option>
+                </optgroup>
+                <optgroup label="── Consumer ──">
+                <option value="NFLX">Netflix (NFLX)</option>
+                <option value="DIS">Disney (DIS)</option>
+                <option value="WMT">Walmart (WMT)</option>
+                <option value="KO">Coca-Cola (KO)</option>
+                <option value="PEP">PepsiCo (PEP)</option>
+                <option value="MCD">McDonald's (MCD)</option>
+                <option value="SBUX">Starbucks (SBUX)</option>
+                <option value="NKE">Nike (NKE)</option>
+                </optgroup>
+                <optgroup label="── Energy / Industrial ──">
+                <option value="XOM">ExxonMobil (XOM)</option>
+                <option value="CVX">Chevron (CVX)</option>
+                <option value="BA">Boeing (BA)</option>
+                <option value="CAT">Caterpillar (CAT)</option>
+                <option value="GE">GE (GE)</option>
+                </optgroup>
+                <optgroup label="── Healthcare ──">
+                <option value="JNJ">Johnson &amp; Johnson (JNJ)</option>
+                <option value="PFE">Pfizer (PFE)</option>
+                <option value="MRNA">Moderna (MRNA)</option>
+                <option value="UNH">UnitedHealth (UNH)</option>
+                <option value="LLY">Eli Lilly (LLY)</option>
+                </optgroup>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper index-wrap">
+              <div class="sw-icon">◱</div>
+              <select class="c-select" data-type="index">
+                <option value="" disabled selected>Indices</option>
+                <optgroup label="── US Indices ──">
+                <option value="NAS100">NASDAQ 100 (NQ=F)</option>
+                <option value="SP500">S&amp;P 500 (ES=F)</option>
+                <option value="US30">Dow Jones (US30)</option>
+                <option value="RUSSELL">Russell 2000 (RTY=F)</option>
+                <option value="VIX">VIX Volatility</option>
+                </optgroup>
+                <optgroup label="── European ──">
+                <option value="DAX40">DAX 40 (Germany)</option>
+                <option value="FTSE">FTSE 100 (UK)</option>
+                <option value="CAC">CAC 40 (France)</option>
+                <option value="EURO50">Euro Stoxx 50</option>
+                </optgroup>
+                <optgroup label="── Asian / Pacific ──">
+                <option value="NIKKEI">Nikkei 225 (Japan)</option>
+                <option value="HSI">Hang Seng (HK)</option>
+                <option value="ASX">ASX 200 (Australia)</option>
+                <option value="SENSEX">SENSEX (India)</option>
+                </optgroup>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+
+            <div class="select-wrapper com-wrap">
+              <div class="sw-icon">☼</div>
+              <select class="c-select" data-type="commodity">
+                <option value="" disabled selected>Commodities</option>
+                <optgroup label="── Precious Metals ──">
+                <option value="GOLD">Gold (XAU/USD)</option>
+                <option value="SILVER">Silver (XAG/USD)</option>
+                <option value="PLATINUM">Platinum</option>
+                <option value="PALLADIUM">Palladium</option>
+                <option value="COPPER">Copper</option>
+                </optgroup>
+                <optgroup label="── Energy ──">
+                <option value="OIL">WTI Crude Oil</option>
+                <option value="BRENT">Brent Crude</option>
+                <option value="NATGAS">Natural Gas</option>
+                </optgroup>
+                <optgroup label="── Grains / Softs ──">
+                <option value="WHEAT">Wheat</option>
+                <option value="CORN">Corn</option>
+                <option value="SOYBEAN">Soybean</option>
+                <option value="COFFEE">Coffee</option>
+                <option value="COCOA">Cocoa</option>
+                <option value="SUGAR">Sugar</option>
+                </optgroup>
+              </select>
+              <div class="sw-arrow">▼</div>
+            </div>
+          </div>
+
+          <!-- Timeframe -->
+          <div class="card-label" style="margin-top:14px">Timeframe</div>
+          <div class="tf-row tf-row-wrap">
+            <button class="tf-btn" data-tf="1m">1m</button>
+            <button class="tf-btn" data-tf="3m">3m</button>
+            <button class="tf-btn" data-tf="5m">5m</button>
+            <button class="tf-btn" data-tf="15m">15m</button>
+            <button class="tf-btn active" data-tf="1h">1H</button>
+            <button class="tf-btn" data-tf="4h">4H</button>
+            <button class="tf-btn" data-tf="1d">1D</button>
+          </div>
+
+          <!-- Risk/Reward -->
+          <div class="card-label" style="margin-top:14px">Risk : Reward</div>
+          <div class="tf-row">
+            <button class="tf-btn rr-btn" data-rr="1">1:1</button>
+            <button class="tf-btn rr-btn" data-rr="1.5">1:1.5</button>
+            <button class="tf-btn rr-btn active" data-rr="2.2">1:2.2</button>
+            <button class="tf-btn rr-btn" data-rr="3">1:3</button>
+            <button class="tf-btn rr-btn" data-rr="5">1:5</button>
+          </div>
+
+          <button class="btn-analyze" id="analyze-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Analyze Chart
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <!-- 02 · Signal Output (hidden until analysis) -->
+        <div class="card glass signal-card" id="signal-card" style="display:none">
+          <div class="card-label">02 · Signal</div>
+
+          <!-- Big Hero Signal -->
+          <a href="https://hfm.com/?refid=30502056" target="_blank" class="signal-hero" id="signal-hero"
+            style="text-decoration:none;">
+            <div class="signal-direction">
+              <span class="sh-icon" id="sig-icon">↔</span>
+              <span id="sig-text">NEUTRAL</span>
+            </div>
+            <div class="sig-meta">
+              <span id="sig-pair">–</span> · <span id="sig-tf">–</span>
+            </div>
+          </a>
+
+          <!-- Confidence -->
+          <div class="conf-wrap">
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><span class="conf-pct" id="conf-pct">0%</span>
+            </div>
+            <div class="conf-bar">
+              <div class="conf-fill" id="conf-fill"></div>
+            </div>
+            <span class="conf-tag" id="conf-tag">–</span>
+          </div>
+
+          <!-- Scalping Badge -->
+          <div class="scalp-badge" id="scalp-badge" style="display:none">⚡ Scalping Mode</div>
+
+          <!-- Market Structure Badges -->
+          <div class="ms-strip" id="ms-strip"></div>
+
+          <!-- Advanced SMC Badges -->
+          <div class="smc-strip" id="smc-strip"></div>
+
+          <!-- Trade Levels -->
+          <div class="levels-grid">
+            <div class="level entry">
+              <div class="lv-label">Entry</div>
+              <div class="lv-val" id="lv-entry">–</div>
+            </div>
+            <div class="level tp">
+              <div class="lv-label">Target</div>
+              <div class="lv-val" id="lv-tp">–</div>
+            </div>
+            <div class="level sl">
+              <div class="lv-label">Stop</div>
+              <div class="lv-val" id="lv-sl">–</div>
+            </div>
+            <div class="level rr">
+              <div class="lv-label">R:R</div>
+              <div class="lv-val" id="lv-rr">–</div>
+            </div>
+          </div>
+
+          <!-- Orderflow Data -->
+          <div class="orderflow-block" id="orderflow-block" style="display:none">
+            <div class="of-label"><span>Orderflow (CVD)</span><span id="of-delta">Δ +0.0K</span></div>
+            <div class="of-bar">
+              <div class="of-fill" id="of-fill" style="width:50%"></div>
+            </div>
+            <div class="of-meta">
+              <span id="of-buy">Buy: 50%</span>
+              <span id="of-sell">Sell: 50%</span>
+            </div>
+          </div>
+
+          <!-- AI Narrative -->
+          <div class="narrative-block" id="narrative-block">
+            <div class="narrative-header">
+              <span class="narrative-icon">🤖</span>
+              <span class="narrative-title">AI Trade Analysis</span>
+            </div>
+            <div id="narrative-content">
+              <div class="narrative-skeleton">
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+                <div class="skel-line"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Copy Trade Button -->
+          <a href="https://hfm.com/?refid=30502056" target="_blank" class="btn-copy-trade">
+            <span class="ct-icon">⚡</span>
+            Copy this Trade
+          </a>
+        </div>
+
+        <!-- 03 · Multi-Timeframe Confluence -->
+        <div class="card glass mtf-card" id="mtf-card" style="display:none">
+          <div class="card-label collapsible-toggle open" id="mtf-toggle">
+            03 · Multi-Timeframe Confluence
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="mtf-body">
+            <div class="mtf-grid" id="mtf-grid">
+              <div class="mtf-cell loading"><span class="mtf-tf">15m</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+              <div class="mtf-cell loading"><span class="mtf-tf">1H</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+              <div class="mtf-cell loading"><span class="mtf-tf">4H</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+              <div class="mtf-cell loading"><span class="mtf-tf">1D</span><span class="mtf-sig">…</span><span
+                  class="mtf-conf">–</span>
+                <div class="mtf-bar-wrap">
+                  <div class="mtf-bar" style="width:0"></div>
+                </div>
+              </div>
+            </div>
+            <div class="confluence-row">
+              <span class="conf-label-small">Confluence</span>
+              <div class="conf-bar-multi">
+                <div class="conf-bar-multi-fill" id="conf-bar-multi-fill" style="width:0"></div>
+              </div>
+              <span class="conf-score-text" id="conf-score-text">–</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 04 · Position Calculator -->
+        <div class="card glass calc-card" id="calc-card">
+          <div class="card-label collapsible-toggle open" id="calc-toggle">
+            04 · Position Calculator
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="calc-body">
+            <div class="calc-row-wrap" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; margin-top: 8px;">
+              <div class="calc-input-grp" style="flex: 1 1 45%; min-width: 100px;">
+                <label style="font-size: 10px; opacity: 0.7; margin-bottom: 4px; display: block;">Equity (USD)</label>
+                <div class="ls-input-row glass">
+                  <input type="number" id="calc-equity" class="ls-input" value="1000" style="width: 100%; border: none; background: transparent; color: white; padding: 6px; font-size: 13px;" />
+                </div>
+              </div>
+              <div class="calc-input-grp" style="flex: 1 1 20%; min-width: 60px;">
+                <label style="font-size: 10px; opacity: 0.7; margin-bottom: 4px; display: block;">Risk (%)</label>
+                <div class="ls-input-row glass">
+                  <input type="number" id="calc-risk" class="ls-input" value="1" step="0.1" style="width: 100%; border: none; background: transparent; color: white; padding: 6px; font-size: 13px;" />
+                </div>
+              </div>
+              <div class="calc-input-grp" style="flex: 1 1 100%;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                  <label style="font-size: 10px; opacity: 0.7;">Leverage (1:X)</label>
+                  <label style="font-size: 10px; opacity: 0.8; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                    <input type="checkbox" id="calc-unlimited" style="cursor: pointer;" />
+                    Unlimited
+                  </label>
+                </div>
+                <div class="ls-input-row glass">
+                  <input type="number" id="calc-lev" class="ls-input" value="100" style="width: 100%; border: none; background: transparent; color: white; padding: 6px; font-size: 13px; outline: none;" />
+                </div>
+              </div>
+            </div>
+            
+            <button class="btn-analyze" id="calc-btn" style="margin-bottom: 12px;">
+              Calculate Position
+            </button>
+            
+            <div class="levels-grid" id="calc-results" style="opacity: 0.5; transition: 0.3s ease;">
+              <div class="level entry" style="flex-direction: column; align-items: flex-start; padding: 8px;">
+                <div class="lv-label">Lot Size</div>
+                <div class="lv-val" id="calc-lots" style="font-size: 14px; margin-top: 2px;">--</div>
+              </div>
+              <div class="level sl" style="flex-direction: column; align-items: flex-start; padding: 8px;">
+                <div class="lv-label">Loss (USD)</div>
+                <div class="lv-val" id="calc-loss" style="font-size: 14px; margin-top: 2px;">--</div>
+              </div>
+              <div class="level tp" style="flex-direction: column; align-items: flex-start; padding: 8px;">
+                <div class="lv-label">Gain (USD)</div>
+                <div class="lv-val" id="calc-gain" style="font-size: 14px; margin-top: 2px;">--</div>
+              </div>
+            </div>
+            <div style="font-size: 10px; opacity: 0.5; margin-top: 8px; text-align: center;" id="calc-info">
+              Requires an active generated signal.
+            </div>
+          </div>
+        </div>
+
+        <!-- 05 · Signal History / Journal -->
+        <div class="card glass history-card" id="history-card">
+          <div class="card-label collapsible-toggle" id="history-toggle">
+            <span>05 · Journal Tracker</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="hist-clear-btn" id="hist-clear-btn">Clear All</button>
+              <span class="toggle-arrow">▼</span>
+            </div>
+          </div>
+          <div class="collapsible-body" id="history-body">
+            <!-- Account Balance Input -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;border-radius:8px;background:rgba(79,172,254,0.05);border:1px solid rgba(79,172,254,0.12);">
+              <label style="font-size:0.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Account Balance</label>
+              <div class="ls-input-row glass" style="flex:1;padding:4px 8px;">
+                <input type="number" id="journal-balance-input" class="ls-input" value="10000" style="font-size:0.78rem;font-weight:700;" />
+              </div>
+              <button id="journal-balance-set" style="padding:5px 12px;border-radius:6px;border:1px solid rgba(79,172,254,0.3);background:rgba(79,172,254,0.12);color:var(--blue);font-size:0.65rem;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;">Set</button>
+            </div>
+
+            <!-- Stats Grid (filled by JS) -->
+            <div class="journal-stats" id="journal-stats" style="display:none"></div>
+
+            <!-- Performance Graph -->
+            <div class="journal-perf-wrap">
+              <canvas id="journal-perf-graph" height="120"></canvas>
+              <div class="journal-perf-legend">
+                <span class="j-leg"><span class="j-dot win"></span> Wins</span>
+                <span class="j-leg"><span class="j-dot loss"></span> Losses</span>
+              </div>
+            </div>
+
+            <!-- Equity / Win-rate bar -->
+            <div class="journal-equity">
+              <span class="journal-equity-label">📈 Account Growth</span>
+              <div class="journal-equity-bar">
+                <div class="journal-equity-fill" id="journal-equity-fill" style="width:0%"></div>
+              </div>
+              <span class="journal-equity-pct" id="journal-equity-pct">No trades yet</span>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="journal-filters">
+              <button class="j-filter-btn active" data-filter="all">All</button>
+              <button class="j-filter-btn" data-filter="won">Wins</button>
+              <button class="j-filter-btn" data-filter="lost">Losses</button>
+              <button class="j-filter-btn" data-filter="pending">Active</button>
+            </div>
+
+            <!-- Ledger Header -->
+            <div class="journal-ledger-header">
+              <span>Asset</span>
+              <span>Pos</span>
+              <span>TF</span>
+              <span>Outcome</span>
+              <span style="text-align:right">P&amp;L ($)</span>
+            </div>
+
+            <!-- Trade rows (filled by JS) -->
+            <div class="history-list" id="history-list">
+              <div class="hist-empty">📋 No trades yet.<br>Run an analysis to auto-log signals.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 06 · Economic Calendar -->
+        <div class="card glass econ-card" id="econ-card">
+          <div class="card-label collapsible-toggle" id="econ-toggle">
+            06 · Economic Calendar
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body" id="econ-body">
+            <div class="econ-list" id="econ-list">
+              <div class="econ-loading">Loading events…</div>
+            </div>
+            <button class="btn-retry" id="econ-refresh-btn" style="width:100%; margin-top:8px; padding:6px; font-size:11px;">↻ Refresh Calendar</button>
+          </div>
+        </div>
+
+        <!-- 07 · Smart Watchlist -->
+        <div class="card glass watchlist-card" id="watchlist-card">
+          <div class="card-label collapsible-toggle open" id="watchlist-toggle">
+            07 · Smart Watchlist
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="watchlist-body">
+            <div class="wl-list" id="wl-list">
+              <div class="wl-loading">Scanning markets…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 08 · News Sentiment -->
+        <div class="card glass news-card" id="news-card">
+          <div class="card-label collapsible-toggle open" id="news-toggle">
+            08 · News Sentiment
+            <span class="toggle-arrow">▼</span>
+          </div>
+          <div class="collapsible-body open" id="news-body">
+            <div class="news-list" id="news-list" style="max-height:250px;overflow-y:auto;padding:8px 0;">
+              <div class="news-loading" style="padding:12px;font-size:12px;opacity:0.6;text-align:center;">Analyze a pair to fetch news…</div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- ══ CHART AREA ══ -->
+      <main class="chart-panel">
+
+        <!-- Empty state -->
+        <div class="chart-state glass" id="state-empty">
+          <div class="state-rings">
+            <div class="sring"></div>
+            <div class="sring s2"></div>
+            <div class="sring s3"></div>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+              opacity=".5">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <h2>Select a pair and click Analyze</h2>
+          <p>Real-time data for forex, crypto, stocks, indices &amp; commodities.</p>
+        </div>
+
+        <!-- Loading state -->
+        <div class="chart-state glass" id="state-loading" style="display:none">
+          <div class="spin-wrap">
+            <div class="spin-ring"></div>
+            <div class="spin-ring r2"></div>
+          </div>
+          <h2 id="load-title">Fetching live data…</h2>
+          <div class="load-steps">
+            <div class="lstep active" id="ls1">
+              <div class="ldot"></div><span>Connecting to data source</span>
+            </div>
+            <div class="lstep" id="ls2">
+              <div class="ldot"></div><span>Downloading OHLCV data</span>
+            </div>
+            <div class="lstep" id="ls3">
+              <div class="ldot"></div><span>Computing indicators</span>
+            </div>
+            <div class="lstep" id="ls4">
+              <div class="ldot"></div><span>Generating signal</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error state -->
+        <div class="chart-state glass" id="state-error" style="display:none">
+          <div class="err-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <h2>Failed to fetch data</h2>
+          <p id="err-msg">Could not load market data. Check the pair name and try again.</p>
+          <button class="btn-retry" id="retry-btn">Try Again</button>
+        </div>
+
+        <!-- Chart wrapper -->
+        <div class="chart-wrapper" id="chart-wrapper" style="display:none">
+          <div class="chart-topbar">
+            <div class="chart-pair-name" id="chart-pair-name">–</div>
+            <div class="chart-price-wrap">
+              <span class="chart-price" id="chart-price">–</span>
+              <span class="chart-change" id="chart-change">–</span>
+              <span class="live-ticker-badge" id="live-ticker-badge" style="display:none">
+                <span class="ticker-dot"></span>
+                <span class="ticker-label" id="ticker-label">Live</span>
+              </span>
+            </div>
+            <div class="chart-meta" id="chart-meta">–</div>
+            <!-- Price Alert -->
+            <div class="alert-row" id="alert-row">
+              <div class="alert-input-wrap">
+                <span class="alert-icon">🔔</span>
+                <input type="number" class="alert-input" id="alert-input" placeholder="Set alert price" step="any" />
+                <button class="alert-set-btn" id="alert-set-btn">Set</button>
+              </div>
+            </div>
+            <div class="alert-active-badge" id="alert-active-badge" style="display:none">
+              <span class="alert-dot"></span>
+              <span id="alert-badge-text">Alert: –</span>
+            </div>
+            <!-- Clean Chart Toggle -->
+            <button id="toggle-indicators" class="btn-toggle-ind" title="Toggle Clean Chart">👁 Options</button>
+          </div>
+
+          <div class="canvas-container" style="position:relative">
+            <!-- Drawing Toolbar -->
+            <div class="draw-toolbar hidden" id="draw-toolbar">
+              <button class="draw-btn active" id="draw-pointer" title="Pointer">↖</button>
+              <div class="draw-sep"></div>
+              <button class="draw-btn" id="draw-hline" title="Horizontal Line">—</button>
+              <button class="draw-btn" id="draw-trendline" title="Trendline">╱</button>
+              <button class="draw-btn" id="draw-rect" title="Rectangle">▭</button>
+              <div class="draw-sep"></div>
+              <button class="draw-clear-btn" id="draw-clear">Clear</button>
+            </div>
+            <canvas id="main-canvas"></canvas>
+          </div>
+
+          <div class="chart-legend" id="chart-legend"></div>
+        </div>
+
+      </main>
     </div>
   </div>
 
-  <!-- Page -->
-  <div class="page">
+  <!-- Signal Popup Modal -->
+  <div class="signal-modal-overlay" id="signal-modal-overlay">
+    <div class="signal-modal">
+      <div class="sm-header">
+        <div class="sm-title">⚡ AI Signal Detected</div>
+        <button class="sm-close" id="sm-close">&times;</button>
+      </div>
+      <div class="sm-body">
+        <div class="sm-pair" id="sm-pair">--</div>
+        <div class="sm-direction" id="sm-direction">--</div>
+        <div class="sm-conf">Confidence: <span id="sm-conf">--</span></div>
 
-    <!-- Top nav -->
-    <nav class="topbar">
-      <div class="nav-brand">
-        <div class="nav-logo">
-          <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
-            <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round"
-              stroke-linejoin="round" />
-            <circle cx="29" cy="17" r="2.2" fill="white" />
-          </svg>
+        <div class="sm-levels">
+          <div class="sm-level"><span class="label">ENTRY</span><span class="val" id="sm-entry">--</span></div>
+          <div class="sm-level"><span class="label">TAKE PROFIT</span><span class="val tp" id="sm-tp">--</span></div>
+          <div class="sm-level"><span class="label">STOP LOSS</span><span class="val sl" id="sm-sl">--</span></div>
         </div>
-        <span class="nav-title">Market<span class="grad">versse</span></span>
-      </div>
-      <div class="nav-links">
-        <button id="theme-btn" class="nav-pill" aria-label="Toggle Theme"
-          style="padding: 6px 12px; font-size: 1rem; border:none;">🌙</button>
-        <a href="https://wa.me/254100574438" target="_blank" class="nav-pill">
-          💬 WhatsApp Support
-        </a>
-        <a href="https://hfm.com/?refid=30406949" target="_blank" class="nav-pill cta">
-          Open Live Account →
-        </a>
-      </div>
-    </nav>
 
-    <!-- Ticker -->
-    <div class="ticker-wrap">
-      <div class="ticker-content" id="ticker-content">
-        <!-- JS fills this -->
+        <a href="https://hfm.com/?refid=30502056" target="_blank" class="btn-copy-trade sm-btn"
+          style="text-decoration: none;">⚡ Copy This Trade</a>
       </div>
     </div>
-
-    <!-- Left hero column -->
-    <main class="hero-col">
-
-      <!-- Headline -->
-      <div>
-        <div class="hero-eyebrow">
-          <span class="live-dot"></span>
-          Live Market Intelligence
-        </div>
-        <h1 class="hero-headline">
-          Trade Smarter With<br>
-          <span class="grad">AI-Powered</span><br>
-          <span class="gold">Market Analysis</span>
-        </h1>
-        <p class="hero-sub">
-          Institutional-grade market analysis for Forex, Crypto, Stocks & Commodities.
-          Real-time AI signals, Global Sessions, Auto-Track Trade Journal and smart confluence — all in one professional
-          terminal.
-        </p>
-      </div>
-
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-num">200+</div>
-          <div class="stat-label">Trading Pairs</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">15+</div>
-          <div class="stat-label">AI Indicators</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">4 TF</div>
-          <div class="stat-label">Confluence</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">Live</div>
-          <div class="stat-label">Auto-Tracking</div>
-        </div>
-      </div>
-
-      <!-- Features -->
-      <div class="features-grid">
-        <div class="feat-item">
-          <div class="feat-icon purple">🤖</div>
-          <div>
-            <div class="feat-title">AI Market Narrative</div>
-            <div class="feat-desc">Instant institutional bias analysis and trade reasoning per signal</div>
-          </div>
-        </div>
-        <div class="feat-item">
-          <div class="feat-icon blue">🌐</div>
-          <div>
-            <div class="feat-title">Global Sessions</div>
-            <div class="feat-desc">Real-time Sydney, Tokyo, London & NY trackers with Killzone detection</div>
-          </div>
-        </div>
-        <div class="feat-item">
-          <div class="feat-icon green">📈</div>
-          <div>
-            <div class="feat-title">Auto-Track Journal</div>
-            <div class="feat-desc">Automatic TP/SL monitoring, equity curves, and performace stats</div>
-          </div>
-        </div>
-        <div class="feat-item">
-          <div class="feat-icon gold">⚖️</div>
-          <div>
-            <div class="feat-title">Institutional TA</div>
-            <div class="feat-desc">FVG detection, Order Blocks, Liquidity Sweeps & Market Structure</div>
-          </div>
-        </div>
-        <div class="feat-item">
-          <div class="feat-icon purple">🔍</div>
-          <div>
-            <div class="feat-title">Smart Watchlist</div>
-            <div class="feat-desc">Parallel cross-pair scanning engine for instant market bias</div>
-          </div>
-        </div>
-        <div class="feat-item">
-          <div class="feat-icon blue">🚀</div>
-          <div>
-            <div class="feat-title">Performance Engine</div>
-            <div class="feat-desc">Extreme optimization mode for high-speed analysis on any device</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Testimonials -->
-      <div class="testimonial-carousel">
-        <div class="test-card" id="test-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-quote" id="test-quote">"TradeVision AI paid for itself on day one. The narrative feature
-            completely reshaped how I see market structure."</p>
-          <div class="test-author" id="test-author">— Alex T.</div>
-        </div>
-      </div>
-
-      <!-- Contact & Broker -->
-      <div class="contact-strip">
-        <a href="https://wa.me/254100574438" target="_blank" class="contact-card whatsapp">
-          <div class="c-icon wa">💬</div>
-          <div>
-            <div class="c-main">WhatsApp Support</div>
-            <div class="c-sub">+254100574438 · Get your activation key or ask for help</div>
-          </div>
-          <span class="c-arrow">→</span>
-        </a>
-        <a href="https://hfm.com/?refid=30406949" target="_blank" class="contact-card broker">
-          <div class="c-icon br">🏦</div>
-          <div>
-            <div class="c-main">Recommended Broker — HFM</div>
-            <div class="c-sub">hfm.com · Regulated · Low spreads · Fast execution</div>
-          </div>
-          <span class="c-arrow">→</span>
-        </a>
-      </div>
-
-    </main>
-
-    <!-- Right login column -->
-    <aside class="login-col">
-      <div class="login-card">
-
-        <div class="card-logo">
-          <div class="card-logo-icon">
-            <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-              <path d="M7 24L13 16L18 20L24 11L29 17" stroke="white" stroke-width="2.4" stroke-linecap="round"
-                stroke-linejoin="round" />
-              <circle cx="29" cy="17" r="2.2" fill="white" />
-            </svg>
-          </div>
-          <div class="card-title">Market<span class="grad">versse</span></div>
-          <div class="card-sub">Secure Access Portal<br>Enter your activation key to continue</div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="login-tabs">
-          <button class="tab-btn" id="tab-login" onclick="switchLoginTab('login')">Activation Key</button>
-          <button class="tab-btn active" id="tab-pricing" onclick="switchLoginTab('pricing')">Pricing Plans</button>
-        </div>
-
-        <div id="login-view" style="display: none;">
-          <!-- Input -->
-          <div class="form-section">
-            <label class="input-label" for="key-input">Activation Key</label>
-            <div class="input-wrapper">
-              <input type="password" id="key-input" class="key-input" placeholder="XXXX-XXXX-XXXX-XXXX" maxlength="24"
-                autocomplete="off" spellcheck="false" autofocus />
-              <button type="button" class="toggle-password" id="toggle-password" onclick="toggleKeyVisibility()"
-                aria-label="Toggle visibility">
-                <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-              <span class="input-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </span>
-            </div>
-
-            <div class="error-msg" id="error-msg">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              <span id="error-text">Invalid key. Please contact admin.</span>
-            </div>
-          </div>
-
-          <!-- Button -->
-          <button class="btn-login" id="login-btn" onclick="handleLogin()">
-            <div class="btn-spinner"></div>
-            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.2" stroke-linecap="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <polyline points="10 17 15 12 10 7" />
-              <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>
-            <span class="btn-text">Unlock Access</span>
-          </button>
-
-          <div class="attempt-info" id="attempt-info">
-            Attempts remaining: <span id="attempts-left">5</span>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="badges">
-            <div class="badge">
-              <div class="badge-dot"></div> Encrypted
-            </div>
-            <div class="badge">
-              <div class="badge-dot"></div> Secure Portal
-            </div>
-            <div class="badge">
-              <div class="badge-dot"></div> 24/7 Live Data
-            </div>
-          </div>
-
-          <div class="get-key-row">
-            Don't have a key?
-            <a href="javascript:void(0)" onclick="switchLoginTab('pricing')" class="get-key-link">View Pricing Plans
-              →</a>
-          </div>
-
-        </div> <!-- end login-view -->
-
-        <div id="pricing-view">
-
-          <!-- Billing toggle -->
-          <div
-            style="display:flex;gap:6px;background:rgba(255,255,255,0.04);padding:5px;border-radius:12px;border:1px solid var(--border);margin-bottom:16px;">
-            <button id="bill-monthly" class="tab-btn active" style="flex:1;padding:8px;font-size:0.78rem;"
-              onclick="switchBilling('monthly')">Monthly</button>
-            <button id="bill-quarterly" class="tab-btn" style="flex:1;padding:8px;font-size:0.78rem;"
-              onclick="switchBilling('quarterly')">Quarterly</button>
-          </div>
-
-          <!-- Tier cards -->
-          <div class="pricing-plans" style="grid-template-columns:1fr;gap:10px;">
-
-            <!-- FX / Commodities / Indices -->
-            <div class="pricing-plan" id="plan-fx"
-              style="flex-direction:row;align-items:center;justify-content:space-between;text-align:left;padding:14px 16px;">
-              <div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                  <span style="font-size:1rem;">📊</span>
-                  <div class="plan-title" style="color:var(--blue);">FX, Commodities &amp; Indices</div>
-                </div>
-                <div class="plan-price" id="price-fx" style="font-size:1.4rem;">$100<span class="plan-period"
-                    style="font-size:0.75rem;">/mo</span></div>
-                <div style="font-size:0.68rem;color:var(--text3);margin-top:2px;">Forex pairs · Gold · Oil · Indices
-                </div>
-              </div>
-              <a id="btn-fx"
-                href="https://wa.me/254100574438?text=Hi,%20I'm%20interested%20in%20the%20FX%2C%20Commodities%20%26%20Indices%20Monthly%20plan%20(%24100)%20for%20Marketversse"
-                target="_blank" class="plan-btn" style="width:auto;white-space:nowrap;padding:10px 18px;">Select →</a>
-            </div>
-
-            <!-- Stocks / Crypto -->
-            <div class="pricing-plan popular" id="plan-sc"
-              style="flex-direction:row;align-items:center;justify-content:space-between;text-align:left;padding:14px 16px;">
-              <div class="popular-badge">Popular</div>
-              <div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                  <span style="font-size:1rem;">💹</span>
-                  <div class="plan-title" style="color:var(--purple);">Stocks &amp; Crypto</div>
-                </div>
-                <div class="plan-price" id="price-sc" style="font-size:1.4rem;">$70<span class="plan-period"
-                    style="font-size:0.75rem;">/mo</span></div>
-                <div style="font-size:0.68rem;color:var(--text3);margin-top:2px;">US Stocks · Crypto pairs</div>
-              </div>
-              <a id="btn-sc"
-                href="https://wa.me/254100574438?text=Hi,%20I'm%20interested%20in%20the%20Stocks%20%26%20Crypto%20Monthly%20plan%20(%2470)%20for%20Marketversse"
-                target="_blank" class="plan-btn" style="width:auto;white-space:nowrap;padding:10px 18px;">Select →</a>
-            </div>
-
-            <!-- Both -->
-            <div class="pricing-plan" id="plan-both"
-              style="flex-direction:row;align-items:center;justify-content:space-between;text-align:left;padding:14px 16px;border-color:rgba(249,168,37,0.4);background:rgba(249,168,37,0.04);">
-              <div>
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                  <span style="font-size:1rem;">🌐</span>
-                  <div class="plan-title" style="color:var(--gold);">Full Access — Both</div>
-                </div>
-                <div class="plan-price" id="price-both" style="font-size:1.4rem;">$150<span class="plan-period"
-                    style="font-size:0.75rem;">/mo</span></div>
-                <div class="plan-discount" id="disc-both" style="margin:4px 0 0;">Best Value</div>
-              </div>
-              <a id="btn-both"
-                href="https://wa.me/254100574438?text=Hi,%20I'm%20interested%20in%20the%20Full%20Access%20Monthly%20plan%20(%24150)%20for%20Marketversse"
-                target="_blank" class="plan-btn"
-                style="width:auto;white-space:nowrap;padding:10px 18px;background:rgba(249,168,37,0.12);border-color:rgba(249,168,37,0.35);color:var(--gold);">Select
-                →</a>
-            </div>
-
-          </div>
-
-          <div class="negotiate-wrap">
-            <button class="negotiate-btn"
-              onclick="window.open('https://wa.me/254100574438?text=Hi,%20I%20would%20like%20to%20discuss%20a%20custom%20pricing%20plan%20for%20Marketversse', '_blank')">Want
-              to negotiate a price?</button>
-          </div>
-
-          <div class="payment-methods-wrap">
-            <div class="payment-methods-title">Accepted Payment Methods</div>
-            <div class="payment-icons">
-              <!-- Crypto -->
-              <svg class="pay-icon" viewBox="0 0 24 24" fill="#F7931A" title="Crypto (BTC/USDT/ETH)">
-                <path
-                  d="M23.638 14.904c-1.232 4.945-6.25 8.012-11.192 6.779-4.941-1.233-8.01-6.249-6.777-11.192 1.231-4.942 6.248-8.012 11.192-6.779 4.941 1.234 8.011 6.249 6.777 11.192zm-5.053-4.048c.328-2.186-1.336-3.363-3.609-4.148l.737-2.956-1.8-.449-.718 2.881c-.473-.118-.958-.229-1.442-.338l.723-2.898-1.799-.449-.738 2.959c-.391-.09-.773-.178-1.144-.271l.001-.005-2.482-.62-.479 1.921s1.335.306 1.306.325c.728.182.86.666.838 1.051l-.839 3.366c.05.013.116.03.188.057l-.19-.048-1.176 4.717c-.089.222-.315.555-.824.428.018.026-1.306-.325-1.306-.325l-.894 2.062 2.342.584c.436.109.864.221 1.285.326l-.744 2.986 1.8.449.738-2.959c.491.134.969.259 1.439.378l-.734 2.943 1.8.449.743-2.983c3.076.582 5.394.348 6.368-2.435.786-2.241-.039-3.535-1.656-4.382 1.177-.272 2.065-1.047 2.304-2.651zm-4.116 5.795c-.558 2.239-4.331 1.029-5.553.725l.991-3.971c1.222.304 5.129.904 4.562 3.246zm1.041-5.83c-.508 2.041-3.652 1.004-4.669.752l.9-3.606c1.017.253 4.286.726 3.769 2.854z" />
-              </svg>
-              <!-- PayPal -->
-              <svg class="pay-icon" viewBox="0 0 24 24" fill="#003087" title="PayPal">
-                <path
-                  d="M20.067 6.378c-.139 2.344-1.419 4.456-3.393 5.367-2.093.971-4.281 1.333-6.505 1.333h-1.482c-.439 0-.811.302-.894.733l-1.319 6.814c-.04.211.122.404.337.404h3.629c.433 0 .8.307.882.732l.033.167c.071.353.38.604.74.604h2.254c.352 0 .638-.286.638-.638 0-.074-.012-.147-.037-.215l-.462-1.238c-.083-.223-.002-.472.195-.602 2.164-1.42 3.673-4.041 3.673-6.845 0-2.39-1.125-4.526-2.884-5.834l-.043.149c-.198.814-.524 1.554-.932 2.203l-.045.066zm-5.694-5.378h-7.143c-.439 0-.811.302-.894.733l-2.32 11.986c-.021.112-.001.227.057.327.058.1.155.176.269.212l2.678.85c.168.053.351.01.483-.11.132-.119.191-.294.159-.467l-.768-4.044c-.083-.431.249-.833.688-.833h2.366c4.61 0 8.016-1.921 8.016-5.833 0-2.333-1.638-3.831-4.591-3.831z" />
-              </svg>
-              <!-- Skrill (Representative) -->
-              <div class="pay-icon"
-                style="background:#802060; color:#fff; padding:0 6px; border-radius:4px; font-weight:800; font-size:10px; line-height:20px; filter: grayscale(1);">
-                SKRILL</div>
-              <!-- BinancePay -->
-              <svg class="pay-icon" viewBox="0 0 24 24" fill="#FCD535" title="BinancePay">
-                <path
-                  d="M12.001 0l-1.944 1.944h3.888l-1.944-1.944zM4.113 4.113l-1.944 1.944 1.944 1.944 1.944-1.944-1.944-1.944zM19.887 4.113l-1.944 1.944 1.944 1.944 1.944-1.944-1.944-1.944zM0 12l1.944-1.944v3.888l-1.944-1.944zM24 12l-1.944-1.944v3.888l1.944-1.944zM4.113 16l1.944 1.944-1.944 1.944-1.944-1.944 1.944-1.944zM19.887 16l1.944 1.944-1.944 1.944-1.944-1.944 1.944-1.944zM12 24l1.944-1.944h-3.888l1.944 1.944zM12 6.5l2.75 2.75 2.75-2.75L12 1 6.5 6.5l2.75 2.75 2.75-2.75zM12 17.5l-2.75-2.75-2.75 2.75 5.5 5.5 5.5-5.5-2.75-2.75-2.75 2.75zM17.5 12l-2.75-2.75 2.75-2.75 5.5 5.5-5.5 5.5-2.75-2.75 2.75-2.75zM6.5 12l2.75 2.75-2.75 2.75-5.5-5.5 5.5-5.5 2.75 2.75-2.75 2.75z" />
-              </svg>
-              <!-- Bybit Pay (Rep) -->
-              <div class="pay-icon"
-                style="background:#000; color:#F7A600; padding:0 6px; border-radius:4px; font-weight:800; font-size:10px; line-height:20px; filter: grayscale(1);">
-                BYBIT</div>
-              <!-- M-Pesa (Rep) -->
-              <div class="pay-icon"
-                style="background:#49AA46; color:#fff; padding:0 6px; border-radius:4px; font-weight:800; font-size:10px; line-height:20px; filter: grayscale(1);">
-                M-PESA</div>
-              <!-- Wire Transfer -->
-              <svg class="pay-icon" viewBox="0 0 24 24" fill="currentColor" title="Wire Transfer">
-                <path d="M2 20h20v2H2v-2zm10-18L1 8h22L12 2zM3.97 9v9h3V9h-3zm6.03 0v9h3V9h-3zm6.03 0v9h3V9h-3z" />
-              </svg>
-            </div>
-          </div>
-
-          <div class="get-key-row">
-            Already have a key?
-            <a href="javascript:void(0)" onclick="switchLoginTab('login')" class="get-key-link">Enter Activation Key
-              →</a>
-          </div>
-        </div> <!-- end pricing-view -->
-
-      </div>
-    </aside>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <span>© 2026 Marketversse — All rights reserved</span>
-      <div class="footer-links">
-        <a href="https://wa.me/254100574438" target="_blank">Support</a>
-        <a href="https://hfm.com/?refid=30406949" target="_blank">Recommended Broker</a>
-        <span style="color:var(--text3)">v2.0</span>
-      </div>
-    </footer>
-
-  </div><!-- end .page -->
+  </div>
 
   <!-- Floating IG Button -->
   <a href="https://instagram.com/curie_trades" target="_blank" class="floating-ig" aria-label="Follow us on Instagram">
@@ -2021,297 +838,7 @@
     </svg>
   </a>
 
-  <script>
-    // ── 
-    // ── 
-    let allKeys = null;
-    let attemptsLeft = 5;
-    let locked = false;
-
-    const keyInput = document.getElementById('key-input');
-    keyInput.addEventListener('input', function () {
-      let val = this.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
-      this.value = val;
-      hideError();
-    });
-    keyInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') handleLogin();
-    });
-
-    function toggleKeyVisibility() {
-      const type = keyInput.getAttribute('type') === 'password' ? 'text' : 'password';
-      keyInput.setAttribute('type', type);
-
-      const eyeIcon = document.getElementById('eye-icon');
-      if (type === 'text') {
-        eyeIcon.innerHTML = `
-          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-          <line x1="1" y1="1" x2="23" y2="23"></line>
-        `;
-      } else {
-        eyeIcon.innerHTML = `
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        `;
-      }
-    }
-
-    // ── Billing period toggle ────────────────────────────────────────────
-    const PRICING = {
-      monthly: {
-        fx: { price: '$100', period: '/mo', label: 'Monthly plan ($100)', wa: 'FX%2C%20Commodities%20%26%20Indices%20Monthly%20plan%20(%24100)' },
-        sc: { price: '$70', period: '/mo', label: 'Monthly plan ($70)', wa: 'Stocks%20%26%20Crypto%20Monthly%20plan%20(%2470)' },
-        both: { price: '$150', period: '/mo', label: 'Monthly plan ($150)', wa: 'Full%20Access%20Monthly%20plan%20(%24150)', disc: 'Best Value' },
-      },
-      quarterly: {
-        fx: { price: '$270', period: '/qtr', label: 'Quarterly plan ($270)', wa: 'FX%2C%20Commodities%20%26%20Indices%20Quarterly%20plan%20(%24270)' },
-        sc: { price: '$180', period: '/qtr', label: 'Quarterly plan ($180)', wa: 'Stocks%20%26%20Crypto%20Quarterly%20plan%20(%24180)' },
-        both: { price: '$440', period: '/qtr', label: 'Quarterly plan ($440)', wa: 'Full%20Access%20Quarterly%20plan%20(%24440)', disc: 'Save vs Monthly' },
-      }
-    };
-
-    function switchBilling(period) {
-      const p = PRICING[period];
-      document.getElementById('bill-monthly').classList.toggle('active', period === 'monthly');
-      document.getElementById('bill-quarterly').classList.toggle('active', period === 'quarterly');
-
-      ['fx', 'sc', 'both'].forEach(tier => {
-        const d = p[tier];
-        const priceEl = document.getElementById('price-' + tier);
-        if (priceEl) priceEl.innerHTML = `${d.price}<span class="plan-period" style="font-size:0.75rem;">${d.period}</span>`;
-        const btnEl = document.getElementById('btn-' + tier);
-        if (btnEl) btnEl.href = `https://wa.me/254100574438?text=Hi,%20I'm%20interested%20in%20the%20${d.wa}%20for%20Marketversse`;
-        if (tier === 'both') {
-          const discEl = document.getElementById('disc-both');
-          if (discEl) discEl.textContent = d.disc;
-        }
-      });
-    }
-
-    function switchLoginTab(tab) {
-      const loginView = document.getElementById('login-view');
-      const pricingView = document.getElementById('pricing-view');
-      const tabLogin = document.getElementById('tab-login');
-      const tabPricing = document.getElementById('tab-pricing');
-
-      if (tab === 'login') {
-        loginView.style.display = 'block';
-        pricingView.style.display = 'none';
-        tabLogin.classList.add('active');
-        tabPricing.classList.remove('active');
-      } else {
-        loginView.style.display = 'none';
-        pricingView.style.display = 'block';
-        tabLogin.classList.remove('active');
-        tabPricing.classList.add('active');
-      }
-    }
-
-    async function loadKeys() {
-      if (allKeys) return allKeys;
-      try {
-        const resp = await fetch('/keys.json?_=' + Date.now());
-        allKeys = await resp.json();
-        return allKeys;
-      } catch {
-        return null;
-      }
-    }
-
-    function findKeyTier(inputKey, keys) {
-      for (const [tier, keyList] of Object.entries(keys)) {
-        for (const item of keyList) {
-          if (typeof item === 'string' && item === inputKey) {
-            return { tier, name: null };
-          }
-          if (typeof item === 'object' && item.key === inputKey) {
-            return { tier, name: item.name || null };
-          }
-        }
-      }
-      return null;
-    }
-
-    async function handleLogin() {
-      if (locked) return;
-      const inputKey = keyInput.value.trim().toUpperCase();
-      if (!inputKey) { showError('Please enter your activation key.'); shakeInput(); return; }
-
-      const btn = document.getElementById('login-btn');
-      btn.classList.add('loading'); btn.disabled = true;
-
-      try {
-        const keys = await loadKeys();
-        if (!keys) {
-          btn.classList.remove('loading'); btn.disabled = false;
-          showError('Could not load activation keys. Try again or contact admin.');
-          return;
-        }
-
-        const result = findKeyTier(inputKey, keys);
-        btn.classList.remove('loading'); btn.disabled = false;
-
-        if (result) {
-          showSuccess(result.tier, result.name);
-        } else {
-          attemptsLeft--;
-          document.getElementById('attempts-left').textContent = Math.max(0, attemptsLeft);
-          shakeInput();
-
-          if (attemptsLeft <= 0) {
-            locked = true;
-            showError('Too many failed attempts. Contact admin on WhatsApp.');
-            keyInput.disabled = true;
-            btn.disabled = true;
-            document.getElementById('attempt-info').innerHTML =
-              '⛔ Access locked. <a href="https://wa.me/254100574438" target="_blank" style="color:#4FACFE;font-weight:600">Contact admin →</a>';
-          } else {
-            showError(`Invalid key. (${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} left)`);
-          }
-          keyInput.value = '';
-          keyInput.focus();
-        }
-      } catch (err) {
-        btn.classList.remove('loading'); btn.disabled = false;
-        showError('Could not verify key. Try again or contact admin.');
-      }
-    }
-
-    function showError(msg) {
-      const err = document.getElementById('error-msg');
-      document.getElementById('error-text').textContent = msg;
-      err.style.opacity = '0'; err.style.display = 'flex';
-      requestAnimationFrame(() => err.classList.add('show'));
-    }
-    function hideError() {
-      const err = document.getElementById('error-msg');
-      err.classList.remove('show');
-      setTimeout(() => { if (!err.classList.contains('show')) err.style.display = 'none'; }, 300);
-    }
-    function shakeInput() {
-      const wrap = document.querySelector('.input-wrapper');
-      wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
-      setTimeout(() => wrap.classList.remove('shake'), 500);
-    }
-    function showSuccess(tier, userName) {
-      sessionStorage.setItem('mv_auth', 'granted');
-      sessionStorage.setItem('mv_tier', tier);
-      if (userName) sessionStorage.setItem('mv_user_name', userName);
-      else sessionStorage.removeItem('mv_user_name');
-      const overlay = document.getElementById('success-overlay');
-      overlay.classList.add('show');
-      setTimeout(() => { document.getElementById('success-bar').style.width = '100%'; }, 100);
-      setTimeout(() => { window.location.replace('/index.html'); }, 2200);
-    }
-
-    // ── Dark/Light Mode ──────────────────────────────────────────────────
-    const themeBtn = document.getElementById('theme-btn');
-    if (localStorage.getItem('tv_theme') === 'light') {
-      document.body.classList.add('light-theme');
-      themeBtn.textContent = '☀️';
-    }
-    themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light-theme');
-      const isLight = document.body.classList.contains('light-theme');
-      themeBtn.textContent = isLight ? '☀️' : '🌙';
-      localStorage.setItem('tv_theme', isLight ? 'light' : 'dark');
-    });
-
-    // ── Ticker ───────────────────────────────────────────────────────────
-    const tickerPairs = [
-      { s: 'BTC/USDT', p: '64,230.50', c: '+1.4%', dir: 'up' },
-      { s: 'ETH/USDT', p: '3,450.20', c: '+2.1%', dir: 'up' },
-      { s: 'EUR/USD', p: '1.0924', c: '-0.1%', dir: 'down' },
-      { s: 'GBP/USD', p: '1.2640', c: '+0.2%', dir: 'up' },
-      { s: 'GOLD', p: '2,340.10', c: '+0.8%', dir: 'up' },
-      { s: 'NASDAQ', p: '18,240.2', c: '+1.1%', dir: 'up' },
-      { s: 'SOL/USDT', p: '142.50', c: '-1.2%', dir: 'down' },
-      { s: 'TSLA', p: '175.20', c: '+2.4%', dir: 'up' }
-    ];
-    let tickerHtml = '';
-    tickerPairs.forEach(t => {
-      tickerHtml += `<span class="ticker-item"><span class="ticker-sym">${t.s}</span><span class="ticker-price">${t.p}</span><span class="ticker-pct ${t.dir}">${t.c}</span></span>`;
-    });
-    // Duplicate for seamless scroll
-    document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml + tickerHtml + tickerHtml;
-
-    // ── Testimonials ─────────────────────────────────────────────────────
-    const testimonials = [
-      { q: '"Marketversse paid for itself on day one. The narrative feature completely reshaped how I see market structure."', a: '— Alex T.' },
-      { q: '"Finally, a tool that combines multi-timeframe confluence automatically. Saves me hours of manual charting."', a: '— Sarah M.' },
-      { q: '"The sniper entries from the AI signals are incredibly accurate. Highly recommend for any serious trader."', a: '— David K.' },
-      { q: '"Its ability to filter out fake breakouts using volume and RSI variance gives me so much confidence."', a: '— Mark L.' }
-    ];
-    let testIdx = 0;
-    setInterval(() => {
-      const card = document.getElementById('test-card');
-      card.style.opacity = '0';
-      setTimeout(() => {
-        testIdx = (testIdx + 1) % testimonials.length;
-        document.getElementById('test-quote').textContent = testimonials[testIdx].q;
-        document.getElementById('test-author').textContent = testimonials[testIdx].a;
-        card.style.opacity = '1';
-      }, 500);
-    }, 6000);
-
-    // ── Background Chart Elements ────────────────────────────────────────
-    const canvas = document.getElementById('particles-canvas');
-    const ctx = canvas.getContext('2d');
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-
-    const candles = Array.from({ length: 35 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      w: Math.random() * 6 + 4,
-      h: Math.random() * 40 + 20,
-      wick: Math.random() * 40 + 20,
-      dx: (Math.random() - 0.5) * 0.4,
-      dy: (Math.random() - 0.5) * 0.4,
-      alpha: Math.random() * 0.15 + 0.05,
-      isBull: Math.random() > 0.5
-    }));
-
-    function drawChartElements() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const isLight = document.body.classList.contains('light-theme');
-
-      // Draw EMA Wave faintly in bg
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height / 2);
-      for (let i = 0; i < canvas.width; i += 20) {
-        let y = canvas.height / 2 + Math.sin(i / 150 + Date.now() / 2000) * 100 + Math.cos(i / 80) * 50;
-        ctx.lineTo(i, y);
-      }
-      ctx.strokeStyle = isLight ? 'rgba(79,172,254,0.15)' : 'rgba(79,172,254,0.08)';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      candles.forEach(c => {
-        const col = c.isBull ? (isLight ? '0,166,80' : '34,211,160') : (isLight ? '211,47,47' : '255,77,109');
-
-        ctx.fillStyle = `rgba(${col},${c.alpha})`;
-        ctx.strokeStyle = `rgba(${col},${c.alpha})`;
-        ctx.lineWidth = 1.5;
-
-        // Draw Wick
-        ctx.beginPath();
-        ctx.moveTo(c.x + c.w / 2, c.y - c.wick / 2);
-        ctx.lineTo(c.x + c.w / 2, c.y + c.h + c.wick / 2);
-        ctx.stroke();
-
-        // Draw Body
-        ctx.fillRect(c.x, c.y, c.w, c.h);
-
-        c.x += c.dx; c.y += c.dy;
-        if (c.x < -50 || c.x > canvas.width + 50) c.dx *= -1;
-        if (c.y < -50 || c.y > canvas.height + 50) c.dy *= -1;
-      });
-      requestAnimationFrame(drawChartElements);
-    }
-    drawChartElements();
-  </script>
-
+  <script src="app.js"></script>
 </body>
 
 </html>
